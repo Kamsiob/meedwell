@@ -112,6 +112,26 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     fun playAlbum(albumId: String, startIndex: Int = 0) = player.playAlbum(albumId, startIndex)
 
+    /**
+     * Plays one specific track, from within its own album.
+     *
+     * Search used to call `playAlbum(track.albumId)`, which started at index
+     * zero: you searched for a song, tapped it, and a different song played.
+     * Music did start, so nothing looked broken, which is worse than a crash.
+     */
+    fun playTrack(track: Track) {
+        viewModelScope.launch {
+            val tracks = container.library.tracksForAlbum(track.albumId)
+            val index = tracks.indexOfFirst { it.id == track.id }
+            if (index >= 0) {
+                player.playTracks(tracks, index)
+            } else {
+                // A track with no album context, such as a local loose file.
+                player.playTracks(listOf(track))
+            }
+        }
+    }
+
     fun shuffleAlbum(albumId: String) {
         viewModelScope.launch {
             // Honestly random, which is what the queue sheet promises. No
@@ -440,11 +460,45 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** Dismissing the trouble sheet clears the failure but changes nothing else. */
+    fun dismissSyncFailure() {
+        _syncFailure.value = null
+    }
+
     val lastSyncAt: Long get() = settings.lastSyncAt
+
+    /**
+     * Syncs when the app comes back and the last one is old enough.
+     *
+     * Sync previously ran once, inside `connect()`, and never again. The only
+     * way to see a record bought that morning was to disconnect and re-paste
+     * both credentials. For an app built around Bandcamp Friday that is the
+     * product not working.
+     *
+     * Still no background worker and still nothing on a timer: this runs when
+     * somebody opens the app, which is the only moment the answer matters.
+     */
+    fun syncIfStale(now: Long = System.currentTimeMillis() / 1000) {
+        if (!isConnected) return
+        if (now - settings.lastSyncAt < STALE_AFTER_SECONDS) return
+        syncNow()
+    }
+
+    /** Pull to refresh, and the manual override for "check now". */
+    fun refresh() = syncNow()
 
     val isConnected: Boolean get() = container.credentials.isConnected
 
     val hasChosenPath: Boolean get() = settings.hasChosenPath
+
+    private companion object {
+        /**
+         * Half an hour. Long enough that reopening the app repeatedly does not
+         * hammer a service in open beta, short enough that a record bought this
+         * morning is there by lunchtime.
+         */
+        const val STALE_AFTER_SECONDS = 30 * 60L
+    }
 
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")

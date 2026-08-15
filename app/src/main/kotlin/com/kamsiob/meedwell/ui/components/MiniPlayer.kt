@@ -22,7 +22,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.playback.PlaybackState
+import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
+import com.kamsiob.meedwell.ui.theme.Radius
+import com.kamsiob.meedwell.ui.theme.meedwellShadow
 
 /**
  * The mini player, above the tab bar.
@@ -43,12 +46,13 @@ fun MiniPlayer(
 
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
-    val shape = RoundedCornerShape(15.dp)
+    val shape = RoundedCornerShape(Radius.floating)
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp)
+            .padding(horizontal = 20.dp)
+            .meedwellShadow(Elevation.floating, shape)
             .clip(shape)
             .background(colors.surfacePanel)
             .border(0.5.dp, colors.hairline, shape)
@@ -68,7 +72,9 @@ fun MiniPlayer(
         Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
             Text(
                 text = state.title,
-                style = type.metadata,
+                // Title and artist were the same size and weight, separated
+                // only by colour. The reference gives the title its own weight.
+                style = type.cardTitle,
                 color = colors.primaryText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -84,9 +90,14 @@ fun MiniPlayer(
         Waveform(
             progress = state.progress,
             animate = state.isPlaying,
+            // Eight bars, as the reference draws it. The default of 28 needed
+            // 67dp of gaps inside a 64dp box, so every bar clamped to one
+            // physical pixel and the row rendered as a grey smear that read
+            // like a loading skeleton.
+            barCount = 8,
             modifier = Modifier
-                .padding(end = 8.dp)
-                .size(width = 64.dp, height = 20.dp),
+                .padding(end = 10.dp)
+                .size(width = 80.dp, height = 22.dp),
         )
         IconButton(
             icon = if (state.isPlaying) MeedwellIcons.Pause else MeedwellIcons.Play,

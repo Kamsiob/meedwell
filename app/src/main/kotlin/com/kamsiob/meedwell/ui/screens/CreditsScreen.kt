@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.surroundings.CreditBlock
 import com.kamsiob.meedwell.core.surroundings.LicenseGroup
 import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -67,8 +68,9 @@ fun CreditsScreen(
             icon = MeedwellIcons.Back,
             contentDescription = "Back",
             onClick = onBack,
-            size = 19.dp,
+            size = 25.dp,
             tint = colors.primaryText,
+            edge = IconEdge.Start,
             modifier = Modifier.padding(top = 6.dp),
         )
         Text("Credits", style = type.largeHeading, color = colors.primaryText)

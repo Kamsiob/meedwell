@@ -3,6 +3,7 @@ package com.kamsiob.meedwell.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -29,7 +30,10 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import androidx.compose.ui.platform.LocalContext
 import com.kamsiob.meedwell.ui.theme.InstrumentSerif
+import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
+import com.kamsiob.meedwell.ui.theme.Radius
+import com.kamsiob.meedwell.ui.theme.meedwellShadow
 
 /**
  * Album art, shown whole and never written on.
@@ -48,7 +52,8 @@ fun Cover(
     url: String?,
     title: String,
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 6.dp,
+    cornerRadius: Dp = Radius.cover,
+    elevation: Dp = Elevation.cover,
     contentDescription: String? = null,
 ) {
     val colors = MeedwellTheme.colors
@@ -57,6 +62,10 @@ fun Cover(
     val shape = RoundedCornerShape(cornerRadius)
     Box(
         modifier = modifier
+            // Shadow before clip, always. Clipping first casts the shadow away
+            // and produces nothing, silently, which is how the app shipped with
+            // no shadows at all.
+            .meedwellShadow(elevation, shape)
             .clip(shape)
             .border(0.5.dp, colors.hairline, shape)
             .semantics {
@@ -105,15 +114,18 @@ fun MissingCover(
     modifier: Modifier = Modifier,
 ) {
     val colors = MeedwellTheme.colors
-    Box(
+    BoxWithConstraints(
         modifier = modifier.background(colors.surfacePanel),
         contentAlignment = Alignment.Center,
     ) {
+        // The letters scale with the tile. A fixed size nearly filled a 48dp
+        // thumbnail and was lost in the middle of a 218dp grid cover.
+        val letterSize = (maxWidth.value * 0.30f).coerceIn(13f, 46f).sp
         Text(
             text = coverInitials(title),
             fontFamily = InstrumentSerif,
             fontStyle = FontStyle.Italic,
-            fontSize = 30.sp,
+            fontSize = letterSize,
             color = colors.secondaryText,
             textAlign = TextAlign.Center,
         )
@@ -150,7 +162,8 @@ fun CoverThumb(
     Cover(
         url = url,
         title = title,
-        cornerRadius = 5.dp,
+        cornerRadius = Radius.thumb,
+        elevation = Elevation.thumb,
         modifier = modifier.size(size),
     )
 }
@@ -165,7 +178,8 @@ fun CoverSquare(
     Cover(
         url = url,
         title = title,
-        cornerRadius = 7.dp,
+        cornerRadius = Radius.cover,
+        elevation = Elevation.cover,
         modifier = modifier.aspectRatio(1f),
     )
 }

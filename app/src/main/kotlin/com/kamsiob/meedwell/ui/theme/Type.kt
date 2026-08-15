@@ -190,8 +190,6 @@ data class MeedwellTypography(
 
 /**
  * Tabular numerals on every time, duration, size and count, per `DESIGN.md`
- * section 4. Applied through a `FontFeatureSetting` at the call site rather
- * than baked into a style, since the same style carries both words and numbers
- * in several places.
+ * section 4. Prefer the `numeric` style, which already carries the feature.
  */
 const val TabularNumerals = "tnum"

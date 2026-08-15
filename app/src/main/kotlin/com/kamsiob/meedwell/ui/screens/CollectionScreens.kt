@@ -38,6 +38,7 @@ import com.kamsiob.meedwell.ui.components.CoverSquare
 import com.kamsiob.meedwell.ui.components.CoverThumb
 import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.combinedClickableCompat
@@ -68,8 +69,9 @@ fun HistoryScreen(
                 icon = MeedwellIcons.Back,
                 contentDescription = "Back",
                 onClick = onBack,
-                size = 19.dp,
+                size = 25.dp,
                 tint = colors.primaryText,
+                edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
             Text("History", style = type.largeHeading, color = colors.primaryText)
@@ -169,8 +171,9 @@ fun ForgottenShelfScreen(
                 icon = MeedwellIcons.Back,
                 contentDescription = "Back",
                 onClick = onBack,
-                size = 19.dp,
+                size = 25.dp,
                 tint = colors.primaryText,
+                edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
             Text("Forgotten shelf", style = type.largeHeading, color = colors.primaryText)
@@ -361,8 +364,9 @@ fun LovedScreen(
                 icon = MeedwellIcons.Back,
                 contentDescription = "Back",
                 onClick = onBack,
-                size = 19.dp,
+                size = 25.dp,
                 tint = colors.primaryText,
+                edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
             Text("Loved", style = type.largeHeading, color = colors.primaryText)
@@ -448,8 +452,9 @@ fun ArtistScreen(
                 icon = MeedwellIcons.Back,
                 contentDescription = "Back",
                 onClick = onBack,
-                size = 19.dp,
+                size = 25.dp,
                 tint = colors.primaryText,
+                edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
             Text(state.name, style = type.sectionHeading, color = colors.primaryText)

@@ -29,6 +29,7 @@ import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.MeedwellMark
 import com.kamsiob.meedwell.ui.components.SupportButton
 import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -231,7 +232,7 @@ fun AboutScreen(
             )
         }
         Text(
-            "v$versionName · AGPLv3 · by Kamsiob",
+            "v$versionName · AGPLv3 · by Kamsiob".uppercase(),
             style = type.capsEyebrow,
             color = colors.secondaryText,
             modifier = Modifier.padding(top = 10.dp),
@@ -250,7 +251,7 @@ fun AboutScreen(
         SettingRow("Feedback", null, trailing = "hello@kamsiob.com", onClick = {})
 
         Text(
-            "Not affiliated with or endorsed by Bandcamp",
+            "Not affiliated with or endorsed by Bandcamp".uppercase(),
             style = type.capsEyebrow,
             color = colors.secondaryText,
             modifier = Modifier.padding(top = 14.dp),
@@ -297,8 +298,9 @@ private fun ScreenScaffold(
             icon = MeedwellIcons.Back,
             contentDescription = "Back",
             onClick = onBack,
-            size = 19.dp,
+            size = 25.dp,
             tint = colors.primaryText,
+            edge = IconEdge.Start,
             modifier = Modifier.padding(top = 6.dp),
         )
         if (title != null) {

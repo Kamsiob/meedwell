@@ -177,7 +177,7 @@ fun NowPlayingScreen(
                 // Honest about what is being played. Verified: Bandcamp serves
                 // MP3 V0, so nothing here may imply more.
                 Text(
-                    text = state.qualityLine,
+                    text = state.qualityLine.uppercase(),
                     style = type.capsEyebrow,
                     color = Color.White.copy(alpha = 0.58f),
                     modifier = Modifier.padding(top = 12.dp),

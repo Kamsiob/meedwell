@@ -120,8 +120,13 @@ fun Waveform(
             }
     ) {
         widthPx = size.width
-        val gap = 2.5.dp.toPx()
-        val barWidth = ((size.width - gap * (envelope.size - 1)) / envelope.size).coerceAtLeast(1f)
+        // Each bar takes half its slot, so the gap scales with the bar count
+        // instead of being a fixed 2.5dp. At eight bars in 80dp the old fixed
+        // gap left bars wider than they were tall, and a bar wider than it is
+        // tall draws as a dot however the radius is capped.
+        val slot = size.width / envelope.size
+        val barWidth = (slot * 0.52f).coerceAtLeast(1f)
+        val gap = slot - barWidth
         val playedUpTo = size.width * progress.coerceIn(0f, 1f)
 
         envelope.forEachIndexed { index, amplitude ->
@@ -129,7 +134,9 @@ fun Waveform(
             // The breathe is a few percent, never enough to misrepresent the
             // shape of the music.
             val breathed = amplitude * (0.94f + 0.12f * breatheFor(index, breathe))
-            val height = (size.height * breathed.coerceIn(0.18f, 1f))
+            // The floor keeps every bar taller than it is wide, which is what
+            // stops the quiet passages rendering as dots.
+            val height = (size.height * breathed.coerceIn(0.34f, 1f))
             val top = (size.height - height) / 2f
 
             val played = x + barWidth / 2f <= playedUpTo
@@ -151,7 +158,10 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRoundRectCompat
     // Without the height cap a short bar becomes a circle, and a row of short
     // bars reads as a dotted line rather than as a waveform. Caught on the
     // device: the first version looked like a dashed rule.
-    val radius = minOf(size.width, size.height) / 2f
+    // Half the bar's WIDTH, never its height. Taking the smaller of the two
+    // turns a short bar into a circle, and a row of circles reads as a dotted
+    // line rather than as a waveform.
+    val radius = size.width / 2f
     drawRoundRect(
         color = color,
         topLeft = topLeft,
@@ -177,7 +187,7 @@ private fun placeholderEnvelope(barCount: Int): List<Float> =
         val t = i.toFloat() / barCount
         // Two frequencies rather than one, so the shape has the uneven look
         // real music has instead of a regular ripple.
-        val body = 0.42f + 0.40f * abs(sin(t * 7.3f)) + 0.18f * abs(sin(t * 19.7f))
+        val body = 0.34f + 0.44f * abs(sin(t * 7.3f)) + 0.20f * abs(sin(t * 19.7f))
         // A gentle taper at the ends only, so the row still reads as bars all
         // the way across rather than trailing off into dots.
         val taper = (0.55f + 0.45f * kotlin.math.sin(t * 3.1415f)).coerceIn(0.55f, 1f)

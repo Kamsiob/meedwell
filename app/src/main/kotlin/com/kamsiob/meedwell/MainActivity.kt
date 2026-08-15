@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
             val viewModel: MeedwellViewModel = viewModel(
                 factory = MeedwellViewModel.Factory(container)
             )
+            viewModelRef = viewModel
             MeedwellTheme(
                 themeChoice = container.settings.theme,
                 reducedMotion = rememberReducedMotion(),
@@ -58,11 +59,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Held so `onResume` can ask it to sync.
+     *
+     * The previous version of this method read a property and discarded it. Its
+     * comment described a sync on resume that did not exist, which meant a
+     * record bought this morning never appeared until the account was
+     * disconnected and reconnected.
+     */
+    private var viewModelRef: MeedwellViewModel? = null
+
     override fun onResume() {
         super.onResume()
-        // A sync on resume rather than on a timer. Nothing about this app
-        // should run in the background hoping to be useful.
-        (application as MeedwellApplication).container
+        // On resume, and only if the last sync is old. Nothing runs in the
+        // background hoping to be useful.
+        viewModelRef?.syncIfStale()
     }
 }
 

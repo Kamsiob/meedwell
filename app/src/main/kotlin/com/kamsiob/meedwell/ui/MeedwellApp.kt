@@ -32,6 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
+import com.kamsiob.meedwell.ui.components.ConfirmSheet
+import com.kamsiob.meedwell.ui.components.SyncTroubleSheet
+import com.kamsiob.meedwell.ui.components.PendingConfirm
 import com.kamsiob.meedwell.ui.components.MiniPlayer
 import com.kamsiob.meedwell.ui.components.rememberWashColor
 import com.kamsiob.meedwell.ui.screens.AlbumScreen
@@ -104,6 +107,8 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val yourFiles by viewModel.yourFiles.collectAsState()
     val search by viewModel.search.collectAsState()
     val credits by viewModel.credits.collectAsState()
+    val syncFailure by viewModel.syncFailure.collectAsState()
+    var pendingConfirm by remember { mutableStateOf<PendingConfirm?>(null) }
 
     // The Storage Access Framework picker. A tree grant with persistable
     // permission, so the folder survives a reboot rather than being asked for
@@ -179,7 +184,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                 Box(Modifier.weight(1f)) {
                     when (current.tab) {
                         Tab.Shelf -> ShelfScreen(
-                            state = shelf,
+                            state = shelf.copy(playerVisible = playback.hasQueue),
                             onViewChange = viewModel::setView,
                             onToggleLayout = viewModel::toggleLayout,
                             onOpenSort = { /* Phase 1: the sort sheet */ },
@@ -195,7 +200,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                             state = search,
                             onQueryChange = viewModel::onSearchQueryChange,
                             onAlbumClick = { destination = Destination.AlbumDetail(it.id) },
-                            onTrackClick = { track -> viewModel.playAlbum(track.albumId) },
+                            onTrackClick = { track -> viewModel.playTrack(track) },
                             onArtistClick = { /* Phase 3: artist pages */ },
                             // The only thing about a search that ever leaves
                             // the phone, and only when this is tapped.
@@ -240,8 +245,8 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                 onToggleLongResume = viewModel::toggleLongResume,
                 onOpenLocalFolders = { destination = Destination.YourFiles },
                 onOpenExport = { /* Phase 6: export and restore */ },
-                onEraseHistory = viewModel::eraseHistory,
-                onDisconnect = viewModel::disconnect,
+                onEraseHistory = { pendingConfirm = PendingConfirm.EraseHistory },
+                onDisconnect = { pendingConfirm = PendingConfirm.Disconnect },
                 onSupport = { open(SUPPORT_URL) },
                 onBack = { destination = Destination.Main(Tab.More) },
                 modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
@@ -360,6 +365,43 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                 }
             }
         }
+
+        // Connection trouble, which was fully written in strings.xml, populated
+        // correctly by the view model, and collected by nothing. On a beta API
+        // a failed sync is not rare, and until now it showed as an empty shelf
+        // saying "your collection is empty".
+        syncFailure?.let { failure ->
+            SyncTroubleSheet(
+                failure = failure,
+                lastSyncAt = viewModel.lastSyncAt,
+                onRetry = { viewModel.refresh() },
+                onFreshCredentials = { open("https://bandcamp.com/settings/subsonic") },
+                onDismiss = { viewModel.dismissSyncFailure() },
+            )
+        }
+
+        pendingConfirm?.let { pending ->
+            when (pending) {
+                PendingConfirm.EraseHistory -> ConfirmSheet(
+                    title = "Erase your listening history?",
+                    body = "This clears every play Meedwell has recorded on this phone, which is what " +
+                        "the forgotten shelf and your resume points are built from. Your music and your " +
+                        "shelf are untouched. This one cannot be undone.",
+                    confirmLabel = "Erase it",
+                    onConfirm = viewModel::eraseHistory,
+                    onDismiss = { pendingConfirm = null },
+                )
+                PendingConfirm.Disconnect -> ConfirmSheet(
+                    title = "Disconnect from Bandcamp?",
+                    body = "Meedwell forgets your credentials and stops syncing. Your shelf, your lists " +
+                        "and your listening history all stay. To connect again you will need to paste " +
+                        "both lines from Bandcamp's Subsonic settings.",
+                    confirmLabel = "Disconnect",
+                    onConfirm = viewModel::disconnect,
+                    onDismiss = { pendingConfirm = null },
+                )
+            }
+        }
     }
 }
 
@@ -398,7 +440,10 @@ private fun TabBar(selected: Tab, onSelect: (Tab) -> Unit) {
                     )
                     Text(
                         text = tab.label,
-                        style = type.capsEyebrow.copy(letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified),
+                        // Its own token rather than a borrowed eyebrow with the
+                        // one property that defines it stripped out. A tab bar
+                        // in caps reads as shouting.
+                        style = type.tabLabel,
                         // Selection is carried by ink weight rather than by
                         // color alone, so it survives a color-blind reader.
                         color = if (isSelected) colors.primaryText else colors.tertiaryText,

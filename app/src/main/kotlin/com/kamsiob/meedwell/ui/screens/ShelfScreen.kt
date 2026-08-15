@@ -60,6 +60,18 @@ enum class ShelfView { Albums, Artists, Genres }
  * sort menu rather than competing with the switcher, which is what keeps the
  * top of the screen readable.
  */
+/**
+ * How much room the mini player and the tab bar actually take.
+ *
+ * The shelf used a flat 120dp, while the real obstruction is the mini player
+ * (58dp plus its 20dp inset), the gap, and the tab bar (58dp plus its own
+ * navigation inset), which is nearer 160dp. The third album was sliced in half
+ * by the player on a three album shelf. It also has to shrink when nothing is
+ * playing, or the shelf ends in 120dp of nothing.
+ */
+private val BottomInsetPlaying = 168.dp
+private val BottomInsetIdle = 96.dp
+
 @Composable
 fun ShelfScreen(
     state: ShelfState,
@@ -143,7 +155,7 @@ fun ShelfScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(state.sortLabel, style = type.metadata, color = colors.secondaryText)
+                        Text(state.sortLabel, style = type.sortLabel, color = colors.secondaryText)
                         MeedwellIcon(
                             icon = MeedwellIcons.ChevronDown,
                             size = 14.dp,
@@ -164,22 +176,29 @@ fun ShelfScreen(
                 state.view == ShelfView.Albums && state.grid -> AlbumGrid(
                     albums = state.albums,
                     newest = state.newestArrival,
+                    bottomInset = state.bottomInset,
                     onAlbumClick = onAlbumClick,
                     onAlbumLongClick = onAlbumLongClick,
                 )
 
                 state.view == ShelfView.Albums -> AlbumList(
                     albums = state.albums,
+                    bottomInset = state.bottomInset,
                     onAlbumClick = onAlbumClick,
                     onAlbumLongClick = onAlbumLongClick,
                 )
 
                 state.view == ShelfView.Artists -> ArtistList(
                     artists = state.artists,
+                    bottomInset = state.bottomInset,
                     onArtistClick = onArtistClick,
                 )
 
-                else -> GenreList(genres = state.genres, onGenreClick = onGenreClick)
+                else -> GenreList(
+                    genres = state.genres,
+                    bottomInset = state.bottomInset,
+                    onGenreClick = onGenreClick,
+                )
             }
         }
     }
@@ -234,14 +253,15 @@ private fun ShelfEmpty(
 private fun AlbumGrid(
     albums: List<Album>,
     newest: Album?,
+    bottomInset: androidx.compose.ui.unit.Dp,
     onAlbumClick: (Album) -> Unit,
     onAlbumLongClick: (Album) -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 14.dp, bottom = 120.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 14.dp, bottom = bottomInset),
         modifier = Modifier.fillMaxSize(),
     ) {
         if (newest != null) {
@@ -315,7 +335,7 @@ private fun AlbumCard(album: Album, onClick: () -> Unit, onLongClick: () -> Unit
         CoverSquare(url = album.coverUrl, title = album.name, modifier = Modifier.fillMaxWidth())
         Text(
             text = album.name,
-            style = type.metadata,
+            style = type.cardTitle,
             color = colors.primaryText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -373,6 +393,7 @@ private fun ProvenanceLine(album: Album, modifier: Modifier = Modifier) {
 @Composable
 private fun AlbumList(
     albums: List<Album>,
+    bottomInset: androidx.compose.ui.unit.Dp,
     onAlbumClick: (Album) -> Unit,
     onAlbumLongClick: (Album) -> Unit,
 ) {
@@ -380,7 +401,7 @@ private fun AlbumList(
     val type = MeedwellTheme.typography
 
     LazyColumn(
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 120.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = bottomInset),
         modifier = Modifier.fillMaxSize(),
     ) {
         items(albums, key = { it.id }) { album ->
@@ -434,12 +455,16 @@ private fun AlbumList(
 }
 
 @Composable
-private fun ArtistList(artists: List<Artist>, onArtistClick: (Artist) -> Unit) {
+private fun ArtistList(
+    artists: List<Artist>,
+    bottomInset: androidx.compose.ui.unit.Dp,
+    onArtistClick: (Artist) -> Unit,
+) {
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
 
     LazyColumn(
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 6.dp, bottom = 120.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 6.dp, bottom = bottomInset),
         modifier = Modifier.fillMaxSize(),
     ) {
         items(artists, key = { it.id }) { artist ->
@@ -475,12 +500,16 @@ private fun ArtistList(artists: List<Artist>, onArtistClick: (Artist) -> Unit) {
 }
 
 @Composable
-private fun GenreList(genres: List<Genre>, onGenreClick: (Genre) -> Unit) {
+private fun GenreList(
+    genres: List<Genre>,
+    bottomInset: androidx.compose.ui.unit.Dp,
+    onGenreClick: (Genre) -> Unit,
+) {
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
 
     LazyColumn(
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 6.dp, bottom = 120.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 6.dp, bottom = bottomInset),
         modifier = Modifier.fillMaxSize(),
     ) {
         items(genres, key = { it.name }) { genre ->
@@ -533,6 +562,20 @@ private fun ViewTab(label: String, selected: Boolean, onClick: () -> Unit) {
 
 private fun pluralAlbums(count: Int) = if (count == 1) "1 album" else "$count albums"
 
+private fun plural(count: Int, word: String) = if (count == 1) word else word + "s"
+
+/**
+ * Numbers under twenty spelled out, which is the register the reference's own
+ * voice lines use: "Forty-one names behind 148 records".
+ */
+private fun spelled(n: Int): String = when (n) {
+    2 -> "Two"; 3 -> "Three"; 4 -> "Four"; 5 -> "Five"; 6 -> "Six"; 7 -> "Seven"
+    8 -> "Eight"; 9 -> "Nine"; 10 -> "Ten"; 11 -> "Eleven"; 12 -> "Twelve"
+    13 -> "Thirteen"; 14 -> "Fourteen"; 15 -> "Fifteen"; 16 -> "Sixteen"
+    17 -> "Seventeen"; 18 -> "Eighteen"; 19 -> "Nineteen"
+    else -> n.toString()
+}
+
 data class ShelfState(
     val view: ShelfView = ShelfView.Albums,
     val grid: Boolean = true,
@@ -545,7 +588,12 @@ data class ShelfState(
     val connected: Boolean = false,
     val sortLabel: String = "Artist A to Z",
     val syncing: Boolean = false,
+    /** Whether the mini player is on screen, which changes how much room the list needs. */
+    val playerVisible: Boolean = false,
 ) {
+    val bottomInset: androidx.compose.ui.unit.Dp
+        get() = if (playerVisible) BottomInsetPlaying else BottomInsetIdle
+
     val isEmpty: Boolean
         get() = when (view) {
             ShelfView.Albums -> albums.isEmpty()
@@ -560,24 +608,52 @@ data class ShelfState(
      * app cannot honor, so the local-only line is genuinely different rather
      * than the same sentence with a number swapped.
      */
+    /**
+     * The editorial line under the heading, and it changes with the view.
+     *
+     * One string repeated across three sibling views is the tell that the voice
+     * is a constant rather than a voice, and the serif italic makes the
+     * repetition louder rather than quieter, because the typeface promises a
+     * person wrote it.
+     *
+     * Every line here is derived from what is actually on the shelf, so none of
+     * them can be wrong.
+     */
     val voiceLine: String
-        get() = when {
-            !connected && albumCount > 0 ->
-                "$albumCount ${if (albumCount == 1) "album" else "albums"} on this phone, no account involved"
-            albumCount == 0 -> if (connected) "Connected, and nothing here yet" else "Nothing here yet"
-            presentCount > 0 -> "$albumCount albums, $presentCount of them living here"
-            else -> "$albumCount ${if (albumCount == 1) "album" else "albums"} on your shelf"
+        get() = when (view) {
+            ShelfView.Artists -> when (artists.size) {
+                0 -> "No names yet"
+                1 -> "One name behind everything here"
+                // Both numbers spelled or both numerals. "Two names behind 3
+                // records" mixes registers in one sentence and reads as careless.
+                else -> "${spelled(artists.size)} names behind ${spelled(albumCount).lowercase()} records"
+            }
+            ShelfView.Genres -> when (genres.size) {
+                0 -> "Nothing here carries a genre tag"
+                1 -> "One tag, so far"
+                else -> "Every tag Bandcamp knows your records by"
+            }
+            ShelfView.Albums -> when {
+                !connected && albumCount > 0 ->
+                    "$albumCount ${plural(albumCount, "album")} on this phone, no account involved"
+                albumCount == 0 -> if (connected) "Connected, and nothing here yet" else "Nothing here yet"
+                presentCount > 0 -> "$albumCount albums, $presentCount of them living here"
+                else -> "$albumCount ${plural(albumCount, "album")} on your shelf"
+            }
         }
 }
 
 private fun Album.rowSubtitle(): String = buildList {
     add(artist)
     if (year > 0) add(year.toString())
+    // "Streaming" is the default state of almost every row, so saying it on
+    // every row is noise. Only a record that is actually here says so, which is
+    // what makes the marker mean something when it appears.
     when (val p = provenance) {
-        Provenance.Yours -> add("here")
+        Provenance.Yours -> add("yours")
         is Provenance.PartlyHere -> add("${p.found} of ${p.total} here")
         Provenance.OnThisPhone -> add("on this phone")
-        Provenance.Streaming -> add("streaming")
+        Provenance.Streaming -> Unit
     }
 }.joinToString(" · ")
 

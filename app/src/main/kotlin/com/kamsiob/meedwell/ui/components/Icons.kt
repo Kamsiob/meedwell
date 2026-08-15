@@ -3,6 +3,7 @@ package com.kamsiob.meedwell.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -44,7 +45,12 @@ enum class MeedwellIcons(
 ) {
     Grid(
         listOf(
-            "M4 4h7v7h-7z", "M13 4h7v7h-7z", "M4 13h7v7h-7z", "M13 13h7v7h-7z",
+            // rx=1.5 in the reference. StrokeJoin.Round only rounds by half
+            // the stroke, so the corners have to be drawn.
+            "M5.5 4h4a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a1.5 1.5 0 0 1-1.5-1.5v-4a1.5 1.5 0 0 1 1.5-1.5z",
+            "M14.5 4h4a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a1.5 1.5 0 0 1-1.5-1.5v-4a1.5 1.5 0 0 1 1.5-1.5z",
+            "M5.5 13h4a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a1.5 1.5 0 0 1-1.5-1.5v-4a1.5 1.5 0 0 1 1.5-1.5z",
+            "M14.5 13h4a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a1.5 1.5 0 0 1-1.5-1.5v-4a1.5 1.5 0 0 1 1.5-1.5z",
         )
     ),
     ListView(listOf("M9 6h11M9 12h11M9 18h11", "M4 6h.5M4 12h.5M4 18h.5")),
@@ -53,8 +59,10 @@ enum class MeedwellIcons(
     /** The four tab icons. */
     TabShelf(
         listOf(
-            "M3.5 3.5h7.5v7.5h-7.5z", "M13 3.5h7.5v7.5h-7.5z",
-            "M3.5 13h7.5v7.5h-7.5z", "M13 13h7.5v7.5h-7.5z",
+            "M5.5 3.5h3.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2z",
+            "M15 3.5h3.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2z",
+            "M5.5 13h3.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2z",
+            "M15 13h3.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2z",
         )
     ),
     TabSearch(listOf("M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14", "M20 20l-3.5-3.5")),
@@ -159,7 +167,7 @@ enum class MeedwellIcons(
 fun MeedwellIcon(
     icon: MeedwellIcons,
     modifier: Modifier = Modifier,
-    size: Dp = 20.dp,
+    size: Dp = 25.dp,
     tint: Color = MeedwellTheme.colors.primaryText,
     contentDescription: String? = null,
 ) {
@@ -211,11 +219,29 @@ fun IconButton(
     contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = 20.dp,
+    size: Dp = 25.dp,
     tint: Color = MeedwellTheme.colors.secondaryText,
+    /**
+     * Pulls the 48dp target back so the **glyph's** edge meets the screen
+     * gutter, rather than the invisible box around it.
+     *
+     * Without this a back chevron in a 48dp box sits 36dp from the screen edge
+     * while the heading beneath it starts at 26dp, and nothing on the screen
+     * lines up with anything. It is the kind of misalignment nobody names and
+     * everybody feels.
+     */
+    edge: IconEdge = IconEdge.None,
 ) {
+    val inset = (48.dp - size) / 2
     Box(
         modifier = modifier
+            .offset(
+                x = when (edge) {
+                    IconEdge.Start -> -inset
+                    IconEdge.End -> inset
+                    IconEdge.None -> 0.dp
+                }
+            )
             .size(48.dp)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -223,3 +249,7 @@ fun IconButton(
         MeedwellIcon(icon = icon, size = size, tint = tint, contentDescription = contentDescription)
     }
 }
+
+/** Which edge, if any, an icon button should optically align to. */
+enum class IconEdge { Start, End, None }
+

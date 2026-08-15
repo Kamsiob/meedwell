@@ -34,7 +34,9 @@ import com.kamsiob.meedwell.ui.theme.GlowEmber
 import com.kamsiob.meedwell.ui.theme.GlowRose
 import com.kamsiob.meedwell.ui.theme.GlowTeal
 import com.kamsiob.meedwell.ui.theme.GlowViolet
+import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
+import com.kamsiob.meedwell.ui.theme.meedwellShadow
 
 /**
  * Shared pieces of the interface, built once here so a control keeps the same
@@ -120,7 +122,7 @@ fun PillButton(
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = 52.dp)
-            .height(52.dp)
+            .meedwellShadow(Elevation.button, CircleShape)
             .clip(CircleShape)
             .background(colors.primaryText)
             .clickable(role = Role.Button, onClick = onClick),
@@ -144,9 +146,11 @@ fun TextButtonRow(
 ) {
     Box(
         modifier = modifier
+            // defaultMinSize followed by a fixed height is just a fixed
+            // height: the minimum is dead and the label clips at 200% type.
             .defaultMinSize(minHeight = 48.dp)
-            .height(48.dp)
-            .clickable(role = Role.Button, onClick = onClick),
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -176,7 +180,10 @@ fun SupportButton(
     Row(
         modifier = modifier
             .defaultMinSize(minHeight = 50.dp)
-            .height(50.dp)
+            // The faint glow DESIGN.md section 3 asks for. A gold shadow under
+            // a gold hairline, which on near-black reads as the button being
+            // lit rather than outlined.
+            .meedwellShadow(10.dp, CircleShape)
             .clip(CircleShape)
             .border(1.dp, colors.gold.copy(alpha = 0.55f), CircleShape)
             .clickable(role = Role.Button, onClick = onClick),

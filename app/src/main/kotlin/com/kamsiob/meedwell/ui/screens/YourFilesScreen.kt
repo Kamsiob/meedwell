@@ -32,6 +32,7 @@ import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.TextButtonRow
 import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -74,8 +75,9 @@ fun YourFilesScreen(
                 icon = MeedwellIcons.Back,
                 contentDescription = "Back",
                 onClick = onBack,
-                size = 19.dp,
+                size = 25.dp,
                 tint = colors.primaryText,
+                edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
 

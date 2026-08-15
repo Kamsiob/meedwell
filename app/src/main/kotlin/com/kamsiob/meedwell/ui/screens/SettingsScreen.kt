@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.ui.components.SupportButton
 import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -67,8 +68,9 @@ fun SettingsScreen(
             icon = MeedwellIcons.Back,
             contentDescription = "Back",
             onClick = onBack,
-            size = 19.dp,
+            size = 25.dp,
             tint = colors.primaryText,
+            edge = IconEdge.Start,
             modifier = Modifier.padding(top = 6.dp),
         )
 
@@ -101,7 +103,7 @@ fun SettingsScreen(
         SettingRow(
             "Local music folders",
             state.foldersSubtitle,
-            trailing = "${state.watchedFolderCount} ›",
+            trailing = if (state.watchedFolderCount == 0) CHEVRON else "${state.watchedFolderCount} ›",
             onClick = onOpenLocalFolders,
         )
 
@@ -119,7 +121,10 @@ fun SettingsScreen(
         }
 
         // Terms before the invitation, always.
-        Box(Modifier.fillMaxWidth().height(0.5.dp).padding(top = 24.dp).background(colors.hairline))
+        // Padding before height, not after. The other order fixes the box at
+        // 0.5dp, then consumes it with 24dp of padding, so neither the gap nor
+        // the rule ever rendered and the value block butted into the row above.
+        Box(Modifier.fillMaxWidth().padding(top = 24.dp).height(0.5.dp).background(colors.hairline))
         Text(
             "Free no matter what. Nothing held back, nothing unlocked later. One person carries it.",
             style = type.metadata,
