@@ -163,6 +163,30 @@ enum class MeedwellIcons(
         )
     ),
     Download(listOf("M12 4v11M7 10.5l5 5 5-5M5 20h14")),
+
+    /** An "i" in a circle. Opens who recorded a sound and under what terms. */
+    Info(listOf("M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18", "M12 10.5v6", "M12 7.4h.01")),
+
+    /** The quiet end of the volume control: a speaker with no waves. */
+    VolumeLow(listOf("M4 9.5h3.5L12 5.5v13L7.5 14.5H4z")),
+
+    /** The loud end: the same speaker with two arcs coming off it. */
+    VolumeHigh(listOf(
+        "M4 9.5h3.5L12 5.5v13L7.5 14.5H4z",
+        "M15.5 9.4a3.6 3.6 0 0 1 0 5.2M18.2 6.8a7.4 7.4 0 0 1 0 10.4",
+    )),
+
+    /**
+     * Surroundings: three arcs opening outward, like sound in a room.
+     *
+     * Not a speaker, not a leaf, not a moon. This is a place rather than a
+     * device or a mood, and the shape says so by being open on both sides.
+     */
+    Surroundings(listOf(
+        "M7.5 8.2a6 6 0 0 0 0 7.6M4.4 5.6a10 10 0 0 0 0 12.8",
+        "M16.5 8.2a6 6 0 0 1 0 7.6M19.6 5.6a10 10 0 0 1 0 12.8",
+        "M12 10.6a1.4 1.4 0 1 0 0 2.8a1.4 1.4 0 1 0 0-2.8",
+    )),
     Offline(
         listOf(
             "M2 9c6-5.5 14-5.5 20 0M5.5 12.8c4-3.6 9-3.6 13 0M9 16.5c2-1.8 4-1.8 6 0",

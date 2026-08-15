@@ -124,14 +124,28 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     private val _yourFiles = MutableStateFlow(YourFilesState())
     val yourFiles: StateFlow<YourFilesState> = _yourFiles.asStateFlow()
 
+    /**
+     * Surroundings: the ambience library, its downloads and its own player.
+     *
+     * Its own object rather than more methods here, because it shares nothing
+     * with the shelf. A different library, a different player, a different idea
+     * of what a file is.
+     */
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+    val surroundings = SurroundingsCoordinator(container, viewModelScope) { message ->
+        _notice.value = message
+    }
+
     init {
         installCoverResolver()
         observeLibrary()
         player.connect()
+        surroundings.load()
     }
 
     override fun onCleared() {
         player.release()
+        surroundings.release()
         super.onCleared()
     }
 
@@ -397,8 +411,14 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
                 connected = container.credentials.isConnected,
                 historyEventCount = container.database.playEvents().count(),
                 lastSyncAt = settings.lastSyncAt,
+                wifiOnlyDownloads = settings.wifiOnlyDownloads,
             )
         }
+    }
+
+    fun toggleWifiOnly() {
+        settings.wifiOnlyDownloads = !settings.wifiOnlyDownloads
+        refreshSettings()
     }
 
     fun setTheme(choice: ThemeChoice) {

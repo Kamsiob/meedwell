@@ -1,0 +1,165 @@
+package com.kamsiob.meedwell.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import com.kamsiob.meedwell.core.surroundings.CreditBlock
+import com.kamsiob.meedwell.ui.theme.Elevation
+import com.kamsiob.meedwell.ui.theme.MeedwellTheme
+import com.kamsiob.meedwell.ui.theme.Radius
+import com.kamsiob.meedwell.ui.theme.meedwellShadow
+
+/**
+ * Who made one recording, under what terms.
+ *
+ * The second of the three attribution surfaces, between the one-line credit on
+ * every row and the full list on the credits screen. It exists because the row
+ * has space for a name and a license and nothing else, and the credits screen
+ * is a document rather than an answer to "what is this one".
+ *
+ * **Every line is generated from the manifest.** Nothing here is typed, so
+ * nothing here can drift out of step with the published library or with what
+ * the credits screen says about the same recording.
+ *
+ * The uploader's own extra conditions are reproduced word for word. Nine
+ * recordings carry one, and paraphrasing somebody's credit request is not
+ * crediting them.
+ */
+@Composable
+fun CreditSheet(
+    title: String,
+    originalTitle: String,
+    credit: CreditBlock?,
+    onOpenUrl: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = MeedwellTheme.colors
+    val type = MeedwellTheme.typography
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f))
+            .clickable(role = Role.Button, onClick = onDismiss)
+            .semantics { contentDescription = "Close" },
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .meedwellShadow(Elevation.sheet, RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .background(colors.background)
+                .clickable(enabled = false) {}
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 26.dp),
+        ) {
+            Box(
+                Modifier
+                    .padding(top = 12.dp)
+                    .width(36.dp)
+                    .height(4.5.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(colors.secondaryText.copy(alpha = 0.4f))
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            // The catalog description leads, as it does on the row. The
+            // uploader's own title is a field further down rather than the
+            // heading: it is often a filename, and "Wind_grass_sheep_Ouessant"
+            // set as a heading looks like the app failed to load something.
+            Text(
+                title,
+                style = type.sectionHeading,
+                color = colors.primaryText,
+                modifier = Modifier.padding(top = 18.dp),
+            )
+
+            if (credit == null) {
+                // Unreachable through the interface, because an incomplete
+                // entry is filtered out before anything can be offered. Said
+                // plainly rather than left blank, because a blank credit is the
+                // one failure this surface must not have.
+                Text(
+                    "This recording is missing the credit it has to carry, so Meedwell does not offer it.",
+                    style = type.body,
+                    color = colors.primaryText,
+                    modifier = Modifier.padding(top = 18.dp, bottom = 26.dp),
+                )
+                return@Column
+            }
+
+            Field("RECORDED BY", credit.recordist)
+            credit.recordistUrl?.let { Link("Their page ↗") { onOpenUrl(it) } }
+
+            Field("LICENSE", credit.licenseFullName.ifBlank { credit.licenseLabel })
+            Link("Read the license ↗") { onOpenUrl(credit.licenseUrl) }
+
+            Field("CHANGED BY MEEDWELL", credit.modificationNote)
+
+            credit.extraConditions?.let {
+                // Word for word, and marked as the uploader's own words rather
+                // than the app's.
+                Field("THE UPLOADER ALSO ASKED", it)
+            }
+
+            // Named exactly as its maker named it, which is what somebody
+            // tracing the source back to Freesound needs.
+            if (!originalTitle.equals(title, ignoreCase = true)) {
+                Field("THE MAKER CALLED IT", originalTitle)
+            }
+
+            Field("WHERE IT CAME FROM", "Freesound")
+            Link("The original recording ↗") { onOpenUrl(credit.sourceUrl) }
+
+            Box(Modifier.height(26.dp))
+        }
+    }
+}
+
+@Composable
+private fun Field(label: String, value: String) {
+    if (value.isBlank()) return
+    val colors = MeedwellTheme.colors
+    val type = MeedwellTheme.typography
+    Column(Modifier.padding(top = 18.dp)) {
+        Text(label, style = type.capsEyebrow, color = colors.tertiaryText)
+        Text(value, style = type.body, color = colors.primaryText, modifier = Modifier.padding(top = 4.dp))
+    }
+}
+
+@Composable
+private fun Link(label: String, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .defaultMinSize(minHeight = 48.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MeedwellTheme.typography.metadata, color = MeedwellTheme.colors.secondaryText)
+    }
+}

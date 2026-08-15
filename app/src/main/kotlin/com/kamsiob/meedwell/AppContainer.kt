@@ -5,7 +5,9 @@ import com.kamsiob.meedwell.core.subsonic.SubsonicClient
 import com.kamsiob.meedwell.data.CredentialStore
 import com.kamsiob.meedwell.data.LibraryRepository
 import com.kamsiob.meedwell.data.OkHttpSubsonicEngine
+import com.kamsiob.meedwell.data.SurroundingsDownloader
 import com.kamsiob.meedwell.data.SurroundingsRepository
+import com.kamsiob.meedwell.data.SurroundingsStore
 import com.kamsiob.meedwell.data.SettingsStore
 import com.kamsiob.meedwell.data.db.MeedwellDatabase
 
@@ -33,6 +35,13 @@ class AppContainer(context: Context) {
     val library: LibraryRepository by lazy { LibraryRepository(database) }
 
     val surroundings: SurroundingsRepository by lazy { SurroundingsRepository(appContext) }
+
+    /** Where Surroundings recordings live, and the only thing that puts one there. */
+    val surroundingsStore: SurroundingsStore by lazy { SurroundingsStore(appContext) }
+
+    val surroundingsDownloader: SurroundingsDownloader by lazy {
+        SurroundingsDownloader(appContext, surroundingsStore, settings)
+    }
 
     private val engine by lazy { OkHttpSubsonicEngine() }
 

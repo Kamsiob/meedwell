@@ -30,6 +30,23 @@ data class SurroundingsManifest(
     @SerialName("sound_count") @Serializable(with = TolerantInt::class) val soundCount: Int = 0,
     @SerialName("packs") val packs: List<SurroundingsPack> = emptyList(),
     @SerialName("sounds") val sounds: List<SurroundingsSound> = emptyList(),
+    /**
+     * The handful of recordings that ship inside the app.
+     *
+     * Enough to open Surroundings on a phone with no network and hear
+     * something: a fire, rain on leaves, and a rainforest at night. They are
+     * deliberately absent from the pack archives, so getting a pack never
+     * re-fetches what is already installed.
+     */
+    @SerialName("bundled_with_app") val bundled: List<SurroundingsBundled> = emptyList(),
+)
+
+/** One of the recordings shipped inside the app. */
+@Serializable
+data class SurroundingsBundled(
+    @SerialName("id") @Serializable(with = TolerantString::class) val id: String = "",
+    @SerialName("filename") @Serializable(with = TolerantString::class) val filename: String = "",
+    @SerialName("sha256") @Serializable(with = TolerantString::class) val sha256: String = "",
 )
 
 @Serializable
@@ -82,6 +99,16 @@ data class SurroundingsLoop(
 data class SurroundingsLoudness(
     @SerialName("makeup_gain_needed_db") @Serializable(with = TolerantString::class) val makeupGainDb: String = "",
     @SerialName("needs_high_makeup") @Serializable(with = TolerantBoolean::class) val needsHighMakeup: Boolean = false,
+    /**
+     * The file's measured true peak, in dBTP, on the encoded audio.
+     *
+     * This is what lets the limiter stay out of the signal path: whether it has
+     * anything to do at a given gain is arithmetic against this figure rather
+     * than a guess, and on most files at their intended level the answer is no.
+     */
+    @SerialName("true_peak_dbtp") @Serializable(with = TolerantString::class) val truePeakDbtp: String = "",
+    /** The recording's own average level, for reference. */
+    @SerialName("bed_level_db") @Serializable(with = TolerantString::class) val bedLevelDb: String = "",
 )
 
 /**
@@ -151,6 +178,25 @@ data class SurroundingsAttribution(
      * The version is never dropped, only never doubled: CC BY 3.0 and CC BY 4.0
      * are different licenses with different terms.
      */
+    /**
+     * The license written out, with its version stated exactly once.
+     *
+     * Every license name in the published library already carries its own
+     * version: "CC0 1.0 Universal", "Creative Commons Attribution 4.0
+     * International". Appending `licence_version` to those gave "CC0 1.0
+     * Universal 1.0" on the credit sheet, which is the same doubling that once
+     * produced "CC BY 4.0 4.0" on the credits screen. The version is never
+     * dropped, because CC BY 3.0 and CC BY 4.0 are different licenses with
+     * different terms; it is only never said twice.
+     */
+    val licenseFullName: String
+        get() = when {
+            licenseName.isBlank() -> licenseLabel
+            licenseVersion.isBlank() -> licenseName
+            licenseName.contains(licenseVersion) -> licenseName
+            else -> "$licenseName $licenseVersion"
+        }
+
     val licenseLabel: String
         get() = when {
             licenseShort.isBlank() ->

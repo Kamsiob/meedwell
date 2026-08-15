@@ -44,9 +44,7 @@ object Credits {
             recordistUrl = a.recordistProfileUrl.takeIf { it.isNotBlank() },
             sourceUrl = a.soundPageUrl,
             licenseLabel = a.licenseLabel,
-            licenseFullName = listOf(a.licenseName, a.licenseVersion)
-                .filter { it.isNotBlank() }
-                .joinToString(" "),
+            licenseFullName = a.licenseFullName,
             licenseUrl = a.licenseUrl,
             modificationNote = a.modificationNote,
             extraConditions = a.extraConditions.takeIf { it.isNotBlank() },

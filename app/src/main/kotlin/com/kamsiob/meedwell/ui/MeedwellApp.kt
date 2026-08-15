@@ -50,7 +50,9 @@ import com.kamsiob.meedwell.ui.screens.MoreDestination
 import com.kamsiob.meedwell.ui.screens.MoreScreen
 import com.kamsiob.meedwell.ui.screens.ArtistScreen
 import com.kamsiob.meedwell.ui.screens.CreditsScreen
+import com.kamsiob.meedwell.ui.components.CreditSheet
 import com.kamsiob.meedwell.ui.screens.ForgottenShelfScreen
+import com.kamsiob.meedwell.ui.screens.SurroundingsScreen
 import com.kamsiob.meedwell.ui.screens.HistoryScreen
 import com.kamsiob.meedwell.ui.screens.ListsScreen
 import com.kamsiob.meedwell.ui.screens.LovedScreen
@@ -107,6 +109,7 @@ sealed interface Destination {
     data object Credits : Destination
     data object History : Destination
     data object Forgotten : Destination
+    data object Surroundings : Destination
     data object Loved : Destination
     data class ArtistDetail(val artistId: String) : Destination
     data class GenreFilter(val genre: String) : Destination
@@ -130,6 +133,8 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val artist by viewModel.artist.collectAsState()
     val syncFailure by viewModel.syncFailure.collectAsState()
     val notice by viewModel.notice.collectAsState()
+    val surroundings by viewModel.surroundings.state.collectAsState()
+    val surroundingsDetail by viewModel.surroundings.detail.collectAsState()
     val sort by viewModel.sort.collectAsState()
     val scope by viewModel.scope.collectAsState()
     var pendingConfirm by remember { mutableStateOf<PendingConfirm?>(null) }
@@ -180,7 +185,8 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
         is Destination.Artwork -> Destination.NowPlaying
         Destination.Settings, Destination.Privacy, Destination.WhatsAhead,
         Destination.About, Destination.YourFiles, Destination.Credits,
-        Destination.History, Destination.Forgotten -> Destination.Main(Tab.More)
+        Destination.History, Destination.Forgotten,
+        Destination.Surroundings -> Destination.Main(Tab.More)
         Destination.Loved -> Destination.Main(Tab.Lists)
         is Destination.ArtistDetail -> Destination.Main()
         is Destination.GenreFilter -> Destination.Main()  // clearGenreFilter runs on leaving, below
@@ -188,13 +194,15 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     // A sheet is on top of everything, so back closes the sheet before it
     // moves anywhere. Back navigating out from under an open sheet is the
     // classic way to end up somewhere you did not ask for.
-    val sheetOpen = sheetTarget != null || sortSheetOpen || queueSheetOpen || pendingConfirm != null
+    val sheetOpen = sheetTarget != null || sortSheetOpen || queueSheetOpen ||
+        pendingConfirm != null || surroundingsDetail != null
     BackHandler(enabled = sheetOpen || backTarget != null) {
         if (sheetOpen) {
             sheetTarget = null
             sortSheetOpen = false
             queueSheetOpen = false
             pendingConfirm = null
+            viewModel.surroundings.closeDetail()
             return@BackHandler
         }
         // Leaving a genre view drops the filter. Without this the shelf stays
@@ -278,6 +286,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                                     MoreDestination.Credits -> Destination.Credits
                                     MoreDestination.History -> Destination.History
                                     MoreDestination.Forgotten -> Destination.Forgotten
+                                    MoreDestination.Surroundings -> Destination.Surroundings
                                 }
                             },
                             onConnectBandcamp = { destination = Destination.Connect },
@@ -305,6 +314,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                 onOpenExport = { /* Phase 6: export and restore */ },
                 onToggleShelfView = viewModel::toggleLayout,
                 onSyncNow = viewModel::refresh,
+                onToggleWifiOnly = viewModel::toggleWifiOnly,
                 onEraseHistory = { pendingConfirm = PendingConfirm.EraseHistory },
                 onDisconnect = { pendingConfirm = PendingConfirm.Disconnect },
                 onSupport = { open(SUPPORT_URL) },
@@ -440,6 +450,29 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                         )
                     }
                 }
+            }
+
+            Destination.Surroundings -> WithMiniPlayer(
+                playback = playback,
+                onPlayPause = viewModel.player::playPause,
+                onOpen = { destination = Destination.NowPlaying },
+            ) {
+                SurroundingsScreen(
+                    state = surroundings,
+                    onPlay = viewModel.surroundings::play,
+                    onPause = viewModel.surroundings::pause,
+                    onStop = viewModel.surroundings::stop,
+                    onVolume = viewModel.surroundings::setVolume,
+                    onDownload = viewModel.surroundings::download,
+                    onCancelDownload = viewModel.surroundings::cancelDownload,
+                    onDownloadGroup = viewModel.surroundings::downloadGroup,
+                    onRemove = viewModel.surroundings::remove,
+                    onOpenDetail = viewModel.surroundings::openDetail,
+                    onToggleGroup = viewModel.surroundings::toggleGroup,
+                    onOpenCredits = { destination = Destination.Credits },
+                    onBack = { destination = Destination.Main(Tab.More) },
+                    modifier = Modifier.statusBarsPadding(),
+                )
             }
 
             Destination.Credits -> WithMiniPlayer(
@@ -613,6 +646,16 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                     }
                 },
                 onDismiss = { sheetTarget = null },
+            )
+        }
+
+        surroundingsDetail?.let { detail ->
+            CreditSheet(
+                title = detail.title,
+                originalTitle = detail.originalTitle,
+                credit = detail.credit,
+                onOpenUrl = { open(it) },
+                onDismiss = viewModel.surroundings::closeDetail,
             )
         }
 

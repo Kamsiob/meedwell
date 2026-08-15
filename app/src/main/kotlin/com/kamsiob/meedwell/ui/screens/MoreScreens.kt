@@ -66,6 +66,7 @@ fun MoreScreen(
 
             SettingRow("History", "Everything you have played, on this phone") { onOpen(MoreDestination.History) }
             SettingRow("Forgotten shelf", "Bought, loved, and quietly waiting") { onOpen(MoreDestination.Forgotten) }
+            SettingRow("Surroundings", "Rain, fire and rooms, under the music") { onOpen(MoreDestination.Surroundings) }
             SettingRow("Your files", "Where owned music lives") { onOpen(MoreDestination.YourFiles) }
             SettingRow("Settings", null) { onOpen(MoreDestination.Settings) }
             SettingRow("Privacy", "The whole sheet") { onOpen(MoreDestination.Privacy) }
@@ -87,7 +88,7 @@ fun MoreScreen(
     }
 }
 
-enum class MoreDestination { History, Forgotten, YourFiles, Settings, Privacy, WhatsAhead, About, Credits }
+enum class MoreDestination { History, Forgotten, Surroundings, YourFiles, Settings, Privacy, WhatsAhead, About, Credits }
 
 /**
  * Screen 33: Privacy, as five plain questions and answers.
@@ -116,8 +117,15 @@ fun PrivacyScreen(onOpenSource: () -> Unit, onBack: () -> Unit, modifier: Modifi
         )
         QuestionAnswer(
             "Network traffic",
-            "Exactly one server: Bandcamp's, to stream and sync what you own. That traffic follows their " +
-                "privacy policy. Meedwell does not have one, because there is nothing to govern.",
+            // Two servers now, not one. Surroundings fetches its recordings
+            // from GitHub, and a privacy page that still said "exactly one"
+            // would be false the first time somebody downloaded a pack. Naming
+            // both, and what each one is for, is the whole point of the page.
+            "Two servers, both only when you ask. Bandcamp's, to stream and sync what you own. " +
+                "GitHub's, to fetch Surroundings recordings, which is where the ambience library is " +
+                "published. Neither is told anything about you beyond what the request needs. That " +
+                "traffic follows their own privacy policies. Meedwell does not have one, because " +
+                "there is nothing to govern.",
         )
         QuestionAnswer(
             "Sharing and outside links",

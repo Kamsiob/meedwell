@@ -79,7 +79,11 @@ class CreditsTest {
         assertThat(Credits.oneLine(s)).isEqualTo("Garuda1982 · CC BY 4.0")
         val block = Credits.full(s)!!
         assertThat(block.recordist).isEqualTo("Garuda1982")
-        assertThat(block.licenseFullName).isEqualTo("Creative Commons Attribution 4.0 International 4.0")
+        // Once, not twice. The name already carries its version, and appending
+        // licence_version to it produced "... International 4.0" on the credit
+        // sheet, the same doubling that once gave "CC BY 4.0 4.0" on the
+        // credits screen. See LicenseNameTest.
+        assertThat(block.licenseFullName).isEqualTo("Creative Commons Attribution 4.0 International")
         assertThat(block.modificationNote).isNotEmpty()
         assertThat(block.creditIsRequired).isTrue()
     }

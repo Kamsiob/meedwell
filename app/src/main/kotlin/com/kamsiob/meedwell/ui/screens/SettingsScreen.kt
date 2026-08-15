@@ -51,6 +51,7 @@ fun SettingsScreen(
     onOpenExport: () -> Unit,
     onToggleShelfView: () -> Unit,
     onSyncNow: () -> Unit,
+    onToggleWifiOnly: () -> Unit,
     onEraseHistory: () -> Unit,
     onDisconnect: () -> Unit,
     onSupport: () -> Unit,
@@ -115,6 +116,16 @@ fun SettingsScreen(
             state.foldersSubtitle,
             trailing = if (state.watchedFolderCount == 0) CHEVRON else "${state.watchedFolderCount} ›",
             onClick = onOpenLocalFolders,
+        )
+
+        Section("Surroundings")
+        ToggleRow(
+            title = "Download over Wi-Fi only",
+            // The number is the point. "Use Wi-Fi only" as a bare switch does
+            // not tell anybody what turning it off could cost them.
+            subtitle = "The whole library is about a gigabyte",
+            checked = state.wifiOnlyDownloads,
+            onToggle = onToggleWifiOnly,
         )
 
         Section("Your data")
@@ -245,6 +256,7 @@ data class SettingsState(
     val connected: Boolean = false,
     val lastBackupLabel: String? = "Not backed up yet",
     val syncing: Boolean = false,
+    val wifiOnlyDownloads: Boolean = true,
     /** Seconds since the epoch, or zero for never. */
     val lastSyncAt: Long = 0,
 ) {

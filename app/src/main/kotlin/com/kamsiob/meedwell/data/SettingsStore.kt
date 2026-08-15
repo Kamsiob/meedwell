@@ -65,6 +65,28 @@ class SettingsStore(context: Context) {
         get() = prefs.getBoolean(KEY_CHOSEN_PATH, false)
         set(value) = prefs.edit { putBoolean(KEY_CHOSEN_PATH, value) }
 
+    /**
+     * Whether Surroundings recordings may be fetched over mobile data.
+     *
+     * **On by default, and the default is the careful one.** The whole library
+     * is over a gigabyte and the largest single recording is twenty-five
+     * megabytes. Somebody who taps a pack without noticing they are off Wi-Fi
+     * should not discover the difference on their bill.
+     */
+    var wifiOnlyDownloads: Boolean
+        get() = prefs.getBoolean(KEY_WIFI_ONLY, true)
+        set(value) = prefs.edit { putBoolean(KEY_WIFI_ONLY, value) }
+
+    /** The Surroundings recording playing under the music, if any. */
+    var surroundingsSoundId: String?
+        get() = prefs.getString(KEY_SURROUNDINGS_SOUND, null)
+        set(value) = prefs.edit { putString(KEY_SURROUNDINGS_SOUND, value) }
+
+    /** Its volume, 0 through 1. */
+    var surroundingsVolume: Float
+        get() = prefs.getFloat(KEY_SURROUNDINGS_VOLUME, 0.6f)
+        set(value) = prefs.edit { putFloat(KEY_SURROUNDINGS_VOLUME, value.coerceIn(0f, 1f)) }
+
     fun observeChanges(): Flow<Unit> = callbackFlow {
         val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
             trySend(Unit)
@@ -84,5 +106,8 @@ class SettingsStore(context: Context) {
         const val KEY_QUEUE_INDEX = "queue_index"
         const val KEY_QUEUE_POSITION = "queue_position"
         const val KEY_CHOSEN_PATH = "chosen_path"
+        const val KEY_WIFI_ONLY = "wifi_only_downloads"
+        const val KEY_SURROUNDINGS_SOUND = "surroundings_sound"
+        const val KEY_SURROUNDINGS_VOLUME = "surroundings_volume"
     }
 }
