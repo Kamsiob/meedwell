@@ -1,6 +1,8 @@
 # Architecture
 
-**Status: skeleton.** This file is seeded with its required structure and the decisions already made. Claude Code fills each section as the corresponding code is written, and updates it whenever structure or a significant integration changes. Empty sections are marked pending rather than deleted, so a gap reads as pending work instead of an omission.
+**Status: partial, and honest about it.** Sections describing code that exists are written. Sections describing code that does not exist yet are marked pending rather than deleted, so a gap reads as pending work instead of an omission.
+
+**Previously:** This file is seeded with its required structure and the decisions already made. Claude Code fills each section as the corresponding code is written, and updates it whenever structure or a significant integration changes. Empty sections are marked pending rather than deleted, so a gap reads as pending work instead of an omission.
 
 This document is for someone who wants to understand or modify the software, including a future session with no memory of building it.
 
@@ -17,7 +19,23 @@ Why: a Linux desktop version is likely later and a web version is possible. The 
 
 ## Components and responsibilities
 
-Pending. As each is built, record: what it owns, what it deliberately does not own, and which module it lives in. Expected entries include the Subsonic client and its tolerant parser, the sync engine, the library repository, the download manager and its foreground service, the playback service, the waveform tap, and the export and import layer.
+### Built
+
+**`SubsonicClient`, in `:core`.** Owns building every API call, the token and salt auth, and turning a raw HTTP result into a meaning. It deliberately does **not** own the socket: `:core` has no HTTP dependency and must not gain one. It describes a request through `SubsonicHttpEngine`, which `:app` implements with OkHttp. That seam is the same one a future Linux desktop or web build would implement with whatever its platform offers.
+
+Two things it knows that are not obvious. First, `validateCredentials()` calls `getArtists` rather than `ping`, because `ping` returns ok for a wrong password. Second, it carries a `VERIFIED_ABSENT` set naming the endpoints Bandcamp does not implement, so a capability that cannot exist is absent from the interface rather than an error in it.
+
+**The tolerant parser, in `:core`.** `Tolerant.kt` holds the scalar readers, `SubsonicDto.kt` the wire shapes, `SubsonicOutcome.kt` the five distinguishable failure shapes. It owns absorbing a beta that does not match its own schema. It does **not** own deciding what any of it means to the app; mapping to domain models is a separate layer, still pending.
+
+The five failure shapes matter enough to name here, because telling them apart is the difference between an honest error screen and a shrug: a rejected login is HTTP 500 with an empty body; an absent route is a non-envelope JSON body; `unstar` answers in XML while ignoring `f=json`; a real Subsonic error arrives in a proper envelope with a code; and the transport can simply fail.
+
+**The design system, in `:app`.** `ui/theme/` owns the tokens from `DESIGN.md`, and the rules that are arithmetic are asserted in `DesignRulesTest` rather than trusted: contrast for every token pair in both themes, and the mark's construction rule that the coin rests on the cradle touching it.
+
+**The manifest audit, in `app/build.gradle.kts`.** Owns making the permission promise mechanical. It runs after every assemble and fails the build on anything not explicitly justified.
+
+### Pending
+
+The sync engine, the library repository, the local folder scanner and matcher that Tier C made load bearing, the playback service, the waveform tap, and the export and import layer. As each is built, record what it owns, what it deliberately does not own, and which module it lives in.
 
 ## The data contract
 
@@ -38,7 +56,9 @@ Pending. Record: which dispatcher owns database work, how the playback service's
 Pending, but three are known before any code exists:
 
 - **Bandcamp's API returns only the user's own collection.** There is no store or catalogue search. This is the single largest constraint on the app's scope and it shapes Search entirely.
-- **Bandcamp's API is in open beta and returns durations as floats** where the schema says integer. Tolerant parsing is a structural requirement, not defensive coding, and it is implemented before any feature.
-- **Downloads are real files in the public Music folder**, which is the app's central differentiator and also means files can vanish underneath it at any time. Reconciliation is therefore a normal code path, not an error path.
+- **Bandcamp's API is in open beta and does not match its own schema.** Tolerant parsing is a structural requirement, not defensive coding, and it was implemented before any feature. Verified 15 August 2026: the reported float durations did not reproduce on the test account, but two other data bugs did, and the beta changes underneath us.
+- **Bandcamp's API will not release purchased files.** Verified exhaustively on 15 August 2026: there is no `download` endpoint in any form, and `stream` returns MP3 V0 while ignoring every transcoding parameter. This is the largest single constraint on the product after the collection-only limit. It moves the entire ownership story onto local folder scanning and matching, which is therefore a version one requirement rather than a convenience.
+- **Owned files live in the open**, which is the app's central differentiator and also means they can vanish underneath it at any time. Reconciliation is therefore a normal code path, not an error path.
+- **`ping` does not enforce authentication**, and a failed login is a bare HTTP 500 with an empty body rather than a Subsonic error code. Both shape the Connect flow and the Connection trouble screen.
 
 Add discovered constraints here as verification and building reveal them, with the measurement or observation that established each.

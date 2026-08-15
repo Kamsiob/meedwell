@@ -6,10 +6,10 @@ Every file `reference/kamsiob-project-template.md` section A1 requires, and wher
 
 | Required artifact | Status | Location |
 |---|---|---|
-| MASTER_SPEC.md | Seeded | `spec/MASTER_SPEC.md` |
-| DESIGN.md | Seeded | `spec/DESIGN.md` |
-| HANDOFF.md | Seeded | `spec/HANDOFF.md` |
-| DECISIONS.md | Seeded | `spec/DECISIONS.md` |
+| MASTER_SPEC.md | Live | `spec/MASTER_SPEC.md`. Rewritten 15 Aug 2026 where verification contradicted it |
+| DESIGN.md | Live | `spec/DESIGN.md`. Connection trouble copy corrected; three verified limits added |
+| HANDOFF.md | Live | `spec/HANDOFF.md`. Replaced with real state at the end of Phase 0 |
+| DECISIONS.md | Live | `spec/DECISIONS.md`. Carries the API verification results block |
 | PRIVACY.md | Seeded | `spec/PRIVACY.md` |
 | LICENSE | Seeded | `repo-seed/LICENSE` |
 | .gitignore | Seeded | `repo-seed/.gitignore` |
@@ -20,12 +20,12 @@ Every file `reference/kamsiob-project-template.md` section A1 requires, and wher
 | .github/PULL_REQUEST_TEMPLATE.md | Seeded | `repo-seed/.github/PULL_REQUEST_TEMPLATE.md` |
 | .github/workflows/ | Seeded | `repo-seed/.github/workflows/` (ci.yml, release.yml with provenance) |
 | .github/FUNDING.yml | Seeded | `repo-seed/.github/FUNDING.yml` |
-| **ARCHITECTURE.md** | **Skeleton** | `repo-seed/ARCHITECTURE.md`. Module boundary, data contract intent, and the three known constraints are written. Component, threading, and lifecycle sections are marked pending and filled as built. |
+| **ARCHITECTURE.md** | **Partial** | `repo-seed/ARCHITECTURE.md`. Module boundary, data contract intent, and the three known constraints are written. Component, threading, and lifecycle sections are marked pending and filled as built. |
 | **CHANGELOG.md** | **Skeleton** | `repo-seed/CHANGELOG.md`. Rules and an Unreleased section. First real entry written at release. |
-| **tools/** | **Skeleton** | `repo-seed/tools/README.md`. Specifies the Bandcamp Friday manifest generator, which must exist because those dates are deliberately not hardcoded. |
+| **tools/** | **Partial** | `tools/`. `capture-screen.sh` is written and in use. The Bandcamp Friday manifest generator is still pending, tracked as issue #26. |
 | **store-assets/** | **Skeleton** | `repo-seed/store-assets/README.md`. Rules only. Assets are generated in Phase 7 from the built app, never from mockups. |
-| README.md | Build-time, deliberate | Written in Phase 7 only, after API verification. See the deferral note below. |
-| LAUNCH.md | Build-time, correct | Written in Phase 7. Its content is the owner's remaining clicks, which are only knowable once automation has run. |
+| README.md | Build-time, now unblocked | Phase 7. The sequencing rule that deferred it is satisfied: API verification was recorded on 15 August 2026. Tracked as issue #39. |
+| LAUNCH.md | Build-time, correct | Phase 7. Tracked as issue #37. |
 
 ## The two deliberate deferrals, recorded as decisions
 

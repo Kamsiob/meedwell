@@ -54,6 +54,30 @@ These were settled in design and research and are recorded here so a future sess
 
 Add dated entries below as work proceeds. Include the API verification results block as the first one.
 
+### 15 August 2026: issue types are not available, so type labels are used
+
+`MASTER_SPEC.md` section 12 says to use GitHub's issue **type** field rather than a type label. That field only exists on repositories owned by an organisation, and `Kamsiob` is a user account, so the API returns 404 for issue types on this repository.
+
+Decided: `type:` prefixed labels carry the kind of work, and area plus blocking labels are unchanged. This is the reversible option: if the repository ever moves under the B7 Collective organisation that the Play Console account already uses, the labels convert to real types and nothing else changes. `MASTER_SPEC.md` is corrected to say so rather than describing a convention the tracker cannot follow.
+
+### 15 August 2026: minSdk is 29, set by a feature rather than by taste
+
+`MediaStore` writes using `RELATIVE_PATH` and `IS_PENDING` are how owned files land in the public Music folder, and neither exists before API 29. Tier C makes local files the whole ownership story, so this is not a corner of the app that could be dropped to reach older phones.
+
+Compiled against 37, targeting 36. Play requires API 36 from 31 August 2026, verified against the live requirements page on 15 August 2026 rather than taken from the specification's note.
+
+### 15 August 2026: the build needs a JDK 21 daemon, and no path is committed
+
+AGP 9.3.1 does not run on the machine's default JDK 26. `JAVA_HOME` is pointed at the JDK 21 installed alongside it before invoking Gradle. Deliberately **not** pinned in `gradle.properties`, because that file is committed and a machine specific path would break CI and every other machine. The development machine's path is recorded in `HANDOFF.md`, which is where machine specific facts belong.
+
+Also discovered: AGP 9 brings its own Kotlin support, and applying `org.jetbrains.kotlin.android` alongside it fails the build outright. The Compose compiler plugin is still applied and still tracks the Kotlin version exactly.
+
+### 15 August 2026: MD5 is the one JVM-only call in `:core`
+
+Subsonic auth requires `t=MD5(password+salt)`. `java.security.MessageDigest` is used for it, isolated in a single function in `SubsonicClient.kt` with a comment saying so. MD5 here is a protocol requirement and not a security choice; the transport is HTTPS and nothing relies on the digest being strong.
+
+Considered and rejected: hand writing MD5 in pure Kotlin to keep `:core` free of the JVM entirely. That would trade a well tested platform primitive for roughly a hundred lines of bit twiddling in order to save one function's worth of work during a multiplatform conversion that may never happen. If that conversion does happen, this is the only function in the module that needs a platform implementation.
+
 ### 15 August 2026: API verification results, run against the live account
 
 Raw responses saved outside the repository at `~/.kamsiob-secrets/meedwell-api-responses/`, one file per endpoint. Credentials live at `~/.kamsiob-secrets/meedwell-subsonic.env`, mode 600, never in the repository.
@@ -120,7 +144,11 @@ Consequences, all of them already designed for, per `MASTER_SPEC.md` section 6:
 
 Anything only the owner can resolve. Each entry states exactly what he needs to do, in plain steps, with no code and no jargon. Summarise this list at the end of every session.
 
-- Nothing yet.
+1. **Two starred items on the real Bandcamp account cannot be removed by the app.** Verifying that `star` works required starring something, and `unstar` turned out to be broken on Bandcamp's side. One track, "Wolf Blood", and one album, "The Celtic Collection II", are now starred. **What to do:** if you want them unstarred, remove the hearts on the Bandcamp website. Nothing in the app can do it until Bandcamp fixes the endpoint.
+
+2. **A Bandcamp pre-order would unblock issue #46.** The collection contains none, so how the API represents an unreleased purchase could not be verified, and building the pre-order shelf state would mean guessing at a data shape. **What to do:** nothing, unless you happen to pre-order something. If you do, say so, and that issue unblocks.
+
+3. **The Bandcamp Friday manifest needs a home before issue #26 can finish.** The dates are fetched from a public GitHub release asset with a hash check rather than hardcoded. The generator will be written into `tools/`, but publishing the asset is a repository release step. **What to do:** nothing yet. Raised here so it is not a surprise later.
 
 ### Known manual steps, expected rather than blocking
 
