@@ -88,6 +88,16 @@ android {
         buildConfig = true
     }
 
+    // The schema is the app's public data contract, so it is exported to a file
+    // and committed rather than living only inside the binary. That is what
+    // makes a migration reviewable and what lets a future desktop or web build
+    // read the database without reverse engineering it. See ARCHITECTURE.md.
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+        arg("room.generateKotlin", "true")
+    }
+    sourceSets["androidTest"].assets.srcDir("$projectDir/schemas")
+
     packaging {
         resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
     }
@@ -128,6 +138,10 @@ val allowedPermissions = setOf(
     // Added by the Media3 session library for the playback foreground service.
     "android.permission.FOREGROUND_SERVICE",
     "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+    // Added by Media3's ExoPlayer so audio keeps playing with the screen off.
+    // A music player that stops when the phone locks is broken, and this grants
+    // nothing beyond keeping the CPU awake while something is actually playing.
+    "android.permission.WAKE_LOCK",
     // Added by androidx.core, namespaced to this application id, and declared
     // at signature protection level. It exists so that a broadcast receiver
     // registered as not-exported cannot be reached by another app. It grants
@@ -220,6 +234,28 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.okhttp)
+
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.common)
+    implementation(libs.androidx.media3.datasource.okhttp)
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.androidx.palette.ktx)
+    // WorkManager is deliberately absent until the feature that needs it
+    // exists. It was added here speculatively for automatic backup in Phase 6,
+    // and the manifest audit immediately caught it bringing in WAKE_LOCK and
+    // RECEIVE_BOOT_COMPLETED. Shipping two permissions for months before the
+    // feature that justifies them is exactly what the audit exists to stop.
+    // See DECISIONS.md and issue #3.
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)

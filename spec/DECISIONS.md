@@ -78,6 +78,26 @@ Subsonic auth requires `t=MD5(password+salt)`. `java.security.MessageDigest` is 
 
 Considered and rejected: hand writing MD5 in pure Kotlin to keep `:core` free of the JVM entirely. That would trade a well tested platform primitive for roughly a hundred lines of bit twiddling in order to save one function's worth of work during a multiplatform conversion that may never happen. If that conversion does happen, this is the only function in the module that needs a platform implementation.
 
+### 15 August 2026: Meedwell does not take part in autofill
+
+Found by using the app on the device rather than by review. After a successful connect, Android offered to save the Bandcamp credentials to Google Password Manager, which would copy them to Google's cloud. The screen immediately above that dialog says "Stored only on this phone, encrypted".
+
+Both cannot be true, and the copy is the promise, so the platform behaviour is what changes: `importantForAutofill` is set to `NO_EXCLUDE_DESCENDANTS` on the window, app-wide.
+
+Considered: leaving it, on the grounds that the user chooses whether to accept the dialog. Rejected, because the app would then be printing a claim on screen that the platform contradicts one tap later, and "honest limits stated at the moment they matter" cuts both ways. A user who keeps credentials in a password manager is not cut off: Bandcamp generates them and keeps them on its own settings page, and the Paste chips exist precisely so they can be pasted from wherever the user keeps them.
+
+### 15 August 2026: the keyboard is told what the credential fields are
+
+Also found on the device. The password field used a visual transformation but no `KeyboardType.Password`, so the IME treated it as ordinary prose and printed it in the suggestion strip in plain sight, as well as learning it.
+
+Both credential fields now declare their keyboard type with autocorrect and capitalisation off. The username needs it too: Bandcamp's generated username is a long uppercase token that autocorrect will happily mangle.
+
+### 15 August 2026: WorkManager removed until the feature that needs it exists
+
+It was added ahead of automatic backup in Phase 6, and the manifest audit immediately failed the build because it brought in `WAKE_LOCK` and `RECEIVE_BOOT_COMPLETED`. Shipping two permissions for months before the feature that justifies them is exactly what that audit exists to stop, so the dependency came out and returns with the feature.
+
+`WAKE_LOCK` remains, from Media3's ExoPlayer, and is allowlisted with its justification: a music player that stops when the screen turns off is broken.
+
 ### 15 August 2026: API verification results, run against the live account
 
 Raw responses saved outside the repository at `~/.kamsiob-secrets/meedwell-api-responses/`, one file per endpoint. Credentials live at `~/.kamsiob-secrets/meedwell-subsonic.env`, mode 600, never in the repository.

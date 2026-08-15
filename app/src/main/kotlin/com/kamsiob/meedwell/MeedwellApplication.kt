@@ -15,4 +15,7 @@ import android.app.Application
  * written to this phone, shown to the user in full, and goes nowhere unless
  * they choose to send it themselves.
  */
-class MeedwellApplication : Application()
+class MeedwellApplication : Application() {
+
+    val container: AppContainer by lazy { AppContainer(this) }
+}
