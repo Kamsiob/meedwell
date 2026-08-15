@@ -660,6 +660,52 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
         _notice.value = "Bandcamp cannot take a heart off yet. Their website can."
     }
 
+    /**
+     * The action sheet for whatever is playing.
+     *
+     * Built from the database rather than from the player, so it carries the
+     * heart state and the artist ID that a media item does not.
+     */
+    fun openSheetForCurrentTrack(onReady: (ActionTarget) -> Unit) {
+        val id = player.state.value.trackId ?: return
+        viewModelScope.launch {
+            val track = container.library.track(id) ?: return@launch
+            onReady(
+                ActionTarget(
+                    id = track.id,
+                    title = track.title,
+                    subtitle = track.artist,
+                    coverUrl = CoverUrls.of(track.coverArtId),
+                    kind = ActionTarget.Kind.Track,
+                    isStarred = track.isStarred,
+                    artistId = track.artistId.takeIf { it.isNotBlank() },
+                )
+            )
+        }
+    }
+
+    /** The heart on the now playing screen. */
+    fun loveCurrentTrack() {
+        val id = player.state.value.trackId ?: return
+        viewModelScope.launch {
+            val track = container.library.track(id)
+            if (track == null) {
+                _notice.value = "That track is not on your shelf, so there is nothing to love."
+                return@launch
+            }
+            if (track.isStarred) {
+                showLoveLimit()
+                return@launch
+            }
+            val landed = container.library.love(container.client(), track.id, isAlbum = false)
+            _notice.value = if (landed) {
+                "Loved. It is on your Bandcamp account too."
+            } else {
+                "Bandcamp did not take the heart. Nothing changed."
+            }
+        }
+    }
+
     fun playNext(target: ActionTarget) {
         viewModelScope.launch {
             val tracks = tracksFor(target)

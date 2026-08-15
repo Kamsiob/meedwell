@@ -103,10 +103,32 @@ enum class MeedwellIcons(
 
     Shuffle(listOf("M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5")),
     Repeat(listOf("M17 2l4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3")),
+
+    /**
+     * Repeat, with a 1 in the middle of the loop.
+     *
+     * A separate glyph rather than a badge stuck on the plain one, so the two
+     * repeat states are told apart by shape and not only by a small mark that
+     * disappears at a glance or under a large font scale.
+     */
+    RepeatOne(listOf(
+        "M17 2l4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3",
+        "M11 10.5l1.6-1v6",
+    )),
     SleepTimer(listOf("M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z")),
 
     PlayNext(listOf("M17 5v14"), filled = listOf("M5 5v14l9-7L5 5z")),
     Queue(listOf("M4 6h13M4 12h13M4 18h8M18 15v6M15 18h6")),
+
+    /**
+     * Opening the queue, as distinct from adding to it.
+     *
+     * `Queue` above carries a plus and means "put this in the queue". Using the
+     * same glyph for "show me the queue" would make one shape mean two things a
+     * tap apart, which is exactly the kind of small lie a person only notices
+     * as a feeling that the app is confusing.
+     */
+    QueueOpen(listOf("M4 6h16M4 12h16M4 18h7", "M14 15.5l6 3.2-6 3.3z")),
     Lists(
         listOf(
             "M4 6h13M4 12h13M4 18h8",

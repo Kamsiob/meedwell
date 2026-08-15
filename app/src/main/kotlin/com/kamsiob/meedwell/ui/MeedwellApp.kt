@@ -487,7 +487,10 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                         )
                     },
                     onOpenQueue = { queueSheetOpen = true },
-                    onMenu = { /* Phase 3: the action sheet */ },
+                    onMenu = { viewModel.openSheetForCurrentTrack { sheetTarget = it } },
+                    onShuffle = viewModel.player::setShuffle,
+                    onCycleRepeat = viewModel.player::cycleRepeat,
+                    onLove = { viewModel.loveCurrentTrack() },
                     modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
                 )
             }

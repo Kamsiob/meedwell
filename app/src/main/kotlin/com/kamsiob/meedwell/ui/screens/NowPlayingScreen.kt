@@ -1,6 +1,7 @@
 package com.kamsiob.meedwell.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -30,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.playback.PlaybackState
+import com.kamsiob.meedwell.playback.RepeatMode
 import com.kamsiob.meedwell.ui.components.Cover
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
@@ -63,6 +66,9 @@ fun NowPlayingScreen(
     onOpenArtwork: () -> Unit,
     onOpenQueue: () -> Unit,
     onMenu: () -> Unit,
+    onShuffle: (Boolean) -> Unit,
+    onCycleRepeat: () -> Unit,
+    onLove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MeedwellTheme.colors
@@ -231,20 +237,49 @@ fun NowPlayingScreen(
                     TransportButton("Next track", MeedwellIcons.Next, onNext)
                 }
 
+                // The second row: the things you set once and forget, kept
+                // deliberately quieter than the transport above so the thumb
+                // never lands on repeat while reaching for play.
                 Row(
-                    Modifier.fillMaxWidth().padding(top = 14.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    Modifier.fillMaxWidth().padding(top = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
-                        Modifier
-                            .height(48.dp)
-                            .clickable(role = Role.Button, onClick = onOpenQueue)
-                            .semantics { contentDescription = "Open the queue" }
-                            .padding(horizontal = 12.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("Queue", style = type.metadata, color = Color.White.copy(alpha = 0.7f))
-                    }
+                    SecondaryButton(
+                        description = if (state.shuffle) "Shuffle is on. Turn it off." else "Shuffle",
+                        icon = MeedwellIcons.Shuffle,
+                        active = state.shuffle,
+                        onClick = { onShuffle(!state.shuffle) },
+                    )
+                    SecondaryButton(
+                        description = when (state.repeat) {
+                            RepeatMode.Off -> "Repeat is off. Repeat everything."
+                            RepeatMode.All -> "Repeating everything. Repeat this one."
+                            RepeatMode.One -> "Repeating this one. Turn repeat off."
+                        },
+                        icon = if (state.repeat == RepeatMode.One) MeedwellIcons.RepeatOne else MeedwellIcons.Repeat,
+                        active = state.repeat != RepeatMode.Off,
+                        onClick = onCycleRepeat,
+                    )
+                    SecondaryButton(
+                        description = "Love this track",
+                        icon = MeedwellIcons.Heart,
+                        active = false,
+                        onClick = onLove,
+                    )
+                    // An icon rather than the word it used to be. Three glyphs
+                    // and one word in a row of four reads as an afterthought
+                    // stuck on the end, and the row is a set.
+                    SecondaryButton(
+                        description = if (state.queueSize > 1) {
+                            "Open the queue. ${state.queueSize} tracks."
+                        } else {
+                            "Open the queue"
+                        },
+                        icon = MeedwellIcons.QueueOpen,
+                        active = false,
+                        onClick = onOpenQueue,
+                    )
                 }
             }
         }
@@ -268,6 +303,49 @@ private fun TransportButton(
         // The play control is deliberately larger than the skips. It is the one
         // a thumb reaches for without looking.
         MeedwellIcon(icon = icon, size = if (large) 40.dp else 24.dp, tint = Color.White)
+    }
+}
+
+/**
+ * A control in the second row.
+ *
+ * Smaller and dimmer than the transport, and **on is carried by opacity rather
+ * than by a colored fill.** A tinted pill for "shuffle is on" would be the only
+ * accent color on a screen whose entire premise is one clamped wash, and it
+ * would put a second bright thing next to the play button.
+ *
+ * On also gets a dot beneath it, so the state does not rest on brightness alone
+ * for anybody who cannot see the difference.
+ */
+@Composable
+private fun SecondaryButton(
+    description: String,
+    icon: MeedwellIcons,
+    active: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier
+            .size(48.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        MeedwellIcon(
+            icon = icon,
+            size = 21.dp,
+            tint = Color.White.copy(alpha = if (active) 1f else 0.55f),
+        )
+        if (active) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 7.dp)
+                    .size(3.5.dp)
+                    .clip(CircleShape)
+                    .background(Color.White)
+            )
+        }
     }
 }
 
