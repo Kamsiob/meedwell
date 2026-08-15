@@ -200,7 +200,12 @@ private fun MusicPage(
         modifier = Modifier
             .padding(top = 15.dp)
             .fillMaxWidth()
-            .aspectRatio(1.36f)
+            // Square, because Bandcamp art is square and the law is that
+            // artwork is shown complete and never cropped. The grid's 286x210
+            // band suits its landscape mock gradients; letterboxing real square
+            // art into it would put empty ground either side of the one thing
+            // on the screen that is the record.
+            .aspectRatio(1f)
             .clickable(role = Role.Button, onClick = onOpenArtwork),
     )
 

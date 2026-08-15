@@ -63,7 +63,6 @@ fun MoreScreen(
 
             SettingRow("History", "Everything you have played, on this phone") { onOpen(MoreDestination.History) }
             SettingRow("Forgotten shelf", "Bought, loved, and quietly waiting") { onOpen(MoreDestination.Forgotten) }
-            SettingRow("Surroundings", "Rain, fire and rooms, under the music") { onOpen(MoreDestination.Surroundings) }
             SettingRow("Your files", "Where owned music lives") { onOpen(MoreDestination.YourFiles) }
             SettingRow("Settings", null) { onOpen(MoreDestination.Settings) }
             SettingRow("Privacy", "The whole sheet") { onOpen(MoreDestination.Privacy) }
@@ -85,7 +84,13 @@ fun MoreScreen(
     }
 }
 
-enum class MoreDestination { History, Forgotten, Surroundings, YourFiles, Settings, Privacy, WhatsAhead, About, Credits }
+/**
+ * Surroundings is deliberately **not** in this list.
+ *
+ * It is one of the four tabs. A destination that is both a tab and a row in
+ * More is a destination somebody has to learn twice.
+ */
+enum class MoreDestination { History, Forgotten, YourFiles, Settings, Privacy, WhatsAhead, About, Credits }
 
 /**
  * Screen 33: Privacy, as five plain questions and answers.

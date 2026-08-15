@@ -1,6 +1,11 @@
 # Meedwell by Kamsiob: master specification
 
-**Precedence.** This document, `DESIGN.md`, `DECISIONS.md`, and the open GitHub issues are the current source of truth for this project. Anything in an older prompt, an earlier conversation, or a superseded document that conflicts with these is superseded. This is a living document: it is updated with every commit so it always describes the app as it currently is and as it is intended to be. Superseded instructions are corrected in place, never left beside their replacements, and anything still pending is marked pending rather than described as built.
+**Precedence.** For anything **visual**, the HTML in `reference/` outranks every
+document including this one: `meedwell-screen-grid-CURRENT.html` for screens and
+`meedwell-surroundings-card.html` for the floating card. Prose cannot carry a
+measurement, and building from a prose translation of the design is what caused
+SPEC-REVISION-02 below. For everything else, this document, `DESIGN.md`,
+`DECISIONS.md`, and the open GitHub issues are the current source of truth for this project. Anything in an older prompt, an earlier conversation, or a superseded document that conflicts with these is superseded. This is a living document: it is updated with every commit so it always describes the app as it currently is and as it is intended to be. Superseded instructions are corrected in place, never left beside their replacements, and anything still pending is marked pending rather than described as built.
 
 ---
 
@@ -81,7 +86,9 @@ Do not trust any library or framework version named here as current. Check actua
 
 **Connect.** A guided three-step flow for the Bandcamp Subsonic credentials, address prefilled, paste chips on each field, a reveal eye on the password, and an "Open Bandcamp for me" link to the settings page where the credentials are generated. Beta-honest copy throughout.
 
-**The Shelf.** A merged, album-first shelf of the Bandcamp collection and local files. Albums, Artists and Genres are three sibling first-class views, switched at the top; the Downloaded and Local scope filters live in the sort menu rather than competing with the view switcher. Grid and list layouts, toggled beside search. List rows carry 48dp art, artist, year, format, and a downloaded dot, at a 56dp minimum height. An A to Z fast scroller appears on scroll, with its index built once and cached rather than recomputed. Sort by recent, artist, purchase date, most played, plus the scope filters. A labeled tab bar: Shelf, Search, Lists, More.
+**The Shelf.** A merged, album-first shelf of the Bandcamp collection and local files. **Albums, Composers and Shelves** are three sibling first-class views, switched at the top; the Downloaded and Local scope filters live in the sort menu rather than competing with the view switcher. Composers rather than Artists is the positioning in one word: it means everything to one listener and nothing to another. Under the title sits the **day line**, a hairline horizon with the copper sun at the actual time of day, set past the right end in the evening. Search is a labelled pill, fixed and never scrolling away. Grid and list layouts. An A to Z fast scroller appears on scroll, with its index built once and cached rather than recomputed. A labelled tab bar of **four destinations: Shelf, Search, Surroundings, More**, with Lists folded into the Shelf's view switcher as Shelves, which is where the width for Surroundings came from.
+
+**The player is a two-page horizontal spread**, music on the left and Surroundings on the right, one swipe apart. Not a single now-playing screen and not a pager with dots: the affordance is two page marks drawn in the app's own iconography, inked with a 16dp moss underline on the page you are on and outlined at 30% ink on the other, with a 7px sliver of the facing page showing at the screen edge. The scrubber is a **contour line on a five-line staff**, not a progress bar. An album is set as a **programme**: centred titling, a plate line, movements in Roman numerals with tempo markings. Dynamics replace numbers wherever a number would do.
 
 **Newest arrival card** at the top of the shelf: the complete cover beside its caption, never underneath it.
 
@@ -120,6 +127,31 @@ Consequence: **local folder scanning and matching is a version one requirement**
 **App icon finishes,** switched instantly through Android's activity-alias technique, which costs nothing and needs no network: Rustic Copper as default, Dusk, Moss, Ink, Paper.
 
 Deferred to 1.1 and later: equalizer, casting, Android Auto, multiple servers, opt-in bring-your-own Last.fm scrobbling, a home screen widget, and a yearly shelf-in-review recap. Never: social features, an in-app store, accounts, telemetry.
+
+## 5a. SPEC-REVISION-02, the design correction
+
+The first build drifted into a competent, generic media player. The cause was
+procedural rather than aesthetic: the design was translated into prose in
+`DESIGN.md` and the app was built from the prose.
+
+**Superseded by this revision, and void wherever they still appear:**
+
+- Any statement that dark is the default. **Daylight is**, warm paper `#F6F4EC`.
+  Dark is Lamplight, deep pine `#12160F`, and it is the alternate.
+- Any surface panel, card, filled container or elevation scale. Structure is
+  hairlines and whitespace. One shadow survives, on a bottom sheet.
+- The four ambient glow washes.
+- The full-bleed manuscript ruling. The five-line staff appears at section
+  heads, behind the contour scrubber, and behind the tone curve. Nowhere else.
+- A four-tab bar containing Lists.
+- **Any entry saying a floating pill or floating control was considered and
+  rejected.** The floating Surroundings card is the approved form and is built.
+  See `SURROUNDINGS-SPEC.md`.
+
+There are no badges, streaks, achievements or progress rings anywhere, for any
+feature.
+
+---
 
 ## 6. The download endpoint decision, resolved: Tier C
 

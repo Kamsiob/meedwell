@@ -73,6 +73,8 @@ fun PageMarks(
             underlined = page == PlayerPage.Music,
             label = "Music page",
             selected = page == PlayerPage.Music,
+            // Copper, because this mark *is* the app's mark.
+            inkedColor = MeedwellTheme.colors.copper,
             onClick = { onSelect(PlayerPage.Music) },
         ) { color, stroke ->
             // The app's mark: a coin resting on a line.
@@ -100,6 +102,10 @@ fun PageMarks(
             underlined = page == PlayerPage.Surroundings,
             label = if (surroundingsPlaying) "Surroundings page, a sound is playing" else "Surroundings page",
             selected = page == PlayerPage.Surroundings,
+            // **Moss, not copper.** The grid inks this one in the accent, and
+            // copper is reserved for the app's own mark and the day-line sun.
+            // Two copper suns a thumb apart would make both mean nothing.
+            inkedColor = MeedwellTheme.colors.moss,
             onClick = { onSelect(PlayerPage.Surroundings) },
         ) { color, stroke ->
             // The sun on a horizon, outlined rather than filled so it reads as
@@ -127,6 +133,7 @@ private fun PageMark(
     underlined: Boolean,
     label: String,
     selected: Boolean,
+    inkedColor: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit,
     draw: androidx.compose.ui.graphics.drawscope.DrawScope.(
         color: androidx.compose.ui.graphics.Color,
@@ -134,9 +141,9 @@ private fun PageMark(
     ) -> Unit,
 ) {
     val colors = MeedwellTheme.colors
-    // Copper when inked, because these marks are the app's own sign and copper
-    // is the mark's color. At 30% ink when not, which is the grid's outline.
-    val color = if (inked) colors.copper else colors.primaryText.copy(alpha = 0.3f)
+    // Each mark has its own inked colour, and both go to a 30% ink outline
+    // when they are not the page you are on.
+    val color = if (inked) inkedColor else colors.primaryText.copy(alpha = 0.3f)
 
     Column(
         Modifier

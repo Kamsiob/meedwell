@@ -62,8 +62,11 @@ fun Cover(
             // Shadow before clip, always. Clipping first casts the shadow away
             // and produces nothing, silently, which is how the app shipped with
             // no shadows at all.
+            // `.cov` in the grid is a rounded rectangle holding the art and
+            // nothing else: no border, no shadow. The hairline that used to be
+            // here framed the letterbox on any cover that is not square, which
+            // drew a box around the one thing the design says to leave alone.
             .clip(shape)
-            .border(0.5.dp, colors.hairline, shape)
             .semantics {
                 contentDescription?.let { this.contentDescription = it }
             },

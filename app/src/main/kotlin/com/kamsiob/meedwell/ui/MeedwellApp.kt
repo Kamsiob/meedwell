@@ -349,7 +349,6 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                                     MoreDestination.Credits -> Destination.Credits
                                     MoreDestination.History -> Destination.History
                                     MoreDestination.Forgotten -> Destination.Forgotten
-                                    MoreDestination.Surroundings -> Destination.Surroundings
                                 }
                             },
                             onConnectBandcamp = { destination = Destination.Connect },

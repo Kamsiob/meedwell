@@ -1,8 +1,26 @@
 # Meedwell by Kamsiob: design specification
 
-**This document is binding.** Where code and this document disagree, this document wins. It is a living document, updated with every commit. The visual reference is `reference/meedwell-screen-grid-final.html`, 46 screens: 2 mark screens, 38 dark app screens, 4 light reference screens, and 2 system surfaces. Open it and look at it. No written description substitutes for seeing it.
+## The measurement authority is the HTML, not this document
 
-Earlier grids v1 through v10, and the 30-screen and 37-screen versions, are superseded.
+**`reference/meedwell-screen-grid-CURRENT.html` governs.** Its header reads
+"Screen grid v2 · 25 screens · supersedes v1". Open it and read the CSS. Where
+this document and the grid disagree on any value, **the grid wins and this
+document is corrected**, including where this document used to claim it was
+binding.
+
+That reversal is the whole point. This document previously said it won over the
+code, the code was built from this document's prose, and the result drifted into
+a competent generic media player. Prose cannot carry a measurement: "generous
+spacing" is not 22px of horizontal padding, and "a hairline" is not
+`1px rgba(28,36,32,.12)`. Read the values out of the file.
+
+**`reference/meedwell-surroundings-card.html`** is a companion, not a
+replacement. It governs the floating Surroundings card. Where it and the grid
+overlap, meaning the Shelf screen behind the card, the grid governs the screen
+and the card file governs the card.
+
+Everything in `reference/superseded/` is historical and must never be built
+from, whatever its filename says.
 
 ---
 
@@ -14,26 +32,48 @@ Structure is carried by hairlines and space rather than boxes and cards. Warmth 
 
 ## 2. Themes and color tokens
 
-**Dark is the default.**
+**Daylight is the default.** Warm paper, not dark, not white, not grey. If the
+app opens dark, or opens on a white Material surface, that is wrong before
+anything else is considered. Lamplight is the alternate and it is deep pine
+rather than a neutral black.
 
-| Token | Dark | Light |
+| Token | Daylight | Lamplight |
 |---|---|---|
-| Background | `#0B0B0E` warm near-black | `#F5F3ED` warm paper |
-| Primary text | `#F4F3F6` | `#17151D` |
-| Secondary text | `#A7A5B1` | `#33303B` to `#44414C` |
-| Tertiary floor | `#8B8993` | `#56525E` |
-| Hairline border | `rgba(255,255,255,.08)` | `rgba(30,28,38,.11)` |
-| Surface panel | `rgba(255,255,255,.05)` | `rgba(30,28,38,.04)` |
-| Gold | `#E7C171` | `#8A6215` |
-| Copper, the mark | `#AE6738` | `#AE6738` |
+| Ground | `#F6F4EC` | `#12160F` |
+| Recess | `#EFEBDF` | none |
+| Primary ink | `#1C2420` | `#EFEEE6` |
+| Secondary ink | `#3D473F` | `#B4B8AC` |
+| Tertiary floor | `#57605A` | `#8A8F84` |
+| Hairline | `rgba(28,36,32,.12)` | `rgba(239,238,230,.12)` |
+| Heavier rule | `rgba(28,36,32,.22)` | `rgba(239,238,230,.2)` |
+| Moss, the accent | `#5C7358`, ink `#43563F` | `#7E9478` |
+| Copper | `#AE6738` | `#AE6738` |
+| Gold ink | `#8A6215` | lifted for the ground |
+| Alarm | `#8C4A2F` | lifted for the ground |
 
-**The light-mode ink floor is law.** Nothing lighter than slate `#56525E` on paper, ever. This was corrected twice in design and is not open for reinterpretation. Measured contrast on paper: `#17151D` 16.3:1, `#33303B` 11.6:1, `#44414C` 9.0:1, `#56525E` 6.9:1.
+**There is no surface panel token.** It was the one that let cards in. Structure
+is carried by hairlines and whitespace only, so a filled container has nowhere
+to get its fill from.
 
-**Gold was corrected for accessibility.** The light gold was `#9A6F1E`, which measures 4.06:1 on paper and fails AA for a 14sp label. It is now `#8A6215`, which measures 4.93:1. Dark gold `#E7C171` on `#0B0B0E` is 11.5:1. Any new color pair introduced anywhere gets measured before it ships.
+**One accent does working colour: moss.** The others are reserved and each
+appears in exactly one place. **Copper** is the app mark and the day-line sun,
+nowhere else. **Gold ink** is the two support blocks, nowhere else. **Alarm** is
+destructive rows, nowhere else. No purple, no gradients, no glassmorphism, no
+coloured accent bars, no tinted card backgrounds, no Material dynamic colour.
 
-**Ambient glow washes,** dark theme: soft radial fields in violet `rgba(112,84,150,.26)`, teal `rgba(58,122,116,.24)`, rose `rgba(150,74,102,.22)` and ember `rgba(168,104,66,.22)`, drifting slowly over roughly 16 seconds, gated behind the reduced-motion setting. At half opacity in light theme.
+**The tertiary floor is law.** Nothing on paper is fainter than `#57605A`.
 
-**Never** pure black or pure white backgrounds. Color is never the only carrier of meaning.
+**The ambient glow washes are gone.** They were four drifting radial fields in
+violet, teal, rose and ember behind every screen. The design has one accent and
+no gradients, so they were four reserved colours doing decorative work in a
+place the grid leaves as plain paper. Removing them is most of what stops the
+app reading as generic.
+
+Contrast is measured rather than eyeballed, and `DesignRulesTest` fails the
+build if a token drifts. Copper is held to the 3:1 floor for graphics rather
+than 4.5:1, because it never carries text.
+
+**Never** pure black or pure white. Colour is never the only carrier of meaning.
 
 ## 3. The gold rule
 
