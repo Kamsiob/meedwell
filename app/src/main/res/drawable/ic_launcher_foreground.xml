@@ -1,0 +1,38 @@
+<!--
+  The mark's two shapes: a copper coin at rest in a shallow open cradle.
+
+  Construction rules from DESIGN.md section 7, which is binding:
+    - The coin rests at the cradle's lowest point, touching it. Never sunk into
+      it, never floating above it.
+    - The cradle is a stroke, the coin is a fill. That pairing is what keeps the
+      mark two shapes.
+    - The arc is shallow, its ends level with each other, stopping short of the
+      frame so the arc breathes.
+    - Nothing else is in frame. Flat: no gradients, no glow, no dimension.
+
+  Drawn inside the 72x72 safe zone of the 108x108 adaptive icon canvas, so no
+  launcher mask can clip the coin or the cradle's ends.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- The cradle. Two quadratics form the shallow lower arc; its ends finish
+         level with each other at y=55.3. -->
+    <path
+        android:pathData="M32.2,55.3 Q32.2,72.5 54,72.5 Q75.8,72.5 75.8,55.3"
+        android:strokeColor="#AE6738"
+        android:strokeWidth="1.78"
+        android:strokeLineCap="round" />
+
+    <!-- The coin. Its lower edge touches the inside of the cradle stroke at the
+         cradle's lowest point: centre 63.0, radius 8.58, so the coin's bottom
+         reaches 71.58 and the stroke's inner edge sits at 72.5 - 0.89 = 71.59.
+         Those two numbers meeting is the construction rule, not a coincidence.
+         The fractions they come from live in ui/components/Mark.kt. -->
+    <path
+        android:pathData="M54,63.0 m-8.58,0 a8.58,8.58 0 1,0 17.16,0 a8.58,8.58 0 1,0 -17.16,0"
+        android:fillColor="#AE6738" />
+</vector>

@@ -1,0 +1,72 @@
+# Runs on every push and every pull request. Compiles the app, compiles EVERY
+# test source set including the instrumented one that is not part of the
+# default build, runs the unit tests, and runs static analysis.
+#
+# Compiling every test source set is what enforces the standing rule that
+# suites must actually compile. An instrumented set that stops compiling rots
+# silently otherwise, and looks like coverage while providing none.
+#
+# This workflow must never be green while something is failing, and must never
+# be left permanently red. If it cannot pass, fix it or remove the check.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile core, with no Android dependencies allowed
+        run: ./gradlew :core:compileKotlin
+
+      - name: Assemble debug
+        run: ./gradlew assembleDebug
+
+      - name: Compile unit test sources
+        run: ./gradlew compileDebugUnitTestKotlin compileReleaseUnitTestKotlin
+
+      - name: Compile instrumented test sources
+        # Not built by default, which is exactly why it is compiled here.
+        run: ./gradlew assembleDebugAndroidTest
+
+      - name: Run unit tests
+        run: ./gradlew test
+
+      - name: Lint
+        run: ./gradlew lintDebug
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/reports/lint-results-*.html
+          retention-days: 14

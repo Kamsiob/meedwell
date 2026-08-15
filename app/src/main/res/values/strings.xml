@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Every user facing string lives here from the first commit, so translation
+  later is an addition rather than a rewrite. Version one ships in English only
+  and the store listing says so plainly rather than leaving it to be discovered.
+
+  Voice rules, from DESIGN.md section 11, and they are not decoration:
+    - Plain, warm, honest. Write like a person explaining something to a friend
+      across a table. Short sentences. Contractions welcome.
+    - No exclamation points. No hype words. No fear language.
+    - NO EM DASHES anywhere. Use commas, periods or colons.
+    - Buttons say exactly what they do, and an action keeps the same name
+      through its whole flow.
+    - Errors explain what happened and offer a way forward.
+    - An empty screen is an invitation to act, never a scolding.
+    - Honest limits appear at the moment they matter, not buried in a help screen.
+-->
+<resources>
+    <string name="app_name">Meedwell</string>
+    <string name="app_name_full">Meedwell by Kamsiob</string>
+
+    <!-- Screen 03, Welcome -->
+    <string name="welcome_tagline">for people who buy their music</string>
+    <string name="welcome_body">Your Bandcamp collection and your local files, together on one shelf. Streamed here, and yours to keep as real files on your phone.</string>
+    <string name="welcome_connect">Connect Bandcamp</string>
+    <string name="welcome_local_only">Just play my local files</string>
+    <string name="welcome_footer">Free · Open source · Collects nothing</string>
+
+    <!-- The mark, for screen readers -->
+    <string name="mark_description">The Meedwell mark, a copper coin resting in an open cradle</string>
+
+    <!-- Tabs -->
+    <string name="tab_shelf">Shelf</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_lists">Lists</string>
+    <string name="tab_more">More</string>
+
+    <!--
+      Honest limits that verification made real on 15 August 2026. Each one is
+      stated where it matters rather than in a help screen, and each is worded
+      so that it stops being needed the day Bandcamp changes.
+    -->
+    <string name="limit_no_downloads">Bandcamp\'s API streams your collection but does not hand over the files. Download them from Bandcamp the way you always have, point Meedwell at the folder, and they join your shelf as what they are: files you own.</string>
+    <string name="limit_lists_local">Lists live on this phone. Bandcamp\'s API can show playlists but offers no way to make or change one, so Meedwell keeps yours here rather than pretending they travel.</string>
+    <string name="limit_unstar_broken">Bandcamp\'s API can add a heart but cannot remove one yet. To take this one off, use the Bandcamp website.</string>
+    <string name="limit_stream_quality">Streaming, MP3 at Bandcamp\'s quality</string>
+
+    <!-- Connection trouble, screen 31. The real error, plainly. -->
+    <string name="trouble_title">Bandcamp didn\'t answer</string>
+    <string name="trouble_voice">Your music on this phone is untouched and playing fine.</string>
+    <string name="trouble_body">The last sync came back as a plain server error with no reason given, which is how Bandcamp answers a login it has rejected. Usually that means the password was regenerated on their side. Nothing on your shelf is lost.</string>
+    <string name="trouble_what_happened">What happened</string>
+    <string name="trouble_try_again">Try again</string>
+    <string name="trouble_fresh_credentials">Get fresh credentials ↗</string>
+    <string name="trouble_stay_offline">Stay offline for now</string>
+
+    <!-- The support button. Label is always this. Never a coffee cliche. -->
+    <string name="support_label">Support this work</string>
+    <string name="support_value_settings">Free no matter what. Nothing held back, nothing unlocked later. One person carries it.</string>
+    <string name="support_value_about">Free no matter what. Nothing held back, nothing unlocked later. Built and carried by one person. If software made this way matters to you, there\'s a place to stand behind it. Either way, it\'s yours.</string>
+
+    <string name="not_affiliated">Not affiliated with or endorsed by Bandcamp</string>
+</resources>

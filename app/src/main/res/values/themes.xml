@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dark is the default, per DESIGN.md section 2, so the launch window is the
+  warm near-black the app opens on rather than a white flash. Never pure black.
+-->
+<resources>
+    <style name="Theme.Meedwell" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/meedwell_background</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nothing is backed up to the cloud, ever. Android's automatic backup would copy
+  app data to the user's Google Drive, which is exactly the kind of quiet
+  off-device journey this app tells people it does not make.
+
+  Data portability is served instead by the export and restore round trip, which
+  is user driven, local, and documented. See MASTER_SPEC.md section 8.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="file" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="file" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

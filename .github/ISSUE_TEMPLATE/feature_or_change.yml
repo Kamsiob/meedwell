@@ -1,0 +1,38 @@
+name: Feature or change
+description: Suggest something Meedwell should do differently.
+type: Feature
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Meedwell has a deliberately narrow scope, and several things are missing on purpose rather than by oversight. The What's Ahead screen in the app and the pinned roadmap issue both list what is being considered and what is not planned, with the reason in each case. Worth a look first.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem you are trying to solve
+      description: Describe the problem rather than the solution. It is often solvable a way you did not have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you think should happen
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do about it today
+      description: The workaround you currently use, if any.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This does not require an account, a server, analytics, or tracking of any kind.
+          required: true
+        - label: This does not require scraping a website rather than using a documented API.
+          required: true
+        - label: I have checked the What's Ahead screen or the roadmap issue and this is not already listed as not planned.
+          required: true

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Two permissions in version one, both narrow, both explained in Meedwell's own
+  words before Android's dialog appears. Nothing else is declared here, and the
+  merged manifest is audited after every dependency addition, because libraries
+  introduce permissions silently.
+
+  Deliberately absent, and they stay absent:
+    - RECORD_AUDIO. The waveform comes from a custom AudioProcessor tap inside
+      Meedwell's own Media3 pipeline, never the Visualizer API, which would
+      require the microphone. There is a test that fails the build if this
+      permission ever appears in the merged manifest.
+    - ACCESS_FINE_LOCATION, READ_CONTACTS, and anything like them. Not ever.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Only so the player appears in the shade and on the lock screen. That is
+         the entire use. Meedwell never sends a notification about anything
+         else, and there are no engagement notifications by design. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- So Meedwell can see music already on the phone, and the files a user
+         downloaded from Bandcamp themselves. Verification found no download
+         endpoint, which makes this the path by which owned files reach the
+         shelf at all. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <!-- Streaming and syncing the collection. The only network peer is
+         Bandcamp's own API server. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name=".MeedwellApplication"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Meedwell">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:theme="@style/Theme.Meedwell">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

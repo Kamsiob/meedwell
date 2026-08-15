@@ -1,0 +1,49 @@
+# Secrets. Written in the first commit, before anything sensitive can exist.
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+play-service-account*.json
+*service-account*.json
+secrets.properties
+local.properties
+credentials.txt
+/private/
+
+# Build output
+*.iml
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.aar
+output-metadata.json
+
+# Local exports and test data
+/exports/
+/scratch/
+*.meedwellexport
+
+# IDE and editor junk
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Android Studio navigation and caches
+.navigation/
+.cxx
+
+# Credentials, again and explicitly. The repository is public, and the cost of
+# one of these landing in it is not recoverable by deleting the file later.
+*.env
+meedwell-subsonic*
+subsonic-credentials*
+/api-responses/
+# Build-kit meta and the owner's standing template. Context for building the
+# app, not part of the app, and not for strangers reading the repository.
+/private/
