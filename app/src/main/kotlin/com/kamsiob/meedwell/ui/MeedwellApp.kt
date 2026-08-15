@@ -36,6 +36,8 @@ import com.kamsiob.meedwell.ui.screens.ArtworkViewer
 import com.kamsiob.meedwell.ui.screens.MoreDestination
 import com.kamsiob.meedwell.ui.screens.MoreScreen
 import com.kamsiob.meedwell.ui.screens.PrivacyScreen
+import com.kamsiob.meedwell.ui.screens.SearchScreen
+import com.kamsiob.meedwell.ui.screens.bandcampSearchUrl
 import com.kamsiob.meedwell.ui.screens.SettingsScreen
 import com.kamsiob.meedwell.ui.screens.WhatsAheadScreen
 import com.kamsiob.meedwell.ui.screens.YourFilesScreen
@@ -82,6 +84,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val albumDetail by viewModel.albumDetail.collectAsState()
     val settingsState by viewModel.settingsState.collectAsState()
     val yourFiles by viewModel.yourFiles.collectAsState()
+    val search by viewModel.search.collectAsState()
 
     // The Storage Access Framework picker. A tree grant with persistable
     // permission, so the folder survives a reboot rather than being asked for
@@ -149,7 +152,16 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                             onFindOnBandcamp = { open("https://bandcamp.com/discover") },
                             onAddLocalFolders = { /* Phase 2: watched folders */ },
                         )
-                        Tab.Search -> Placeholder("Search", "Your shelf, and Bandcamp's site one tap away.")
+                        Tab.Search -> SearchScreen(
+                            state = search,
+                            onQueryChange = viewModel::onSearchQueryChange,
+                            onAlbumClick = { destination = Destination.AlbumDetail(it.id) },
+                            onTrackClick = { track -> viewModel.playAlbum(track.albumId) },
+                            onArtistClick = { /* Phase 3: artist pages */ },
+                            // The only thing about a search that ever leaves
+                            // the phone, and only when this is tapped.
+                            onSearchBandcamp = { query -> open(bandcampSearchUrl(query)) },
+                        )
                         Tab.Lists -> Placeholder("Lists", "Lists live on this phone.")
                         Tab.More -> MoreScreen(
                             connected = shelf.connected,

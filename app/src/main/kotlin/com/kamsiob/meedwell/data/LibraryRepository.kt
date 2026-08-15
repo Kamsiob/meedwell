@@ -76,6 +76,16 @@ class LibraryRepository(
 
     suspend fun track(id: String): Track? = db.tracks().byId(id)?.toDomain()
 
+    /** Search across albums, tracks and artists, all locally. */
+    suspend fun search(query: String): SearchResults {
+        val like = "%" + query.trim().replace("%", "").replace("_", "") + "%"
+        return SearchResults(
+            albums = db.albums().search(like).map { it.toDomain() },
+            tracks = db.tracks().search(like).map { it.toDomain() },
+            artists = db.artists().search(like).map { it.toDomain() },
+        )
+    }
+
     suspend fun tracks(ids: List<String>): List<Track> {
         val byId = db.tracks().byIds(ids).associateBy { it.id }
         // Preserve the caller's order, which matters for a queue.
@@ -229,6 +239,12 @@ class LibraryRepository(
         const val MAX_ALBUMS = 100_000
     }
 }
+
+data class SearchResults(
+    val albums: List<Album>,
+    val tracks: List<Track>,
+    val artists: List<Artist>,
+)
 
 enum class ShelfSort { Artist, Recent, Title, MostPlayed }
 

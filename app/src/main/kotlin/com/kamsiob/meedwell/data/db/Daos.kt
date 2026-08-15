@@ -65,6 +65,17 @@ interface AlbumDao {
     @Query("SELECT * FROM album")
     suspend fun all(): List<AlbumEntity>
 
+    /**
+     * Search, done in the database rather than in Kotlin.
+     *
+     * `search3` exists on Bandcamp's API and searches the same collection this
+     * table already holds, so calling it would mean a round trip and a spinner
+     * to learn something already known. Local search is instant, works offline,
+     * and makes "nothing about the search leaves the phone" literally true.
+     */
+    @Query("SELECT * FROM album WHERE name LIKE :like OR artist LIKE :like ORDER BY sortArtist, sortName LIMIT :limit")
+    suspend fun search(like: String, limit: Int = 20): List<AlbumEntity>
+
     @Query("SELECT * FROM album WHERE artistId = :artistId ORDER BY year DESC, sortName")
     fun observeByArtistId(artistId: String): Flow<List<AlbumEntity>>
 
@@ -119,6 +130,9 @@ interface TrackDao {
     @Query("SELECT * FROM track WHERE isStarred = 1 ORDER BY artist, title")
     fun observeStarred(): Flow<List<TrackEntity>>
 
+    @Query("SELECT * FROM track WHERE title LIKE :like ORDER BY artist, title LIMIT :limit")
+    suspend fun search(like: String, limit: Int = 50): List<TrackEntity>
+
     @Query("SELECT COUNT(*) FROM track WHERE albumId = :albumId AND localPath IS NOT NULL")
     suspend fun countPresentForAlbum(albumId: String): Int
 
@@ -158,6 +172,9 @@ interface ArtistDao {
 
     @Query("SELECT * FROM artist WHERE id = :id")
     fun observeById(id: String): Flow<ArtistEntity?>
+
+    @Query("SELECT * FROM artist WHERE name LIKE :like ORDER BY sortName LIMIT :limit")
+    suspend fun search(like: String, limit: Int = 20): List<ArtistEntity>
 
     @Query("SELECT COUNT(*) FROM artist")
     fun observeCount(): Flow<Int>

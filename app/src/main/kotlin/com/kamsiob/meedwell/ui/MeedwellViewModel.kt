@@ -25,6 +25,7 @@ import com.kamsiob.meedwell.ui.screens.ConnectError
 import com.kamsiob.meedwell.ui.screens.ConnectState
 import com.kamsiob.meedwell.ui.screens.CoverUrls
 import com.kamsiob.meedwell.ui.screens.ShelfState
+import com.kamsiob.meedwell.ui.screens.SearchState
 import com.kamsiob.meedwell.ui.screens.ShelfView
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -72,6 +73,9 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     val albumDetail: StateFlow<AlbumDetail?> = _albumDetail.asStateFlow()
 
     private val scanner = LocalScanner(container.appContext, container.database)
+
+    private val _search = MutableStateFlow(SearchState())
+    val search: StateFlow<SearchState> = _search.asStateFlow()
 
     private val _settings = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settings.asStateFlow()
@@ -167,6 +171,36 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
             .launchIn(viewModelScope)
 
         refreshSettings()
+    }
+
+    // ---------- Search ----------
+
+    /**
+     * Searches the local database rather than the API.
+     *
+     * `search3` exists and works, but it searches the same collection the
+     * database already holds, so calling it would mean a round trip and a
+     * spinner to learn something already known. Searching locally is instant,
+     * works offline, and is literally true when the screen says nothing about
+     * the search leaves the phone.
+     */
+    fun onSearchQueryChange(query: String) {
+        _search.value = _search.value.copy(query = query)
+        if (query.isBlank()) {
+            _search.value = SearchState(query = query)
+            return
+        }
+        viewModelScope.launch {
+            val results = container.library.search(query)
+            // Guard against a slow query landing after the user has typed on.
+            if (_search.value.query != query) return@launch
+            _search.value = SearchState(
+                query = query,
+                albums = results.albums,
+                tracks = results.tracks,
+                artists = results.artists,
+            )
+        }
     }
 
     // ---------- Settings ----------

@@ -95,6 +95,10 @@ class PlaybackService : MediaLibraryService() {
 
         player = exo
         QueuePersistence.attach(exo, container)
+        // The play log. Everything that looks like intelligence on the shelf
+        // reads this one table, and without it History, the Forgotten Shelf and
+        // the most-played sort are all permanently empty.
+        PlayLogger(container).attach(exo)
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? = session

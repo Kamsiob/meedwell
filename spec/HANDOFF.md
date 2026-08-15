@@ -8,9 +8,9 @@ The resume document. Kept current at all times so a session with no memory of an
 
 ## State of play
 
-**Last updated: 15 August 2026.**
+**Last updated: 15 August 2026, second entry.**
 
-Phase 0 is complete. The repository is live at https://github.com/Kamsiob/meedwell, public, with 48 issues open and a first signed commit. The app builds, installs on the Pixel 8, and launches to the Welcome screen with the real design tokens and both bundled fonts.
+Phase 0 is complete, Phase 1 is complete, and Phase 2 is largely complete. The repository is live at https://github.com/Kamsiob/meedwell, public, with 48 issues open and a first signed commit. The app builds, installs on the Pixel 8, and launches to the Welcome screen with the real design tokens and both bundled fonts.
 
 **API verification is done, and it changed the product.** This is the most important thing on this page. The full evidence is in `DECISIONS.md` under 15 August 2026 and in `API-VERIFICATION.md`, whose tables are filled in. The three findings that changed what gets built:
 
@@ -24,18 +24,41 @@ Three more that will bite anyone who forgets them:
 - **A failed login is HTTP 500 with an empty body**, not error code 40. That is the unexplained 401 from the field reports.
 - **`{"error":true,"error_message":"bad version"}` means the route does not exist**, not that the version is wrong. Every version from 1.8.0 to 1.16.1 returns it on a bad path.
 
+## What works right now, verified on the Pixel
+
+Every item here was exercised on the device against the real account, not only compiled.
+
+- **Connect, sync and the shelf.** Three albums, 60 tracks, artists and genres arrive and render with cover art. Albums, Artists and Genres are sibling views; grid and list both work.
+- **Playback.** Media3 through a `MediaLibraryService`. Audio focus granted, `AudioTrack` live, media button session registered, gapless advance between tracks confirmed. Queue and position are written on every meaningful change.
+- **Album screen**, including the collapsing toolbar and the legibility law: cover complete, hard edge, text only past it.
+- **Now playing**, with the palette-derived wash clamped so white passes. The clamp is swept across 216 colours in a unit test.
+- **Artwork viewer**, themeless by construction.
+- **Mini player** with the waveform, which stills when paused.
+- **Search**, done locally, with the Bandcamp browser handoff.
+- **More, Privacy, What's ahead, About, Settings**, all with copy checked against what the software actually does.
+- **Your files**, the Tier C surface, with the local scanner, matching, and reconciliation.
+- **The play log**, which History, the Forgotten Shelf and most-played all read.
+
 ## Next concrete step
 
-**Phase 1, the working core.** Start with the Connect flow, issue #6's screen half, then sync (#7), then the shelf (#9).
+**Phase 3, the rest of the collection.** In rough order of value:
 
-Before writing the shelf's sort menu, read issue #48: three of the API's list types return empty, so the specified "most played" sort has to be computed on device instead.
+1. History and the Forgotten Shelf. Both read `play_event`, which is now being written, so both are mostly a screen each.
+2. The action sheet (#13), which every surface needs and which several screens currently have a `TODO` comment where it belongs.
+3. The queue sheet (#12), reachable from now playing.
+4. Lists (#18) and Loved (#19), both local, both with their stated limits.
+5. Artist pages.
+
+Then Phase 5 platform surfaces (#26 through #30), Phase 6 export and restore (#3, a release blocker), and Phase 7.
+
+**Do not skip #49.** A missing migration currently crash-loops the app with no way out. The no-destructive-migration decision is right; its handling is not, and a released user hitting it would lose everything.
 
 ## Remaining work inventory
 
 - **Phase 0, repository and verification: complete and verified.** Repository created, `repo-seed` copied in, 48 issues opened, both modules scaffolded, design tokens implemented, tolerant parsing written and tested, smoke test passing on the device.
-- **Phase 1, the working core: not started.**
-- **Phase 2, ownership: not started.** Reshaped by Tier C into the "Your files" surface (#14) rather than a download manager. There is no download queue, no foreground download service and no storage-exhaustion path, because nothing is being fetched.
-- **Phase 3, the collection: not started.**
+- **Phase 1, the working core: complete and device-verified.** See the list above.
+- **Phase 2, ownership: largely complete.** Reshaped by Tier C into the "Your files" surface (#14). Watched folders, scanning, tag reading with `albumArtist` preferred, matching, local-only albums and reconciliation are all built. **Not yet verified end to end on the device with real files**, because that needs a folder of Bandcamp downloads on the phone to test against; the matching rules themselves have unit coverage.
+- **Phase 3, the collection: partly done.** Search is built and verified. History, the Forgotten Shelf, Lists, Loved, artist pages, the action sheet and the queue sheet remain.
 - **Phase 4, local files: not started.** Note that Tier C promoted folder scanning itself into Phase 2; what remains here is the tag and merge intelligence on top.
 - **Phase 5, platform surfaces: not started.**
 - **Phase 6, files and backup: not started.**
@@ -51,6 +74,10 @@ The issue tracker is the item-level inventory from here on.
 - **Drawing the mark's cradle with `arcTo` and a rect built from the arc's ends and its lowest point.** The ellipse's lowest point landed below the canvas, the arc was clipped, and the coin floated well clear of it. It looked wrong on the device before anything caught it. Now drawn as two quadratics meeting at the bottom centre, so the join *is* the lowest point, and there is a unit test asserting the coin touches. Worth revisiting only with the test in place.
 - **Capturing script-level values inside a Gradle `doLast`.** Breaks the configuration cache, which slows every build. Capture them as locals in the task registration block instead.
 - **Truth's `assertWithMessage` with `%.2f`.** It takes `%s` placeholders only. Format the number before passing it.
+- **Applying `padding` after a size modifier in Compose.** It shrinks the content inside the size rather than adding around it. The waveform rendered as a row of dots for this reason: a 38dp box with 18dp of padding left 20dp of canvas. Padding goes before the size.
+- **A corner radius taken from bar width alone.** Short bars became circles. Cap the radius against height too.
+- **Assuming a library merges a permission you rely on.** `FOREGROUND_SERVICE` was on the audit allowlist but never declared, and the service crashed the moment it went foreground. The audit fails on permissions that should not be there; it cannot notice one that should.
+- **Adding a database column without bumping the schema version.** Room refuses to open the old database and the app crash-loops. Correct behaviour, badly handled; see #49.
 
 ## Measurements
 
@@ -59,7 +86,7 @@ Real figures, not impressions.
 - **The owner's collection: 3 albums, 60 tracks, 3.5 hours.** Far too small to validate any large-library work, so the synthetic emulator test (#33) carries that load alone and cannot be skipped on the strength of a fast real sync.
 - **API response times: roughly 200 ms** for metadata calls. 20 rapid sequential calls averaged 105 ms with zero failures and no rate limiting.
 - **Cover art: 700x700 JPEG, about 174 KB.** The `size` parameter is ignored, so the app resizes locally.
-- **Tests: 23 in `:core`, 9 in `:app`.** All passing.
+- **Tests: 60 in `:core`, 14 in `:app`.** All passing. The `:app` suite includes the contrast measurements for every token pair, the mark's construction rule, and the wash clamp swept over the colour cube.
 - Still to measure: sync duration on a large library, app size, cold start, memory during a large sync.
 
 ## Environment and toolchain notes
