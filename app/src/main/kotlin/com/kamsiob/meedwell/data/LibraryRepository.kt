@@ -311,6 +311,7 @@ internal fun AlbumEntity.toDomain() = Album(
 internal fun Track.toEntity(localPath: String? = null) = TrackEntity(
     id = id,
     albumId = albumId,
+    albumName = albumName,
     title = title,
     artist = artist,
     artistId = artistId,
@@ -324,12 +325,13 @@ internal fun Track.toEntity(localPath: String? = null) = TrackEntity(
     coverArtId = coverArtId,
     localPath = localPath ?: this.localPath,
     isStarred = isStarred,
-    resumePositionSeconds = null,
+    resumePositionSeconds = resumePositionSeconds,
 )
 
 internal fun TrackEntity.toDomain() = Track(
     id = id,
     albumId = albumId,
+    albumName = albumName,
     title = title,
     artist = artist,
     artistId = artistId,
@@ -343,6 +345,7 @@ internal fun TrackEntity.toDomain() = Track(
     coverArtId = coverArtId,
     localPath = localPath,
     isStarred = isStarred,
+    resumePositionSeconds = resumePositionSeconds,
 )
 
 internal fun Artist.toEntity(lastSeenAt: Long) = ArtistEntity(

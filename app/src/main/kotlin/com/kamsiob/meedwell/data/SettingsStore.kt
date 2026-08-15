@@ -40,6 +40,18 @@ class SettingsStore(context: Context) {
         get() = prefs.getBoolean(KEY_LONG_RESUME, true)
         set(value) = prefs.edit { putBoolean(KEY_LONG_RESUME, value) }
 
+    /**
+     * Where the queue was when the app last knew. Written with the queue itself
+     * so that reopening lands on the same track at the same position, paused.
+     */
+    var queueIndex: Int
+        get() = prefs.getInt(KEY_QUEUE_INDEX, 0)
+        set(value) = prefs.edit { putInt(KEY_QUEUE_INDEX, value) }
+
+    var queuePositionSeconds: Long
+        get() = prefs.getLong(KEY_QUEUE_POSITION, 0L)
+        set(value) = prefs.edit { putLong(KEY_QUEUE_POSITION, value) }
+
     var lastSyncAt: Long
         get() = prefs.getLong(KEY_LAST_SYNC, 0L)
         set(value) = prefs.edit { putLong(KEY_LAST_SYNC, value) }
@@ -69,6 +81,8 @@ class SettingsStore(context: Context) {
         const val KEY_GAPLESS = "gapless"
         const val KEY_LONG_RESUME = "long_resume"
         const val KEY_LAST_SYNC = "last_sync"
+        const val KEY_QUEUE_INDEX = "queue_index"
+        const val KEY_QUEUE_POSITION = "queue_position"
         const val KEY_CHOSEN_PATH = "chosen_path"
     }
 }

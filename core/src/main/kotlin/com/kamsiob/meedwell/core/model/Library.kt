@@ -41,6 +41,8 @@ enum class Origin {
 data class Track(
     val id: String,
     val albumId: String,
+    /** Carried on the track because the system media card shows it. */
+    val albumName: String,
     val title: String,
     val artist: String,
     val artistId: String,
@@ -55,6 +57,12 @@ data class Track(
     /** Set when a file for this track exists on the phone. Playback prefers it. */
     val localPath: String? = null,
     val isStarred: Boolean = false,
+    /**
+     * Where the listener got to, kept only for long pieces. Losing your place
+     * in a twenty minute piece is a real loss; losing it in a three minute song
+     * is not, so short tracks never carry one.
+     */
+    val resumePositionSeconds: Long? = null,
 ) {
     val isPresentLocally: Boolean get() = localPath != null
 

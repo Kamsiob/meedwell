@@ -62,6 +62,7 @@ data class AlbumEntity(
 data class TrackEntity(
     @PrimaryKey val id: String,
     val albumId: String,
+    val albumName: String,
     val title: String,
     val artist: String,
     val artistId: String,

@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +28,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.kamsiob.meedwell.ui.components.MiniPlayer
+import com.kamsiob.meedwell.ui.screens.AlbumScreen
 import com.kamsiob.meedwell.ui.screens.ConnectScreen
 import com.kamsiob.meedwell.ui.screens.ShelfScreen
 import com.kamsiob.meedwell.ui.screens.WelcomeScreen
@@ -54,6 +57,8 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val context = LocalContext.current
     val shelf by viewModel.shelf.collectAsState()
     val connect by viewModel.connect.collectAsState()
+    val playback by viewModel.playback.collectAsState()
+    val albumDetail by viewModel.albumDetail.collectAsState()
 
     var destination by remember {
         mutableStateOf<Destination>(
@@ -119,17 +124,52 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                         Tab.More -> Placeholder("More", "Privacy, What's ahead, Settings and About.")
                     }
                 }
+                MiniPlayer(
+                    state = playback,
+                    onPlayPause = viewModel.player::playPause,
+                    onOpen = { /* Phase 1: now playing */ },
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
                 TabBar(
                     selected = current.tab,
                     onSelect = { destination = Destination.Main(it) },
                 )
             }
 
-            is Destination.AlbumDetail -> Placeholder(
-                "Album",
-                "The album screen arrives next.",
-                onBack = { destination = Destination.Main() },
-            )
+            is Destination.AlbumDetail -> {
+                LaunchedEffect(current.albumId) { viewModel.openAlbum(current.albumId) }
+                val detail = albumDetail
+                if (detail == null) {
+                    // No spinner. The album is in the database already, so this
+                    // is a frame or two, and a spinner would be theatre.
+                    Box(Modifier.fillMaxSize())
+                } else {
+                    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+                        Box(Modifier.weight(1f)) {
+                            AlbumScreen(
+                                album = detail.album,
+                                tracks = detail.tracks,
+                                playingTrackId = playback.trackId,
+                                onBack = { destination = Destination.Main() },
+                                onPlay = { viewModel.playAlbum(detail.album.id) },
+                                onShuffle = { viewModel.shuffleAlbum(detail.album.id) },
+                                onTrackClick = { index -> viewModel.playAlbum(detail.album.id, index) },
+                                onTrackLongClick = { /* Phase 3: the action sheet */ },
+                                onAlbumMenu = { /* Phase 3: the action sheet */ },
+                                onOpenArtwork = { /* Phase 3: the artwork viewer */ },
+                            )
+                        }
+                        MiniPlayer(
+                            state = playback,
+                            onPlayPause = viewModel.player::playPause,
+                            onOpen = { },
+                            modifier = Modifier
+                                .padding(bottom = 6.dp)
+                                .navigationBarsPadding(),
+                        )
+                    }
+                }
+            }
         }
     }
 }

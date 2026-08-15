@@ -20,7 +20,8 @@ import com.kamsiob.meedwell.data.db.MeedwellDatabase
  */
 class AppContainer(context: Context) {
 
-    private val appContext = context.applicationContext
+    /** Exposed so the player controller can bind to the service. */
+    val appContext: Context = context.applicationContext
 
     val database: MeedwellDatabase by lazy { MeedwellDatabase.get(appContext) }
 

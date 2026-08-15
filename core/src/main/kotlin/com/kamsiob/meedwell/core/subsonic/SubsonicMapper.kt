@@ -94,6 +94,7 @@ fun SubsonicSong.toDomain(): Track = Track(
     // `albumId` is the reliable one; `parent` carries the same value and is
     // the fallback for servers that only send the older field.
     albumId = albumId.ifBlank { parent },
+    albumName = album,
     title = title,
     artist = artist,
     artistId = artistId,

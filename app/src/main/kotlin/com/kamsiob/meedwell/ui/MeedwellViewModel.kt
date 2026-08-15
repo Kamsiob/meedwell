@@ -11,6 +11,10 @@ import com.kamsiob.meedwell.data.ShelfScope
 import com.kamsiob.meedwell.data.ShelfSort
 import com.kamsiob.meedwell.data.SyncFailure
 import com.kamsiob.meedwell.data.SyncResult
+import com.kamsiob.meedwell.core.model.Album
+import com.kamsiob.meedwell.core.model.Track
+import com.kamsiob.meedwell.playback.PlaybackState
+import com.kamsiob.meedwell.playback.PlayerController
 import com.kamsiob.meedwell.ui.screens.ConnectError
 import com.kamsiob.meedwell.ui.screens.ConnectState
 import com.kamsiob.meedwell.ui.screens.CoverUrls
@@ -50,9 +54,49 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     private val _sort = MutableStateFlow(ShelfSort.Artist)
     private val _scope = MutableStateFlow(ShelfScope.Everything)
 
+    /**
+     * Playback, bound to the service so that the app, the notification and the
+     * lock screen are all driving one player rather than two that can disagree.
+     */
+    val player = PlayerController(container.appContext, container)
+
+    val playback: StateFlow<PlaybackState> get() = player.state
+
+    private val _albumDetail = MutableStateFlow<AlbumDetail?>(null)
+    val albumDetail: StateFlow<AlbumDetail?> = _albumDetail.asStateFlow()
+
     init {
         installCoverResolver()
         observeLibrary()
+        player.connect()
+    }
+
+    override fun onCleared() {
+        player.release()
+        super.onCleared()
+    }
+
+    /** Loads one album and its tracks for the album screen. */
+    fun openAlbum(albumId: String) {
+        _albumDetail.value = null
+        viewModelScope.launch {
+            combine(
+                container.library.observeAlbum(albumId),
+                container.library.observeTracks(albumId),
+            ) { album, tracks -> album?.let { AlbumDetail(it, tracks) } }
+                .collect { _albumDetail.value = it }
+        }
+    }
+
+    fun playAlbum(albumId: String, startIndex: Int = 0) = player.playAlbum(albumId, startIndex)
+
+    fun shuffleAlbum(albumId: String) {
+        viewModelScope.launch {
+            // Honestly random, which is what the queue sheet promises. No
+            // weighting, no recency avoidance, no cleverness.
+            val tracks = container.library.tracksForAlbum(albumId).shuffled()
+            player.playTracks(tracks)
+        }
     }
 
     /**
@@ -229,3 +273,6 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
             MeedwellViewModel(container) as T
     }
 }
+
+/** An album together with its tracks, which is what the album screen needs. */
+data class AlbumDetail(val album: Album, val tracks: List<Track>)

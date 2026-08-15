@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "7c90a41bd5b0febb6adc5aa72e0e561f",
+    "identityHash": "4da97bd3833badecb16a1d09d8ffeecf",
     "entities": [
       {
         "tableName": "album",
@@ -142,7 +142,7 @@
       },
       {
         "tableName": "track",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `albumId` TEXT NOT NULL, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `artistId` TEXT NOT NULL, `trackNumber` INTEGER NOT NULL, `discNumber` INTEGER NOT NULL, `durationSeconds` INTEGER NOT NULL, `year` INTEGER NOT NULL, `suffix` TEXT NOT NULL, `bitRate` INTEGER NOT NULL, `sizeBytes` INTEGER NOT NULL, `coverArtId` TEXT NOT NULL, `localPath` TEXT, `isStarred` INTEGER NOT NULL, `resumePositionSeconds` INTEGER, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `albumId` TEXT NOT NULL, `albumName` TEXT NOT NULL, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `artistId` TEXT NOT NULL, `trackNumber` INTEGER NOT NULL, `discNumber` INTEGER NOT NULL, `durationSeconds` INTEGER NOT NULL, `year` INTEGER NOT NULL, `suffix` TEXT NOT NULL, `bitRate` INTEGER NOT NULL, `sizeBytes` INTEGER NOT NULL, `coverArtId` TEXT NOT NULL, `localPath` TEXT, `isStarred` INTEGER NOT NULL, `resumePositionSeconds` INTEGER, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -153,6 +153,12 @@
           {
             "fieldPath": "albumId",
             "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumName",
+            "columnName": "albumName",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -625,7 +631,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7c90a41bd5b0febb6adc5aa72e0e561f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4da97bd3833badecb16a1d09d8ffeecf')"
     ]
   }
 }

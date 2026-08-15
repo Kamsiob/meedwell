@@ -51,6 +51,29 @@
             </intent-filter>
         </activity>
 
+
+        <!--
+          The playback service. A MediaLibraryService rather than a plain
+          MediaSessionService, which costs nothing now and is what makes Android
+          Auto a small change later rather than a rewrite.
+
+          foregroundServiceType mediaPlayback is required from Android 14, and
+          without it a long run is killed on most phones.
+
+          exported is true because the system media controls, the lock screen
+          and Bluetooth media buttons all reach the session from outside the
+          app. The intent filter is the only way in.
+        -->
+        <service
+            android:name=".playback.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>
