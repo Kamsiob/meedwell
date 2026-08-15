@@ -129,7 +129,7 @@ fun Waveform(
             // The breathe is a few percent, never enough to misrepresent the
             // shape of the music.
             val breathed = amplitude * (0.94f + 0.12f * breatheFor(index, breathe))
-            val height = (size.height * breathed.coerceIn(0.08f, 1f))
+            val height = (size.height * breathed.coerceIn(0.18f, 1f))
             val top = (size.height - height) / 2f
 
             val played = x + barWidth / 2f <= playedUpTo
@@ -147,11 +147,16 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRoundRectCompat
     topLeft: Offset,
     size: Size,
 ) {
+    // The radius is capped against the bar's own height as well as its width.
+    // Without the height cap a short bar becomes a circle, and a row of short
+    // bars reads as a dotted line rather than as a waveform. Caught on the
+    // device: the first version looked like a dashed rule.
+    val radius = minOf(size.width, size.height) / 2f
     drawRoundRect(
         color = color,
         topLeft = topLeft,
         size = size,
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width / 2f),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius),
     )
 }
 
@@ -170,8 +175,11 @@ private fun breatheFor(index: Int, phase: Float): Float =
 private fun placeholderEnvelope(barCount: Int): List<Float> =
     (0 until barCount).map { i ->
         val t = i.toFloat() / barCount
-        val body = 0.45f + 0.35f * abs(sin(t * 6.2f))
-        val fadeIn = (t * 6f).coerceAtMost(1f)
-        val fadeOut = ((1f - t) * 6f).coerceAtMost(1f)
-        (body * fadeIn * fadeOut).coerceIn(0.12f, 1f)
+        // Two frequencies rather than one, so the shape has the uneven look
+        // real music has instead of a regular ripple.
+        val body = 0.42f + 0.40f * abs(sin(t * 7.3f)) + 0.18f * abs(sin(t * 19.7f))
+        // A gentle taper at the ends only, so the row still reads as bars all
+        // the way across rather than trailing off into dots.
+        val taper = (0.55f + 0.45f * kotlin.math.sin(t * 3.1415f)).coerceIn(0.55f, 1f)
+        (body * taper).coerceIn(0.22f, 1f)
     }

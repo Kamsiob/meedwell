@@ -40,6 +40,27 @@ class PlayerController(
     private val _state = MutableStateFlow(PlaybackState())
     val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
+    /**
+     * A position ticker.
+     *
+     * The player only emits events on state changes, so without this the
+     * waveform and the clock would sit still through a whole track. One second
+     * is enough for a clock and for a scrubber, and cheap enough to run only
+     * while something is actually playing.
+     */
+    private fun startTicker() {
+        if (ticker != null) return
+        ticker = scope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(1_000)
+                val c = controller ?: continue
+                if (c.isPlaying) pushState(c)
+            }
+        }
+    }
+
+    private var ticker: kotlinx.coroutines.Job? = null
+
     fun connect() {
         if (controller != null) return
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
@@ -51,12 +72,15 @@ class PlayerController(
                 c.addListener(StateListener())
                 restoreQueue(c)
                 pushState(c)
+                startTicker()
             },
             MoreExecutors.directExecutor(),
         )
     }
 
     fun release() {
+        ticker?.cancel()
+        ticker = null
         controller?.release()
         controller = null
     }
@@ -138,6 +162,9 @@ class PlayerController(
             trackId = player.currentMediaItem?.mediaId,
             positionMs = player.currentPosition.coerceAtLeast(0),
             durationMs = player.duration.coerceAtLeast(0),
+            isLocalFile = player.currentMediaItem
+                ?.localConfiguration?.uri?.scheme
+                ?.let { it != "http" && it != "https" } ?: false,
         )
     }
 
@@ -155,6 +182,12 @@ data class PlaybackState(
     val trackId: String? = null,
     val positionMs: Long = 0,
     val durationMs: Long = 0,
+    /**
+     * Whether the thing playing is a file on this phone rather than a stream.
+     * Drives the honest line under the title, which never implies more than
+     * MP3 for a stream, because MP3 is what Bandcamp's API serves.
+     */
+    val isLocalFile: Boolean = false,
 ) {
     val progress: Float
         get() = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f

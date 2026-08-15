@@ -29,9 +29,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.kamsiob.meedwell.ui.components.MiniPlayer
+import com.kamsiob.meedwell.ui.components.rememberWashColor
 import com.kamsiob.meedwell.ui.screens.AlbumScreen
+import com.kamsiob.meedwell.ui.screens.ArtworkViewer
+import com.kamsiob.meedwell.ui.screens.NowPlayingScreen
 import com.kamsiob.meedwell.ui.screens.ConnectScreen
 import com.kamsiob.meedwell.ui.screens.ShelfScreen
+import com.kamsiob.meedwell.ui.screens.coverUrl
 import com.kamsiob.meedwell.ui.screens.WelcomeScreen
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
@@ -50,6 +54,8 @@ sealed interface Destination {
     data object Connect : Destination
     data class Main(val tab: Tab = Tab.Shelf) : Destination
     data class AlbumDetail(val albumId: String) : Destination
+    data object NowPlaying : Destination
+    data class Artwork(val uri: String?, val title: String, val subtitle: String) : Destination
 }
 
 @Composable
@@ -127,7 +133,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                 MiniPlayer(
                     state = playback,
                     onPlayPause = viewModel.player::playPause,
-                    onOpen = { /* Phase 1: now playing */ },
+                    onOpen = { destination = Destination.NowPlaying },
                     modifier = Modifier.padding(bottom = 6.dp),
                 )
                 TabBar(
@@ -135,6 +141,37 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                     onSelect = { destination = Destination.Main(it) },
                 )
             }
+
+            Destination.NowPlaying -> {
+                val wash by rememberWashColor(playback.artworkUri)
+                NowPlayingScreen(
+                    state = playback,
+                    washColor = wash,
+                    onCollapse = { destination = Destination.Main() },
+                    onPlayPause = viewModel.player::playPause,
+                    onNext = { viewModel.player.next() },
+                    onPrevious = viewModel.player::previous,
+                    onSeek = viewModel.player::seekTo,
+                    onOpenArtwork = {
+                        destination = Destination.Artwork(
+                            uri = playback.artworkUri,
+                            title = playback.title,
+                            subtitle = playback.artist,
+                        )
+                    },
+                    onOpenQueue = { /* Phase 3: the queue sheet */ },
+                    onMenu = { /* Phase 3: the action sheet */ },
+                    modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+                )
+            }
+
+            is Destination.Artwork -> ArtworkViewer(
+                artworkUri = current.uri,
+                title = current.title,
+                subtitle = current.subtitle,
+                onClose = { destination = Destination.NowPlaying },
+                modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+            )
 
             is Destination.AlbumDetail -> {
                 LaunchedEffect(current.albumId) { viewModel.openAlbum(current.albumId) }
@@ -156,13 +193,19 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                                 onTrackClick = { index -> viewModel.playAlbum(detail.album.id, index) },
                                 onTrackLongClick = { /* Phase 3: the action sheet */ },
                                 onAlbumMenu = { /* Phase 3: the action sheet */ },
-                                onOpenArtwork = { /* Phase 3: the artwork viewer */ },
+                                onOpenArtwork = {
+                                    destination = Destination.Artwork(
+                                        uri = detail.album.coverUrl,
+                                        title = detail.album.name,
+                                        subtitle = detail.album.artist,
+                                    )
+                                },
                             )
                         }
                         MiniPlayer(
                             state = playback,
                             onPlayPause = viewModel.player::playPause,
-                            onOpen = { },
+                            onOpen = { destination = Destination.NowPlaying },
                             modifier = Modifier
                                 .padding(bottom = 6.dp)
                                 .navigationBarsPadding(),

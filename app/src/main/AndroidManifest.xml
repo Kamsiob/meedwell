@@ -30,6 +30,20 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- The playback service goes foreground while something is playing, which
+         is what keeps audio alive when the app is not on screen and what puts
+         the player in the notification shade.
+
+         Both are required from Android 14, and the typed one has to match the
+         service's foregroundServiceType. Without them the app crashes the
+         moment the service posts its notification, which is exactly what
+         happened before they were added: playback started fine and then died
+         on backgrounding. The manifest audit could not catch this, because its
+         job is to fail on a permission that should not be here rather than to
+         notice one that should. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
     <application
         android:name=".MeedwellApplication"
         android:allowBackup="false"

@@ -85,8 +85,8 @@ fun MiniPlayer(
             progress = state.progress,
             animate = state.isPlaying,
             modifier = Modifier
-                .size(width = 64.dp, height = 18.dp)
-                .padding(end = 8.dp),
+                .padding(end = 8.dp)
+                .size(width = 64.dp, height = 20.dp),
         )
         Box(
             Modifier

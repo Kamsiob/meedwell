@@ -311,13 +311,15 @@ private fun MenuButton(onClick: () -> Unit) {
             .semantics { contentDescription = "More actions for this album" },
         contentAlignment = Alignment.Center,
     ) {
-        Text("···", style = MeedwellTheme.typography.rowTitle, color = MeedwellTheme.colors.primaryText)
+        Text("• • •", style = MeedwellTheme.typography.rowTitle, color = MeedwellTheme.colors.primaryText)
     }
 }
 
 /** Tabular, and always minutes and seconds rather than a bare count. */
 fun formatDuration(seconds: Long): String {
-    if (seconds <= 0) return "--:--"
+    // Zero is a real position, and "0:00" is what a listener expects at the
+    // start of a track. Only an unknown duration is dashes.
+    if (seconds < 0) return "--:--"
     val hours = seconds / 3600
     val minutes = (seconds % 3600) / 60
     val secs = seconds % 60
