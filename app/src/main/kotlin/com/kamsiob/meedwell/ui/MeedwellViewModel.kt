@@ -55,6 +55,24 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     private val settings = container.settings
 
+    /**
+     * A short line confirming something happened, shown once and then gone.
+     *
+     * Every verb in the action sheet acts on something off screen: a queue you
+     * are not looking at, an account somewhere else. Without a word back, the
+     * sheet closing is the only feedback, which is indistinguishable from the
+     * sheet closing because nothing worked.
+     *
+     * **Declared here, above `init`, on purpose.** Kotlin initializes
+     * properties in declaration order, and `init` announces a database that had
+     * to be set aside. With this further down the class it was still null at
+     * that moment, so the one path that exists to rescue somebody from an
+     * unopenable database crashed instead. That path is by definition the one
+     * nobody exercises, which is exactly why it has to be right.
+     */
+    private val _notice = MutableStateFlow<String?>(null)
+    val notice: StateFlow<String?> = _notice.asStateFlow()
+
     private val _shelf = MutableStateFlow(
         ShelfState(
             grid = settings.shelfGrid,
@@ -145,6 +163,21 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
         observeLibrary()
         player.connect()
         surroundings.load()
+        announceSetAsideDatabase()
+    }
+
+    /**
+     * Says so, once, when the previous database could not be read.
+     *
+     * Without this the app opens onto an empty shelf and the user is left to
+     * conclude that it lost everything. It did not: the old file was renamed
+     * rather than deleted, and this says where it is.
+     */
+    private fun announceSetAsideDatabase() {
+        val name = com.kamsiob.meedwell.data.db.MeedwellDatabase.setAsideFileName ?: return
+        _notice.value = "Meedwell could not read the data it had, so it started fresh. " +
+            "Your old data was not deleted: it is still on this phone as $name. " +
+            "Your music and your Bandcamp account are untouched."
     }
 
     override fun onCleared() {
@@ -705,17 +738,6 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     // ---------- The action sheet ----------
-
-    /**
-     * A short line confirming something happened, shown once and then gone.
-     *
-     * Every verb in the action sheet acts on something off screen: a queue you
-     * are not looking at, an account somewhere else. Without a word back, the
-     * sheet closing is the only feedback, which is indistinguishable from the
-     * sheet closing because nothing worked.
-     */
-    private val _notice = MutableStateFlow<String?>(null)
-    val notice: StateFlow<String?> = _notice.asStateFlow()
 
     fun dismissNotice() {
         _notice.value = null
