@@ -39,7 +39,7 @@ import com.kamsiob.meedwell.ui.theme.MeedwellTheme
  * Screen 20 in the visual reference: Search.
  *
  * **Searches what you own, and nothing leaves the phone.** Bandcamp's API
- * exposes only the user's own collection, with no store or catalogue search,
+ * exposes only the user's own collection, with no store or catalog search,
  * and that is the single largest constraint on this app's scope. So the screen
  * says so plainly and offers the one honest way past it: a deep link that hands
  * the query to Bandcamp's own site in the user's browser.

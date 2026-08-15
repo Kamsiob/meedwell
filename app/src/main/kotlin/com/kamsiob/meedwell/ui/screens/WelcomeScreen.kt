@@ -27,7 +27,7 @@ import com.kamsiob.meedwell.ui.theme.MeedwellTheme
  *
  * Two doors, and the second one is a real product rather than a fallback. A
  * user who taps "Just play my local files" must never meet sync language the
- * app cannot honour, which is why it sits here as an equal choice instead of
+ * app cannot honor, which is why it sits here as an equal choice instead of
  * hiding behind the first.
  */
 @Composable

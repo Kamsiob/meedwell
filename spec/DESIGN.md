@@ -12,7 +12,7 @@ Meedwell is for people who buy their music, so the design treats artwork as a po
 
 Structure is carried by hairlines and space rather than boxes and cards. Warmth rather than neon. Nothing gamer-coded, nothing that reads as a streaming service.
 
-## 2. Themes and colour tokens
+## 2. Themes and color tokens
 
 **Dark is the default.**
 
@@ -29,11 +29,11 @@ Structure is carried by hairlines and space rather than boxes and cards. Warmth 
 
 **The light-mode ink floor is law.** Nothing lighter than slate `#56525E` on paper, ever. This was corrected twice in design and is not open for reinterpretation. Measured contrast on paper: `#17151D` 16.3:1, `#33303B` 11.6:1, `#44414C` 9.0:1, `#56525E` 6.9:1.
 
-**Gold was corrected for accessibility.** The light gold was `#9A6F1E`, which measures 4.06:1 on paper and fails AA for a 14sp label. It is now `#8A6215`, which measures 4.93:1. Dark gold `#E7C171` on `#0B0B0E` is 11.5:1. Any new colour pair introduced anywhere gets measured before it ships.
+**Gold was corrected for accessibility.** The light gold was `#9A6F1E`, which measures 4.06:1 on paper and fails AA for a 14sp label. It is now `#8A6215`, which measures 4.93:1. Dark gold `#E7C171` on `#0B0B0E` is 11.5:1. Any new color pair introduced anywhere gets measured before it ships.
 
 **Ambient glow washes,** dark theme: soft radial fields in violet `rgba(112,84,150,.26)`, teal `rgba(58,122,116,.24)`, rose `rgba(150,74,102,.22)` and ember `rgba(168,104,66,.22)`, drifting slowly over roughly 16 seconds, gated behind the reduced-motion setting. At half opacity in light theme.
 
-**Never** pure black or pure white backgrounds. Colour is never the only carrier of meaning.
+**Never** pure black or pure white backgrounds. Color is never the only carrier of meaning.
 
 ## 3. The gold rule
 
@@ -76,7 +76,7 @@ This supersedes the earlier adaptive-scrim law completely. The scrim approach wa
 - The shelf's newest-arrival card places the whole cover **beside** its caption rather than underneath it.
 - A **full-screen artwork viewer** sits one tap behind every cover in the app. It is themeless by design: the complete art on near-black in both light and dark, no text over it, pinch to zoom, tap to close.
 
-**The single sanctioned text-over-colour moment** is the now-playing wash: a palette-derived colour field, which is not the artwork, clamped below a brightness ceiling so white always passes on any album in either theme. The complete cover sits above it.
+**The single sanctioned text-over-color moment** is the now-playing wash: a palette-derived color field, which is not the artwork, clamped below a brightness ceiling so white always passes on any album in either theme. The complete cover sits above it.
 
 **Net effect: legibility no longer depends on the artwork at all, in either theme.** No measuring, no adaptive anything, no worst case.
 
@@ -86,7 +86,7 @@ The legibility law makes this load-bearing rather than cosmetic: if words may ne
 
 A missing cover is drawn as **surface, never as a fake image**: a surface panel with a hairline, carrying the title's own first letters in Instrument Serif italic at secondary ink.
 
-Never a grey box. Never a generic music-note icon. **Never the Meedwell mark**, because borrowing the mark for album art blurs the one thing it must never be confused with.
+Never a gray box. Never a generic music-note icon. **Never the Meedwell mark**, because borrowing the mark for album art blurs the one thing it must never be confused with.
 
 On the album screen a missing cover means the art region is **omitted entirely** rather than held open, so the screen opens on the title.
 
@@ -98,7 +98,7 @@ No gradients, no glow, no dimension. Earlier versions, a three-dimensional treat
 
 It reads as a record in an open sleeve, a coin in a waiting palm, the pan of an honest scale, and above all as the name itself: **the meed, held well**. The earned reward received and kept, the way money should come to rest with the people who made the music.
 
-**Construction rules:** the coin rests at the lowest point of the cradle, touching it, never sunk into it and never floating above it. The cradle's arc is shallow, its ends rising level with each other and stopping short of the frame so the arc breathes. Nothing else is in frame. One-colour stroke variants exist for both themes. The cradle stroke scales with the mark: hairline at favicon sizes, deliberate at icon sizes, never heavier than the coin's radius reads.
+**Construction rules:** the coin rests at the lowest point of the cradle, touching it, never sunk into it and never floating above it. The cradle's arc is shallow, its ends rising level with each other and stopping short of the frame so the arc breathes. Nothing else is in frame. One-color stroke variants exist for both themes. The cradle stroke scales with the mark: hairline at favicon sizes, deliberate at icon sizes, never heavier than the coin's radius reads.
 
 Wordmark lockup: mark plus "Meedwell" in Instrument Sans 700, tight tracking.
 
@@ -138,7 +138,7 @@ Meedwell's job on these surfaces is perfect art, correct metadata, an accurate s
 
 Exactly two spring personalities: a standard damped spring for everything by default, and an expressive spring with slight overshoot reserved for a small number of signature moments. Three durations, used consistently.
 
-The ambient washes drift over roughly 16 seconds. Waiting tiles during first sync shimmer in the incoming album's own colour, never grey.
+The ambient washes drift over roughly 16 seconds. Waiting tiles during first sync shimmer in the incoming album's own color, never gray.
 
 Respect the system reduced-motion setting everywhere: no drift, no shimmer, and a static waveform envelope.
 
@@ -148,11 +148,15 @@ Plain, warm, honest, first-person-adjacent. "A report was saved, here, and only 
 
 Write like a person explaining something to a friend across a table. Plain words, short sentences, contractions welcome. No exclamation points. No hype words. No fear language. If a sentence could appear in a generic tech advertisement, rewrite it.
 
+**American English everywhere.** Standing order from the owner, given 15 August 2026, covering interface strings, every document in this repository, code comments, commit messages, issue text, the README and store copy. Write color, behavior, license, normalize, organization, catalog, canceled, gray and toward, rather than their British forms.
+
+Three things are deliberately not converted, because changing them would be wrong rather than inconsistent: verbatim quotations, above all the nine attribution conditions in the Surroundings library, which are a recordist's own words; proper nouns and official names such as "Creative Commons Attribution 4.0 International"; and the existing data field names in the Surroundings `manifest.json`, which are a published and hash-verified contract produced by the owner's own pipeline.
+
 **No em dashes anywhere,** in any user-facing copy, documentation, README, commit message or store text. Use commas, periods or colons.
 
 Buttons say exactly what they do, and an action keeps the same name through its whole flow. Interface labels use plain nouns.
 
-Errors explain what happened and offer a way forward. They never apologise theatrically and never go vague. An empty screen is an invitation to act, never a scolding.
+Errors explain what happened and offer a way forward. They never apologize theatrically and never go vague. An empty screen is an invitation to act, never a scolding.
 
 **Honest limits appear in the interface** at the moment they matter, not buried in a help screen.
 
@@ -177,13 +181,13 @@ Before writing any store copy, README or website page, research current AI-slop 
 
 ## 12. Accessibility floor
 
-- Contrast meeting WCAG AA in both themes, measured rather than eyeballed. Any new colour pair gets computed before it ships.
+- Contrast meeting WCAG AA in both themes, measured rather than eyeballed. Any new color pair gets computed before it ships.
 - Minimum touch target 48dp. The existing 56dp list row minimum satisfies this; the per-track download circles and the A to Z rail need explicit checking, since both are small by design.
 - Complete screen reader labels on every control, including the many icon-only ones: view toggle, sort, share, sleep timer, shuffle, repeat, heart.
 - The waveform scrubber per section 8.
 - Dynamic type respected to 200 percent without breaking layouts.
 - Reduced motion respected everywhere.
-- Colour never the only carrier of meaning: the downloaded dot, the Bandcamp Friday dot and the "yours" marker all pair with text or shape.
+- Color never the only carrier of meaning: the downloaded dot, the Bandcamp Friday dot and the "yours" marker all pair with text or shape.
 - Visible focus states throughout.
 
 ## 13. Screenshots
@@ -192,4 +196,4 @@ Capture from the running app on the device, never from a mockup or this referenc
 
 Capture in both themes, keeping the same set of screens represented so the README's story stays coherent. Store them under a predictable directory with stable filenames so replacing one is mechanical.
 
-Whenever a screen changes materially, meaning its layout, controls, colours or copy, recapture the affected screenshots in the same pass as the change. Do not defer and do not batch, because a later pass never comes and the drift compounds. Before any release, recapture the full set regardless of what changed.
+Whenever a screen changes materially, meaning its layout, controls, colors or copy, recapture the affected screenshots in the same pass as the change. Do not defer and do not batch, because a later pass never comes and the drift compounds. Before any release, recapture the full set regardless of what changed.

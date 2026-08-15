@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
         // offered to save the Bandcamp credentials to Google Password Manager,
         // which would copy them to Google's cloud. The screen immediately above
         // that dialog says "Stored only on this phone, encrypted". Both cannot
-        // be true, and the copy is the promise, so the platform behaviour is
+        // be true, and the copy is the promise, so the platform behavior is
         // what changes.
         //
         // A user who wants a password manager still has one: the credentials

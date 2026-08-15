@@ -40,6 +40,9 @@ import com.kamsiob.meedwell.ui.components.AmbientGlow
 import com.kamsiob.meedwell.ui.components.CoverSquare
 import com.kamsiob.meedwell.ui.components.CoverThumb
 import com.kamsiob.meedwell.ui.components.GlowTone
+import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.combinedClickableCompat
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.TextButtonRow
@@ -105,14 +108,14 @@ fun ShelfScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconTextButton(
-                        label = if (state.grid) "List" else "Grid",
-                        description = if (state.grid) "Show the shelf as a list" else "Show the shelf as a grid",
+                    IconButton(
+                        icon = if (state.grid) MeedwellIcons.ListView else MeedwellIcons.Grid,
+                        contentDescription = if (state.grid) "Show the shelf as a list" else "Show the shelf as a grid",
                         onClick = onToggleLayout,
                     )
-                    IconTextButton(
-                        label = "Search",
-                        description = "Search your shelf",
+                    IconButton(
+                        icon = MeedwellIcons.Search,
+                        contentDescription = "Search your shelf",
                         onClick = onOpenSearch,
                     )
                 }
@@ -139,7 +142,15 @@ fun ShelfScreen(
                         .semantics { contentDescription = "Change how the shelf is sorted and filtered" },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(state.sortLabel, style = type.metadata, color = colors.secondaryText)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(state.sortLabel, style = type.metadata, color = colors.secondaryText)
+                        MeedwellIcon(
+                            icon = MeedwellIcons.ChevronDown,
+                            size = 14.dp,
+                            tint = colors.tertiaryText,
+                            modifier = Modifier.padding(start = 5.dp),
+                        )
+                    }
                 }
             }
 
@@ -318,7 +329,7 @@ private fun AlbumCard(album: Album, onClick: () -> Unit, onLongClick: () -> Unit
  * The line under an album title.
  *
  * The "yours" marker is Instrument Serif italic, and it is paired with the
- * artist name rather than standing alone, because colour and style are never
+ * artist name rather than standing alone, because color and style are never
  * the only carrier of meaning.
  */
 @Composable
@@ -406,7 +417,7 @@ private fun AlbumList(
                     )
                 }
                 // The presence dot is paired with the text in the subtitle, so
-                // colour and shape are never the only carrier of meaning.
+                // color and shape are never the only carrier of meaning.
                 if (album.isFullyPresent) {
                     Box(
                         Modifier
@@ -490,7 +501,7 @@ private fun GenreList(genres: List<Genre>, onGenreClick: (Genre) -> Unit) {
                         modifier = Modifier.padding(top = 2.dp),
                     )
                 }
-                Text("›", style = type.metadata, color = colors.tertiaryText)
+                MeedwellIcon(icon = MeedwellIcons.ChevronRight, size = 14.dp, tint = colors.tertiaryText)
             }
             Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
         }
@@ -513,24 +524,10 @@ private fun ViewTab(label: String, selected: Boolean, onClick: () -> Unit) {
         Text(
             text = label,
             style = type.metadata,
-            // Selection is carried by weight and ink rather than by colour
-            // alone, so it survives a colour-blind reader and a screenshot.
+            // Selection is carried by weight and ink rather than by color
+            // alone, so it survives a color-blind reader and a screenshot.
             color = if (selected) colors.primaryText else colors.tertiaryText,
         )
-    }
-}
-
-@Composable
-private fun IconTextButton(label: String, description: String, onClick: () -> Unit) {
-    val colors = MeedwellTheme.colors
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = description },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(label, style = MeedwellTheme.typography.metadata, color = colors.secondaryText)
     }
 }
 
@@ -560,7 +557,7 @@ data class ShelfState(
      * The voice line, which is the app's quiet editorial register.
      *
      * A user who never connects an account must never meet sync language the
-     * app cannot honour, so the local-only line is genuinely different rather
+     * app cannot honor, so the local-only line is genuinely different rather
      * than the same sentence with a number swapped.
      */
     val voiceLine: String

@@ -16,7 +16,7 @@ These were settled in design and research and are recorded here so a future sess
 
 **The SQLite schema plus the versioned export format are the public data contract from version one.** The app is AGPL so the schema is public anyway. Documenting it deliberately in `ARCHITECTURE.md` is what makes a future desktop or web build able to interoperate.
 
-**No SQLCipher, and the database is not encrypted.** This departs from the standing template, which specifies an encrypted database with a Keystore-held key. That is right for an app holding personal records and wrong here: this database holds an album catalogue and a play log, and encrypting it would break the portability contract above in order to protect data that is not sensitive. Credentials are the one genuinely sensitive item and they never go in the database at all: they live in `EncryptedSharedPreferences`, are never logged, never exported, and never written to a crash report. The Privacy screen states this plainly.
+**No SQLCipher, and the database is not encrypted.** This departs from the standing template, which specifies an encrypted database with a Keystore-held key. That is right for an app holding personal records and wrong here: this database holds an album catalog and a play log, and encrypting it would break the portability contract above in order to protect data that is not sensitive. Credentials are the one genuinely sensitive item and they never go in the database at all: they live in `EncryptedSharedPreferences`, are never logged, never exported, and never written to a crash report. The Privacy screen states this plainly.
 
 **The export file is not encrypted, and says what it contains.** Follows from the above, since it carries no credentials.
 
@@ -26,7 +26,7 @@ These were settled in design and research and are recorded here so a future sess
 
 **The light-mode gold was corrected from `#9A6F1E` to `#8A6215`.** The original measured 4.06:1 on paper `#F5F3ED` and fails WCAG AA for a 14sp label. The replacement measures 4.93:1. Measured, not estimated.
 
-**The mark is flat rustic copper `#AE6738`.** An earlier three-dimensional version was explicitly rejected, and the Siob-era circle-on-flat-line construction was retired with the name. The colour was deepened from `#C97E52` to read less orange and more like old pipe and pennies. The current construction is a coin at rest in a shallow open cradle: the meed, held well, which is the app's whole argument in two shapes. Full rules in `DESIGN.md` section 7.
+**The mark is flat rustic copper `#AE6738`.** An earlier three-dimensional version was explicitly rejected, and the Siob-era circle-on-flat-line construction was retired with the name. The color was deepened from `#C97E52` to read less orange and more like old pipe and pennies. The current construction is a coin at rest in a shallow open cradle: the meed, held well, which is the app's whole argument in two shapes. Full rules in `DESIGN.md` section 7.
 
 **The Meedwell mark is never used as a placeholder for missing album art.** The mark's one job is to never be confused with artwork, and borrowing it for a cover would undo that.
 
@@ -46,7 +46,7 @@ These were settled in design and research and are recorded here so a future sess
 
 **Stale cross-reference defect, found in the same audit and fixed.** Three places cited `MASTER_PROMPT.md` section 12 for the signing and database-encryption departures. The prompt has seven sections; the departures section is section 7. The references were left behind by an earlier renumbering and would have sent a session hunting for signing instructions in a section that does not exist. Corrected in `MASTER_SPEC.md`. The separate citation of `MASTER_SPEC.md` section 12 in `ISSUES-SEED.md` was verified correct and left alone.
 
-**Restore replaces rather than merges.** Merging two divergent listening histories is genuinely ambiguous, so the app states the behaviour plainly instead of guessing.
+**Restore replaces rather than merges.** Merging two divergent listening histories is genuinely ambiguous, so the app states the behavior plainly instead of guessing.
 
 ---
 
@@ -54,11 +54,21 @@ These were settled in design and research and are recorded here so a future sess
 
 Add dated entries below as work proceeds. Include the API verification results block as the first one.
 
+### 15 August 2026: "Surroundings", an ambient sound library, parked rather than adopted
+
+The owner has a prepared library of ambient sound files on the desktop: roughly 30 GB across nine categories (water and weather, rainforest, water bodies, wind, fire, forest and countryside, human spaces, transit, mechanical), with an attribution file and a manifest already generated. He described them as being for "Surroundings, the background audio feature".
+
+Nothing in `MASTER_SPEC.md`, `DESIGN.md` or the 46 screen reference mentions ambient sounds, and Meedwell's positioning is a deliberately narrow scope where absences are decisions rather than gaps. Adopting this silently would be the largest change to what the app is since the name was chosen.
+
+**Parked, on the owner's instruction, pending details from him.** Not built, not designed, and `MASTER_SPEC.md` is not modified. Recorded here so the asset library and the intent are not lost, and so a future session does not rediscover a 30 GB folder with no idea what it was for.
+
+Worth noting for whenever it is picked up, because it shapes the answer: 30 GB cannot ship inside an app bundle, so wherever this lands it needs a delivery story, and Meedwell's current story is that the only server it ever talks to is Bandcamp's.
+
 ### 15 August 2026: issue types are not available, so type labels are used
 
-`MASTER_SPEC.md` section 12 says to use GitHub's issue **type** field rather than a type label. That field only exists on repositories owned by an organisation, and `Kamsiob` is a user account, so the API returns 404 for issue types on this repository.
+`MASTER_SPEC.md` section 12 says to use GitHub's issue **type** field rather than a type label. That field only exists on repositories owned by an organization, and `Kamsiob` is a user account, so the API returns 404 for issue types on this repository.
 
-Decided: `type:` prefixed labels carry the kind of work, and area plus blocking labels are unchanged. This is the reversible option: if the repository ever moves under the B7 Collective organisation that the Play Console account already uses, the labels convert to real types and nothing else changes. `MASTER_SPEC.md` is corrected to say so rather than describing a convention the tracker cannot follow.
+Decided: `type:` prefixed labels carry the kind of work, and area plus blocking labels are unchanged. This is the reversible option: if the repository ever moves under the B7 Collective organization that the Play Console account already uses, the labels convert to real types and nothing else changes. `MASTER_SPEC.md` is corrected to say so rather than describing a convention the tracker cannot follow.
 
 ### 15 August 2026: minSdk is 29, set by a feature rather than by taste
 
@@ -82,7 +92,7 @@ Considered and rejected: hand writing MD5 in pure Kotlin to keep `:core` free of
 
 Found by using the app on the device rather than by review. After a successful connect, Android offered to save the Bandcamp credentials to Google Password Manager, which would copy them to Google's cloud. The screen immediately above that dialog says "Stored only on this phone, encrypted".
 
-Both cannot be true, and the copy is the promise, so the platform behaviour is what changes: `importantForAutofill` is set to `NO_EXCLUDE_DESCENDANTS` on the window, app-wide.
+Both cannot be true, and the copy is the promise, so the platform behavior is what changes: `importantForAutofill` is set to `NO_EXCLUDE_DESCENDANTS` on the window, app-wide.
 
 Considered: leaving it, on the grounds that the user chooses whether to accept the dialog. Rejected, because the app would then be printing a claim on screen that the platform contradicts one tap later, and "honest limits stated at the moment they matter" cuts both ways. A user who keeps credentials in a password manager is not cut off: Bandcamp generates them and keeps them on its own settings page, and the Paste chips exist precisely so they can be pasted from wherever the user keeps them.
 
@@ -102,7 +112,7 @@ It was added ahead of automatic backup in Phase 6, and the manifest audit immedi
 
 Raw responses saved outside the repository at `~/.kamsiob-secrets/meedwell-api-responses/`, one file per endpoint. Credentials live at `~/.kamsiob-secrets/meedwell-subsonic.env`, mode 600, never in the repository.
 
-**The base path is `/rest/`, and this was not obvious.** The server address the user pastes is `https://bandcamp.com/api/subsonic`, exactly as the Connect screen prefills it, but every call goes to `https://bandcamp.com/api/subsonic/rest/<endpoint>`. Calling the endpoint directly under the server address returns `bad version` and looks like a protocol mismatch. This cost the first twenty minutes of verification and is recorded so it costs nobody else any. Appending `/rest/` is standard Subsonic client behaviour, so the prefilled address stays as designed.
+**The base path is `/rest/`, and this was not obvious.** The server address the user pastes is `https://bandcamp.com/api/subsonic`, exactly as the Connect screen prefills it, but every call goes to `https://bandcamp.com/api/subsonic/rest/<endpoint>`. Calling the endpoint directly under the server address returns `bad version` and looks like a protocol mismatch. This cost the first twenty minutes of verification and is recorded so it costs nobody else any. Appending `/rest/` is standard Subsonic client behavior, so the prefilled address stays as designed.
 
 **`bad version` is Bandcamp's response to an unknown route, not a version problem.** Proven by calling `definitelyNotAnEndpoint`, which returns the same body. The body is `{"error":true,"error_message":"bad version"}` and is **not** a `subsonic-response` envelope. Every protocol version from 1.8.0 to 1.16.1 produces it on a wrong path, and 1.16.1 works on a right one. Treat this exact body as "endpoint absent" rather than as an error to show a user.
 
@@ -112,7 +122,7 @@ Raw responses saved outside the repository at `~/.kamsiob-secrets/meedwell-api-r
 
 **A failed login is HTTP 500 with an empty body,** not Subsonic error code 40. Verified for wrong password, wrong username, missing auth parameters, and plaintext `p=`. This is almost certainly the cause of the unexplained 401 in the field reports: Bandcamp's auth failure path returns a bare server error and each client renders it differently. **Consequence for the interface:** the Connection trouble screen in `DESIGN.md` shows `error 40 · wrong username or password`, and no such code is ever returned. The screen now shows what actually happened. `DESIGN.md` is corrected rather than the code bent to match it.
 
-**Genuine Subsonic errors do honour `f=json`.** A bad album id returns `{"code":70,"message":"not found"}` inside a proper envelope. So there are three distinct failure shapes to parse, not one.
+**Genuine Subsonic errors do honor `f=json`.** A bad album id returns `{"code":70,"message":"not found"}` inside a proper envelope. So there are three distinct failure shapes to parse, not one.
 
 **`unstar` is broken, and it answers in XML.** Every form tried, `id=`, `songId=`, and `unstar.view`, returns `status="failed"` with `code="0" message="unknown error"` as **XML, ignoring `f=json` entirely**. `star` works. This means a parser that assumes JSON crashes on the one call most likely to be made twice in a row. It also means Loved is one-way against Bandcamp today: a heart can be set and cannot be removed through the API.
 
@@ -126,7 +136,7 @@ Consequences, all of them already designed for, per `MASTER_SPEC.md` section 6:
 - No copy anywhere may say Meedwell downloads from Bandcamp. It says plainly that the API streams but does not release files, and points the user at Bandcamp to download them the way they always have.
 - Streaming quality wording is fixed to what was measured: MP3 V0. Never "lossless", never "best quality Bandcamp provides", which was Tier A wording.
 
-**Playlists are read-only, which the specification did not anticipate.** `getPlaylists` exists and returns an empty list. `createPlaylist`, `updatePlaylist`, `deletePlaylist` and even `getPlaylist` are all absent. **Save queue as a list cannot write back to the Bandcamp collection**, and `MASTER_SPEC.md` section 5 claimed it could on the strength of Bandcamp's own documentation. Lists in Meedwell are therefore local to the phone, labelled as such, in exactly the way local-only mode already labels them. The "Edits here appear in your Bandcamp collection too" line is removed rather than shown and broken.
+**Playlists are read-only, which the specification did not anticipate.** `getPlaylists` exists and returns an empty list. `createPlaylist`, `updatePlaylist`, `deletePlaylist` and even `getPlaylist` are all absent. **Save queue as a list cannot write back to the Bandcamp collection**, and `MASTER_SPEC.md` section 5 claimed it could on the strength of Bandcamp's own documentation. Lists in Meedwell are therefore local to the phone, labeled as such, in exactly the way local-only mode already labels them. The "Edits here appear in your Bandcamp collection too" line is removed rather than shown and broken.
 
 **Endpoints confirmed present:** `ping`, `getOpenSubsonicExtensions`, `getLicense`, `getMusicFolders`, `getGenres`, `getArtists`, `getArtist`, `getAlbum`, `getAlbumList2`, `search3`, `getCoverArt`, `stream`, `star`, `getStarred`, `getPlaylists`, `scrobble`.
 
@@ -162,7 +172,7 @@ Consequences, all of them already designed for, per `MASTER_SPEC.md` section 6:
 
 ## BLOCKED
 
-Anything only the owner can resolve. Each entry states exactly what he needs to do, in plain steps, with no code and no jargon. Summarise this list at the end of every session.
+Anything only the owner can resolve. Each entry states exactly what he needs to do, in plain steps, with no code and no jargon. Summarize this list at the end of every session.
 
 1. **Two starred items on the real Bandcamp account cannot be removed by the app.** Verifying that `star` works required starring something, and `unstar` turned out to be broken on Bandcamp's side. One track, "Wolf Blood", and one album, "The Celtic Collection II", are now starred. **What to do:** if you want them unstarred, remove the hearts on the Bandcamp website. Nothing in the app can do it until Bandcamp fixes the endpoint.
 

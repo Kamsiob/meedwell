@@ -28,7 +28,7 @@
         android:strokeLineCap="round" />
 
     <!-- The coin. Its lower edge touches the inside of the cradle stroke at the
-         cradle's lowest point: centre 63.0, radius 8.58, so the coin's bottom
+         cradle's lowest point: center 63.0, radius 8.58, so the coin's bottom
          reaches 71.58 and the stroke's inner edge sits at 72.5 - 0.89 = 71.59.
          Those two numbers meeting is the construction rule, not a coincidence.
          The fractions they come from live in ui/components/Mark.kt. -->

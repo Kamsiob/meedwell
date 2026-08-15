@@ -22,14 +22,14 @@ import kotlinx.coroutines.withContext
 import kotlin.math.min
 
 /**
- * The now-playing wash colour.
+ * The now-playing wash color.
  *
- * This is the one place in the app where words sit on colour, and it works only
+ * This is the one place in the app where words sit on color, and it works only
  * because of the clamp below. `DESIGN.md` section 5 permits it precisely
- * because a **colour field** can be clamped with no worst case, while artwork
+ * because a **color field** can be clamped with no worst case, while artwork
  * cannot: that is the whole reason the adaptive-scrim law was retired.
  *
- * So the rule here is not "darken until it looks fine". It is: take a colour
+ * So the rule here is not "darken until it looks fine". It is: take a color
  * from the artwork, then force it below a brightness ceiling, unconditionally,
  * before it is ever drawn. Any album, either theme, white always passes.
  */
@@ -69,9 +69,9 @@ private suspend fun extractWash(context: Context, uri: String): Color? = withCon
 }
 
 /**
- * Forces a colour below the brightness ceiling that keeps white text legible.
+ * Forces a color below the brightness ceiling that keeps white text legible.
  *
- * Unconditional, and applied before the colour is ever drawn. A bright album
+ * Unconditional, and applied before the color is ever drawn. A bright album
  * cover cannot produce a bright wash, so there is no album for which this
  * screen fails. That guarantee is what the design bought by drawing the wash
  * from a palette rather than from the artwork itself.
@@ -93,7 +93,7 @@ internal fun clampForWhiteText(color: Color, ceiling: Double = MAX_WASH_LUMINANC
         guard++
     }
     // Also lift anything so dark it reads as a black rectangle rather than as
-    // the record's own colour, which is the point of having a wash at all.
+    // the record's own color, which is the point of having a wash at all.
     if (relativeLuminance(candidate) < MIN_WASH_LUMINANCE) {
         candidate = Color(
             red = min(1f, candidate.red + 0.06f),

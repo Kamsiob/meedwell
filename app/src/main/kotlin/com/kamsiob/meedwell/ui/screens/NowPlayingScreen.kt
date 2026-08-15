@@ -31,19 +31,21 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.playback.PlaybackState
 import com.kamsiob.meedwell.ui.components.Cover
+import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.Waveform
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
 /**
  * Screen 16 in the visual reference: now playing.
  *
- * **The single sanctioned text-over-colour moment in the entire app.** The wash
- * behind this screen is a palette-derived colour field, which is *not* the
+ * **The single sanctioned text-over-color moment in the entire app.** The wash
+ * behind this screen is a palette-derived color field, which is *not* the
  * artwork, clamped below a brightness ceiling so white always passes on any
  * album in either theme. The complete cover sits above it, untouched.
  *
  * That distinction is the whole reason the adaptive-scrim law could be retired:
- * a colour field can be clamped with no worst case, and artwork cannot.
+ * a color field can be clamped with no worst case, and artwork cannot.
  *
  * The live waveform is the scrubber. Swiping the cover skips; tapping it opens
  * the artwork viewer; the two gestures never conflict because the swipe needs
@@ -68,7 +70,7 @@ fun NowPlayingScreen(
 
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
 
-        // The wash. A colour field, clamped, never the artwork itself.
+        // The wash. A color field, clamped, never the artwork itself.
         Box(
             Modifier
                 .fillMaxSize()
@@ -107,7 +109,7 @@ fun NowPlayingScreen(
                         .clickable(role = Role.Button, onClick = onCollapse)
                         .semantics { contentDescription = "Close the player" },
                     contentAlignment = Alignment.Center,
-                ) { Text("⌄", style = type.sectionHeading, color = Color.White) }
+                ) { MeedwellIcon(MeedwellIcons.ChevronDown, size = 20.dp, tint = Color.White) }
                 Box(Modifier.weight(1f))
                 Box(
                     Modifier
@@ -115,7 +117,7 @@ fun NowPlayingScreen(
                         .clickable(role = Role.Button, onClick = onMenu)
                         .semantics { contentDescription = "More actions for this track" },
                     contentAlignment = Alignment.Center,
-                ) { Text("• • •", style = type.rowTitle, color = Color.White) }
+                ) { MeedwellIcon(MeedwellIcons.Dots, size = 20.dp, tint = Color.White) }
             }
 
             // The cover, complete, above the wash. Swipe to skip, tap to open.
@@ -130,16 +132,16 @@ fun NowPlayingScreen(
                     .align(Alignment.CenterHorizontally)
                     .clickable(role = Role.Button, onClick = onOpenArtwork)
                     .pointerInput(state.trackId) {
-                        var travelled = 0f
+                        var traveled = 0f
                         detectHorizontalDragGestures(
-                            onDragStart = { travelled = 0f },
+                            onDragStart = { traveled = 0f },
                             onDragEnd = {
                                 // A deliberate threshold, so a slightly
                                 // imprecise tap never becomes a skip.
-                                if (travelled <= -SWIPE_THRESHOLD_PX) onNext()
-                                else if (travelled >= SWIPE_THRESHOLD_PX) onPrevious()
+                                if (traveled <= -SWIPE_THRESHOLD_PX) onNext()
+                                else if (traveled >= SWIPE_THRESHOLD_PX) onPrevious()
                             },
-                        ) { _, delta -> travelled += delta }
+                        ) { _, delta -> traveled += delta }
                     }
                     .semantics {
                         contentDescription = "Cover of ${state.title}. Open the artwork viewer."
@@ -217,16 +219,16 @@ fun NowPlayingScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    TransportButton("Previous track", "◀◀", onPrevious)
+                    TransportButton("Previous track", MeedwellIcons.Previous, onPrevious)
                     Box(Modifier.width(40.dp))
                     TransportButton(
                         description = if (state.isPlaying) "Pause" else "Play",
-                        glyph = if (state.isPlaying) "❙❙" else "▶",
+                        icon = if (state.isPlaying) MeedwellIcons.Pause else MeedwellIcons.Play,
                         onClick = onPlayPause,
                         large = true,
                     )
                     Box(Modifier.width(40.dp))
-                    TransportButton("Next track", "▶▶", onNext)
+                    TransportButton("Next track", MeedwellIcons.Next, onNext)
                 }
 
                 Row(
@@ -252,7 +254,7 @@ fun NowPlayingScreen(
 @Composable
 private fun TransportButton(
     description: String,
-    glyph: String,
+    icon: MeedwellIcons,
     onClick: () -> Unit,
     large: Boolean = false,
 ) {
@@ -263,11 +265,9 @@ private fun TransportButton(
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = glyph,
-            style = if (large) MeedwellTheme.typography.sectionHeading else MeedwellTheme.typography.rowTitle,
-            color = Color.White,
-        )
+        // The play control is deliberately larger than the skips. It is the one
+        // a thumb reaches for without looking.
+        MeedwellIcon(icon = icon, size = if (large) 40.dp else 24.dp, tint = Color.White)
     }
 }
 

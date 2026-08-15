@@ -24,7 +24,7 @@ android {
     namespace = "com.kamsiob.meedwell"
 
     // compileSdk decides which APIs the code may call. targetSdk opts the app
-    // into a platform version's runtime behaviour and is what Play checks.
+    // into a platform version's runtime behavior and is what Play checks.
     // Play requires API 36 from 31 August 2026, verified against the live
     // requirements page on 15 August 2026.
     compileSdk = 37

@@ -6,7 +6,7 @@ Open these as real GitHub issues in Phase 0, before writing feature code, using 
 
 Every issue body carries: what and why in two or three sentences, acceptance criteria in checkable terms, and how to verify. Parents hold intent and overall criteria; children hold their own. Never nest more than two levels and never create a parent with a single child.
 
-Two of these are **release blockers** rather than ordinary work, labelled `blocker`: the download tier decision, because public copy depends on it, and the export round trip, because shipping export without tested restore risks user data.
+Two of these are **release blockers** rather than ordinary work, labeled `blocker`: the download tier decision, because public copy depends on it, and the export round trip, because shipping export without tested restore risks user data.
 
 ---
 
@@ -28,7 +28,7 @@ Two of these are **release blockers** rather than ordinary work, labelled `block
 
 **Auth, with the 401 investigated.** Type feature, `area:api`. Token and salt, or apiKey per verification. Plaintext passwords refused regardless of whether the server accepts them. Acceptance: a wrong password produces the Connection trouble screen with the real error code and the last successful sync time.
 
-**Sync, incremental and resumable.** Type feature, `area:api`. Paged requests, resumable after process death, honouring whatever pacing verification established. Acceptance: a sync of the owner's real collection completes, and one killed halfway resumes without duplicating or losing anything.
+**Sync, incremental and resumable.** Type feature, `area:api`. Paged requests, resumable after process death, honoring whatever pacing verification established. Acceptance: a sync of the owner's real collection completes, and one killed halfway resumes without duplicating or losing anything.
 
 **Album art without the album-list URL.** Type task, `area:api`. Field reports say the album list omits cover art URLs while the artists endpoint carries them. Acceptance: covers appear throughout the shelf regardless, with the resolution path recorded in `DECISIONS.md`.
 
@@ -64,7 +64,7 @@ Two of these are **release blockers** rather than ordinary work, labelled `block
 
 **Album screen and its collapsed state.** Type feature, `area:ui`. Full square cover, hard edge, then text; collapse to a hairline toolbar with a 30dp thumb on scroll. Acceptance: no text over art at any point in the scroll transition, in either theme.
 
-**Missing-cover placeholder.** Type feature, `area:ui`. Surface panel with serif letters. Acceptance: no grey boxes, no music-note icons, the mark never used as cover art, and the album screen omits the art region entirely rather than holding it open.
+**Missing-cover placeholder.** Type feature, `area:ui`. Surface panel with serif letters. Acceptance: no gray boxes, no music-note icons, the mark never used as cover art, and the album screen omits the art region entirely rather than holding it open.
 
 **Empty states, all of them.** Type feature, `area:ui`. Zero purchases, zero local files, zero search results, an empty list, an empty queue. Acceptance: each written in the app voice as an invitation, none scolding.
 

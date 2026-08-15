@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Only the handful of colours the platform needs before Compose is running.
+  Only the handful of colors the platform needs before Compose is running.
   The real palette lives in ui/theme/Color.kt, which is the single source of
   truth. These two exist so the launch window and the icon background match it.
 -->

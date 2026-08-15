@@ -79,7 +79,7 @@ fun MeedwellMark(
         val strokeWidth = w * CRADLE_STROKE
         val coinRadius = w * COIN_RADIUS
 
-        // Two quadratics, meeting at the bottom centre. Written this way rather
+        // Two quadratics, meeting at the bottom center. Written this way rather
         // than as an ellipse arc on purpose: the join is exactly the arc's
         // lowest point, so "the coin rests at the cradle's lowest point" is
         // arithmetic rather than a hope about where an arc bottoms out. An

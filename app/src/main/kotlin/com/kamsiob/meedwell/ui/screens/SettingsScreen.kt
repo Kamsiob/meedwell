@@ -27,6 +27,9 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.ui.components.SupportButton
+import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.ThemeChoice
 
@@ -60,14 +63,14 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 22.dp),
     ) {
-        Box(
-            Modifier
-                .padding(top = 6.dp)
-                .height(48.dp)
-                .clickable(role = Role.Button, onClick = onBack)
-                .semantics { contentDescription = "Back" },
-            contentAlignment = Alignment.CenterStart,
-        ) { Text("‹", style = type.sectionHeading, color = colors.primaryText) }
+        IconButton(
+            icon = MeedwellIcons.Back,
+            contentDescription = "Back",
+            onClick = onBack,
+            size = 19.dp,
+            tint = colors.primaryText,
+            modifier = Modifier.padding(top = 6.dp),
+        )
 
         Text("Settings", style = type.largeHeading, color = colors.primaryText)
 
@@ -178,7 +181,7 @@ private fun ToggleRow(
                 }
             }
             // The state is carried by a word as well as by the switch, so
-            // colour and position are never the only carrier of meaning.
+            // color and position are never the only carrier of meaning.
             Text(
                 if (checked) "On" else "Off",
                 style = type.metadata,

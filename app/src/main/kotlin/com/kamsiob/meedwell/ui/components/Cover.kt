@@ -95,7 +95,7 @@ fun Cover(
  * carrying the title's own first letters in Instrument Serif italic at
  * secondary ink.
  *
- * Never a grey box. Never a generic music-note icon. **Never the Meedwell
+ * Never a gray box. Never a generic music-note icon. **Never the Meedwell
  * mark**, because borrowing the mark for album art blurs the one thing it must
  * never be confused with.
  */

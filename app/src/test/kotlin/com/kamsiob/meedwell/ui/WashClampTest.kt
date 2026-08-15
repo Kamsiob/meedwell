@@ -11,7 +11,7 @@ import org.junit.Test
 
 /**
  * The now-playing wash is the single place in the app where words sit on
- * colour, and `DESIGN.md` permits it on one condition: that the clamp has **no
+ * color, and `DESIGN.md` permits it on one condition: that the clamp has **no
  * worst case**. That is a testable claim, so it is tested rather than asserted.
  *
  * The old adaptive-scrim law was retired precisely because it could not make
@@ -24,8 +24,8 @@ class WashClampTest {
     private val floor = 4.5
 
     @Test
-    fun `white passes on the clamped wash for every fully saturated colour`() {
-        // Sweep the corners and edges of the colour cube, which is where a
+    fun `white passes on the clamped wash for every fully saturated color`() {
+        // Sweep the corners and edges of the color cube, which is where a
         // naive fixed darkening factor fails: bright yellow and cyan stay far
         // too light while dark blue goes needlessly muddy.
         val corners = listOf(
@@ -41,8 +41,8 @@ class WashClampTest {
     }
 
     @Test
-    fun `white passes on the clamped wash across the whole colour cube`() {
-        // A coarse but genuine sweep. 6^3 = 216 colours, every one of which has
+    fun `white passes on the clamped wash across the whole color cube`() {
+        // A coarse but genuine sweep. 6^3 = 216 colors, every one of which has
         // to pass, because "any album, either theme" is the actual claim.
         var worst = Double.MAX_VALUE
         var worstColor = Color.Black
@@ -68,8 +68,8 @@ class WashClampTest {
     }
 
     @Test
-    fun `a very dark cover still produces a colour rather than a black rectangle`() {
-        // The wash exists to carry the record's own colour. Clamping something
+    fun `a very dark cover still produces a color rather than a black rectangle`() {
+        // The wash exists to carry the record's own color. Clamping something
         // nearly black to exactly black would lose the point of having one.
         val wash = clampForWhiteText(Color(0.01f, 0.01f, 0.02f))
         assertThat(relativeLuminance(wash)).isGreaterThan(0.0)
@@ -77,7 +77,7 @@ class WashClampTest {
 
     @Test
     fun `the clamp is stable, so a second pass changes nothing`() {
-        // Recomposition must not walk the colour steadily darker.
+        // Recomposition must not walk the color steadily darker.
         listOf(Color.Yellow, Color.Cyan, Color(0.4f, 0.2f, 0.5f)).forEach { source ->
             val once = clampForWhiteText(source)
             val twice = clampForWhiteText(once)

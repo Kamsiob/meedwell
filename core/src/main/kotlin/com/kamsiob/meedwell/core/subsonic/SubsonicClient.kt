@@ -25,7 +25,7 @@ data class SubsonicCredentials(
      * This cost real time during verification: calling the endpoint directly
      * under the server address returns `bad version`, which reads like a
      * protocol mismatch and is actually a wrong path. Appending `/rest/` is
-     * standard Subsonic client behaviour, so the address the user sees stays
+     * standard Subsonic client behavior, so the address the user sees stays
      * exactly what Bandcamp gave them.
      */
     val restBase: String

@@ -28,6 +28,9 @@ import com.kamsiob.meedwell.ui.components.AmbientGlow
 import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.MeedwellMark
 import com.kamsiob.meedwell.ui.components.SupportButton
+import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
 /**
@@ -67,6 +70,7 @@ fun MoreScreen(
             SettingRow("Privacy", "The whole sheet") { onOpen(MoreDestination.Privacy) }
             SettingRow("What's ahead", null) { onOpen(MoreDestination.WhatsAhead) }
             SettingRow("About", null) { onOpen(MoreDestination.About) }
+            SettingRow("Credits", "Everyone whose recording is in here") { onOpen(MoreDestination.Credits) }
 
             // Connect Bandcamp stays permanently reachable from More, which is
             // what keeps local-only a door rather than a dead end.
@@ -82,7 +86,7 @@ fun MoreScreen(
     }
 }
 
-enum class MoreDestination { History, Forgotten, YourFiles, Settings, Privacy, WhatsAhead, About }
+enum class MoreDestination { History, Forgotten, YourFiles, Settings, Privacy, WhatsAhead, About, Credits }
 
 /**
  * Screen 33: Privacy, as five plain questions and answers.
@@ -150,7 +154,7 @@ fun WhatsAheadScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         QuestionAnswer(
             "Getting files through the app",
             "Bandcamp's API streams your collection but will not release the files. So Meedwell does not " +
-                "pretend to: you download them from Bandcamp as you always have, and Meedwell recognises " +
+                "pretend to: you download them from Bandcamp as you always have, and Meedwell recognizes " +
                 "them. If they ever open that up, this becomes one button.",
         )
         QuestionAnswer(
@@ -289,16 +293,14 @@ private fun ScreenScaffold(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 22.dp),
     ) {
-        Box(
-            Modifier
-                .padding(top = 6.dp)
-                .height(48.dp)
-                .clickable(role = Role.Button, onClick = onBack)
-                .semantics { contentDescription = "Back" },
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Text("‹", style = type.sectionHeading, color = colors.primaryText)
-        }
+        IconButton(
+            icon = MeedwellIcons.Back,
+            contentDescription = "Back",
+            onClick = onBack,
+            size = 19.dp,
+            tint = colors.primaryText,
+            modifier = Modifier.padding(top = 6.dp),
+        )
         if (title != null) {
             Text(title, style = type.largeHeading, color = colors.primaryText)
         }
@@ -321,11 +323,14 @@ private fun QuestionAnswer(question: String, answer: String) {
     }
 }
 
+/** The chevron sentinel, so a row can ask for the icon rather than a glyph. */
+const val CHEVRON = "\u203A"
+
 @Composable
 fun SettingRow(
     title: String,
     subtitle: String?,
-    trailing: String? = "›",
+    trailing: String? = CHEVRON,
     onClick: () -> Unit,
 ) {
     val colors = MeedwellTheme.colors
@@ -345,8 +350,25 @@ fun SettingRow(
                     Text(subtitle, style = type.metadata, color = colors.tertiaryText, modifier = Modifier.padding(top = 3.dp))
                 }
             }
-            if (trailing != null) {
-                Text(trailing, style = type.metadata, color = colors.tertiaryText, modifier = Modifier.padding(start = 14.dp))
+            if (trailing == CHEVRON) {
+                MeedwellIcon(
+                    icon = MeedwellIcons.ChevronRight,
+                    size = 14.dp,
+                    tint = colors.tertiaryText,
+                    modifier = Modifier.padding(start = 14.dp),
+                )
+            } else if (trailing != null) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 14.dp)) {
+                    Text(trailing.removeSuffix(" ›"), style = type.metadata, color = colors.tertiaryText)
+                    if (trailing.endsWith(" ›")) {
+                        MeedwellIcon(
+                            icon = MeedwellIcons.ChevronRight,
+                            size = 14.dp,
+                            tint = colors.tertiaryText,
+                            modifier = Modifier.padding(start = 6.dp),
+                        )
+                    }
+                }
             }
         }
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))

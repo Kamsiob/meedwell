@@ -4,7 +4,7 @@ Meedwell is maintained by one person. Issues and pull requests are welcome, and 
 
 ## How the implementation is written
 
-The specifications in this repository are authoritative, and the code is written by a coding agent working from them. That is why `MASTER_SPEC.md` and `DESIGN.md` are treated as binding documents rather than as notes, and why a change to behaviour or appearance belongs in those documents in the same commit as the code. A pull request that changes behaviour without updating the specification will be asked to update it.
+The specifications in this repository are authoritative, and the code is written by a coding agent working from them. That is why `MASTER_SPEC.md` and `DESIGN.md` are treated as binding documents rather than as notes, and why a change to behavior or appearance belongs in those documents in the same commit as the code. A pull request that changes behavior without updating the specification will be asked to update it.
 
 ## Reporting a bug
 
@@ -63,6 +63,6 @@ Not accepted: anything that adds analytics, telemetry, tracking, an account syst
 
 These are not preferences that a good enough implementation could overcome. They are the reason the app exists.
 
-## Licence
+## License
 
-Contributions are made under the AGPL-3.0, the same licence the project carries.
+Contributions are made under the AGPL-3.0, the same license the project carries.

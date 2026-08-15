@@ -32,7 +32,7 @@ object SortKeys {
         // rather than only at the front. Stripping it only at the front files
         // "(Sandy) Alex G" under S correctly but then sorts it as
         // "sandy) alex g", which lands it in the wrong place among its
-        // neighbours. Letters, digits and single spaces are what remain.
+        // neighbors. Letters, digits and single spaces are what remain.
         val cleaned = buildString {
             var lastWasSpace = true
             for (ch in name.trim().lowercase()) {

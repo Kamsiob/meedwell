@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
  *
  * **This is the app's ownership story now.** Verification found that Bandcamp's
  * API will not release purchased files to any client, so a user downloads them
- * from Bandcamp themselves and this is what recognises them. If this is wrong,
+ * from Bandcamp themselves and this is what recognizes them. If this is wrong,
  * the whole positioning has nothing behind it.
  *
  * Two directions, both of which have to work:
@@ -309,7 +309,7 @@ class LocalScanner(
         const val UNKNOWN_ARTIST = "Unknown artist"
 
         /**
-         * Loose singles go to a plainly labelled bucket rather than having an
+         * Loose singles go to a plainly labeled bucket rather than having an
          * album name invented for them.
          */
         const val LOOSE_TRACKS = "Loose tracks"

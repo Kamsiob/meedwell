@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey
  * documenting it deliberately is what lets a future desktop or web build
  * interoperate.
  *
- * **Not encrypted, deliberately.** This holds an album catalogue and a play
+ * **Not encrypted, deliberately.** This holds an album catalog and a play
  * log. Encrypting it would break the portability contract in order to protect
  * data that is not sensitive. Credentials are the one genuinely sensitive item
  * and they never come near this file: they live in EncryptedSharedPreferences

@@ -25,6 +25,7 @@ import com.kamsiob.meedwell.ui.screens.ConnectError
 import com.kamsiob.meedwell.ui.screens.ConnectState
 import com.kamsiob.meedwell.ui.screens.CoverUrls
 import com.kamsiob.meedwell.ui.screens.ShelfState
+import com.kamsiob.meedwell.core.surroundings.LicenseGroup
 import com.kamsiob.meedwell.ui.screens.SearchState
 import com.kamsiob.meedwell.ui.screens.ShelfView
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,6 +80,9 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     private val _settings = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settings.asStateFlow()
+
+    private val _credits = MutableStateFlow(CreditsState())
+    val credits: StateFlow<CreditsState> = _credits.asStateFlow()
 
     private val _yourFiles = MutableStateFlow(YourFilesState())
     val yourFiles: StateFlow<YourFilesState> = _yourFiles.asStateFlow()
@@ -171,6 +175,30 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
             .launchIn(viewModelScope)
 
         refreshSettings()
+        loadCredits()
+    }
+
+    // ---------- Credits ----------
+
+    /**
+     * Loads the Surroundings credits from the bundled manifest.
+     *
+     * Not lazy and not gated on anybody opening an ambience player: 21 of the
+     * recordings are CC BY, where the credit is a condition of use, so the
+     * credits screen has to render whether or not the feature has been touched.
+     */
+    private fun loadCredits() {
+        viewModelScope.launch {
+            val rejected = container.surroundings.rejected()
+            _credits.value = CreditsState(
+                summary = container.surroundings.creditsSummary(),
+                groups = container.surroundings.creditsByLicense(),
+                // Anything with incomplete attribution is never offered, and is
+                // named here rather than silently dropped.
+                withheld = rejected.map { it.filename },
+                loadError = container.surroundings.loadError,
+            )
+        }
     }
 
     // ---------- Search ----------
@@ -427,3 +455,12 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
 /** An album together with its tracks, which is what the album screen needs. */
 data class AlbumDetail(val album: Album, val tracks: List<Track>)
+
+/** The Surroundings credits, generated from the manifest rather than typed. */
+data class CreditsState(
+    val summary: String = "",
+    val groups: List<LicenseGroup> = emptyList(),
+    val withheld: List<String> = emptyList(),
+    /** Set when the credits could not be read at all. Shown, never swallowed. */
+    val loadError: String? = null,
+)

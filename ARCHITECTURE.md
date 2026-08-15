@@ -45,7 +45,7 @@ One SQLite database, accessed through Room. The schema plus the versioned export
 
 Record here, as they are built: every table and column with its meaning, the `play_event` append-only table's exact shape, the schema version history with each migration, and the export format's version-one field list. When the export format version increments, the old version's field list stays documented here rather than being replaced.
 
-**Not encrypted, deliberately.** See `MASTER_PROMPT.md` section 7 and `DECISIONS.md`. The database holds an album catalogue and a play log. Credentials never enter it; they live in `EncryptedSharedPreferences` alone, are never logged, never exported, and never written to a crash report.
+**Not encrypted, deliberately.** See `MASTER_PROMPT.md` section 7 and `DECISIONS.md`. The database holds an album catalog and a play log. Credentials never enter it; they live in `EncryptedSharedPreferences` alone, are never logged, never exported, and never written to a crash report.
 
 ## Threading and lifecycle
 
@@ -55,7 +55,7 @@ Pending. Record: which dispatcher owns database work, how the playback service's
 
 Pending, but three are known before any code exists:
 
-- **Bandcamp's API returns only the user's own collection.** There is no store or catalogue search. This is the single largest constraint on the app's scope and it shapes Search entirely.
+- **Bandcamp's API returns only the user's own collection.** There is no store or catalog search. This is the single largest constraint on the app's scope and it shapes Search entirely.
 - **Bandcamp's API is in open beta and does not match its own schema.** Tolerant parsing is a structural requirement, not defensive coding, and it was implemented before any feature. Verified 15 August 2026: the reported float durations did not reproduce on the test account, but two other data bugs did, and the beta changes underneath us.
 - **Bandcamp's API will not release purchased files.** Verified exhaustively on 15 August 2026: there is no `download` endpoint in any form, and `stream` returns MP3 V0 while ignoring every transcoding parameter. This is the largest single constraint on the product after the collection-only limit. It moves the entire ownership story onto local folder scanning and matching, which is therefore a version one requirement rather than a convenience.
 - **Owned files live in the open**, which is the app's central differentiator and also means they can vanish underneath it at any time. Reconciliation is therefore a normal code path, not an error path.

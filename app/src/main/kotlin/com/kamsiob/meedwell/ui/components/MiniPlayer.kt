@@ -88,18 +88,12 @@ fun MiniPlayer(
                 .padding(end = 8.dp)
                 .size(width = 64.dp, height = 20.dp),
         )
-        Box(
-            Modifier
-                .size(48.dp)
-                .clickable(role = Role.Button, onClick = onPlayPause)
-                .semantics { contentDescription = if (state.isPlaying) "Pause" else "Play" },
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = if (state.isPlaying) "❙❙" else "▶",
-                style = type.metadata,
-                color = colors.primaryText,
-            )
-        }
+        IconButton(
+            icon = if (state.isPlaying) MeedwellIcons.Pause else MeedwellIcons.Play,
+            contentDescription = if (state.isPlaying) "Pause" else "Play",
+            onClick = onPlayPause,
+            size = 20.dp,
+            tint = colors.primaryText,
+        )
     }
 }

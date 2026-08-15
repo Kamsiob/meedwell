@@ -41,7 +41,7 @@ sealed interface SubsonicOutcome<out T> {
 
     /**
      * A real Subsonic error inside a proper envelope, for example code 70,
-     * "not found", for an id that does not exist. These honour `f=json`.
+     * "not found", for an id that does not exist. These honor `f=json`.
      */
     data class ServerError(val code: Int, val message: String) : SubsonicOutcome<Nothing>
 

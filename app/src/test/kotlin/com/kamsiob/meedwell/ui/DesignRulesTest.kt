@@ -29,7 +29,7 @@ import kotlin.math.pow
  * The design rules that are arithmetic, asserted rather than trusted.
  *
  * `DESIGN.md` says contrast is "measured rather than eyeballed" and that any
- * new colour pair gets computed before it ships. A document saying so does not
+ * new color pair gets computed before it ships. A document saying so does not
  * enforce it; this does. If someone lightens a token, the build fails here and
  * names the pair and its ratio.
  */

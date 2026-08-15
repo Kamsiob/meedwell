@@ -4,7 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 /**
- * The colour tokens from `DESIGN.md` section 2, which is a binding document.
+ * The color tokens from `DESIGN.md` section 2, which is a binding document.
  * Where this file and that document disagree, that document wins.
  *
  * Two rules are load bearing rather than stylistic:
@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
  *    "Support this work" button. Light gold is `#8A6215` at 4.93:1, corrected
  *    from `#9A6F1E`, which measured 4.06:1 and failed AA for a 14sp label.
  *
- * Any new colour pair introduced anywhere gets measured before it ships. There
+ * Any new color pair introduced anywhere gets measured before it ships. There
  * is a contrast test in the unit suite that fails the build if a token pair
  * drops below its floor.
  */
@@ -42,7 +42,7 @@ val LightHairline = Color(0x1C1E1C26)       // rgba(30,28,38,.11)
 val LightSurfacePanel = Color(0x0A1E1C26)   // rgba(30,28,38,.04)
 val LightGold = Color(0xFF8A6215)           // 4.93:1 on #F5F3ED
 
-/** The mark, in both themes. It never changes colour with the theme. */
+/** The mark, in both themes. It never changes color with the theme. */
 val Copper = Color(0xFFAE6738)
 val MarkField = Color(0xFF16121C)
 
@@ -72,8 +72,8 @@ enum class IconFinish(val mark: Color, val field: Color) {
 /**
  * Meedwell's own palette, carried beside Material 3's rather than bent into it.
  *
- * Material's colour roles do not have a place for "the tertiary ink floor" or
- * "the one colour that means money reaching makers", and forcing them into
+ * Material's color roles do not have a place for "the tertiary ink floor" or
+ * "the one color that means money reaching makers", and forcing them into
  * `surfaceVariant` and `tertiary` would lose the meaning that makes them rules.
  */
 @Immutable

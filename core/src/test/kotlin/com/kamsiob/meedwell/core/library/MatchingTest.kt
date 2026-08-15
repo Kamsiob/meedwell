@@ -6,7 +6,7 @@ import com.kamsiob.meedwell.core.library.Matching.LocalFile
 import org.junit.Test
 
 /**
- * Matching is the centre of the app now that Tier C is decided, so it is tested
+ * Matching is the center of the app now that Tier C is decided, so it is tested
  * against the shapes real files actually have rather than tidy ones.
  */
 class MatchingTest {
@@ -17,28 +17,28 @@ class MatchingTest {
     private fun file(artist: String, album: String, title: String, path: String = title) =
         LocalFile(artist = artist, album = album, title = title, payload = path)
 
-    // ---------- Normalising ----------
+    // ---------- Normalizing ----------
 
     @Test
     fun `punctuation and spacing differences do not prevent a match`() {
-        assertThat(Matching.normalise("Copper Lines (Remastered)"))
-            .isEqualTo(Matching.normalise("Copper  Lines [remastered]"))
-        assertThat(Matching.normalise("Duluth, 4am")).isEqualTo(Matching.normalise("Duluth 4AM"))
-        assertThat(Matching.normalise("Filament, reprise")).isEqualTo(Matching.normalise("Filament - Reprise"))
+        assertThat(Matching.normalize("Copper Lines (Remastered)"))
+            .isEqualTo(Matching.normalize("Copper  Lines [remastered]"))
+        assertThat(Matching.normalize("Duluth, 4am")).isEqualTo(Matching.normalize("Duluth 4AM"))
+        assertThat(Matching.normalize("Filament, reprise")).isEqualTo(Matching.normalize("Filament - Reprise"))
     }
 
     @Test
     fun `genuinely different releases still differ`() {
         // Dropping words like "remastered" entirely would collapse these, and
         // showing two rows is better than hiding one.
-        assertThat(Matching.normalise("Copper Lines (Remastered)"))
-            .isNotEqualTo(Matching.normalise("Copper Lines"))
+        assertThat(Matching.normalize("Copper Lines (Remastered)"))
+            .isNotEqualTo(Matching.normalize("Copper Lines"))
     }
 
     @Test
-    fun `unicode titles survive normalising`() {
-        assertThat(Matching.normalise("Sigur Rós")).isEqualTo("sigur rós")
-        assertThat(Matching.normalise("日本語")).isEqualTo("日本語")
+    fun `unicode titles survive normalizing`() {
+        assertThat(Matching.normalize("Sigur Rós")).isEqualTo("sigur rós")
+        assertThat(Matching.normalize("日本語")).isEqualTo("日本語")
     }
 
     // ---------- Track numbers in file names ----------

@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
  * costs nothing today and is what makes Android Auto a small change later
  * rather than a rewrite.
  *
- * Three behaviours here are release blockers rather than polish, and each is
+ * Three behaviors here are release blockers rather than polish, and each is
  * the kind of thing that is invisible when it works and infuriating when it
  * does not:
  *
@@ -78,7 +78,7 @@ class PlaybackService : MediaLibraryService() {
             // than blasting the track out of the phone speaker.
             .setHandleAudioBecomingNoisy(true)
             // Gapless. Bandcamp streams are MP3, which carries gapless
-            // information in its Xing or LAME header, and ExoPlayer honours it.
+            // information in its Xing or LAME header, and ExoPlayer honors it.
             .setSkipSilenceEnabled(false)
             .build()
 

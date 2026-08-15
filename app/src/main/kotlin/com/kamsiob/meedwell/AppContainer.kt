@@ -5,6 +5,7 @@ import com.kamsiob.meedwell.core.subsonic.SubsonicClient
 import com.kamsiob.meedwell.data.CredentialStore
 import com.kamsiob.meedwell.data.LibraryRepository
 import com.kamsiob.meedwell.data.OkHttpSubsonicEngine
+import com.kamsiob.meedwell.data.SurroundingsRepository
 import com.kamsiob.meedwell.data.SettingsStore
 import com.kamsiob.meedwell.data.db.MeedwellDatabase
 
@@ -30,6 +31,8 @@ class AppContainer(context: Context) {
     val settings: SettingsStore by lazy { SettingsStore(appContext) }
 
     val library: LibraryRepository by lazy { LibraryRepository(database) }
+
+    val surroundings: SurroundingsRepository by lazy { SurroundingsRepository(appContext) }
 
     private val engine by lazy { OkHttpSubsonicEngine() }
 

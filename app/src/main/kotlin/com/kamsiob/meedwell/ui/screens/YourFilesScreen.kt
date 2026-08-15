@@ -31,6 +31,9 @@ import com.kamsiob.meedwell.ui.components.CoverThumb
 import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.TextButtonRow
+import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
 /**
@@ -67,14 +70,14 @@ fun YourFilesScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 22.dp),
         ) {
-            Box(
-                Modifier
-                    .padding(top = 6.dp)
-                    .height(48.dp)
-                    .clickable(role = Role.Button, onClick = onBack)
-                    .semantics { contentDescription = "Back" },
-                contentAlignment = Alignment.CenterStart,
-            ) { Text("‹", style = type.sectionHeading, color = colors.primaryText) }
+            IconButton(
+                icon = MeedwellIcons.Back,
+                contentDescription = "Back",
+                onClick = onBack,
+                size = 19.dp,
+                tint = colors.primaryText,
+                modifier = Modifier.padding(top = 6.dp),
+            )
 
             Text("Your files", style = type.largeHeading, color = colors.primaryText)
             Text(

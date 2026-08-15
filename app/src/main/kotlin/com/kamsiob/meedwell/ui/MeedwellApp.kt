@@ -1,9 +1,11 @@
 package com.kamsiob.meedwell.ui
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +30,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.MiniPlayer
 import com.kamsiob.meedwell.ui.components.rememberWashColor
 import com.kamsiob.meedwell.ui.screens.AlbumScreen
@@ -35,6 +39,8 @@ import com.kamsiob.meedwell.ui.screens.AboutScreen
 import com.kamsiob.meedwell.ui.screens.ArtworkViewer
 import com.kamsiob.meedwell.ui.screens.MoreDestination
 import com.kamsiob.meedwell.ui.screens.MoreScreen
+import com.kamsiob.meedwell.ui.screens.CreditsScreen
+import com.kamsiob.meedwell.ui.screens.SoftwareNotice
 import com.kamsiob.meedwell.ui.screens.PrivacyScreen
 import com.kamsiob.meedwell.ui.screens.SearchScreen
 import com.kamsiob.meedwell.ui.screens.bandcampSearchUrl
@@ -51,8 +57,19 @@ import com.kamsiob.meedwell.ui.screens.coverUrl
 import com.kamsiob.meedwell.ui.screens.WelcomeScreen
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
-/** The four labelled tabs. Labelled rather than icon-only, on purpose. */
-enum class Tab(val label: String) { Shelf("Shelf"), Search("Search"), Lists("Lists"), More("More") }
+/**
+ * The four tabs: an icon **and** a label, as the reference draws them.
+ *
+ * Labels rather than icons alone, because an icon-only bar makes people guess,
+ * and icons rather than labels alone, because a row of four words is harder to
+ * hit accurately than a shape with a word under it.
+ */
+enum class Tab(val label: String, val icon: MeedwellIcons) {
+    Shelf("Shelf", MeedwellIcons.TabShelf),
+    Search("Search", MeedwellIcons.TabSearch),
+    Lists("Lists", MeedwellIcons.TabLists),
+    More("More", MeedwellIcons.TabMore),
+}
 
 /**
  * Where the app is.
@@ -73,6 +90,7 @@ sealed interface Destination {
     data object WhatsAhead : Destination
     data object About : Destination
     data object YourFiles : Destination
+    data object Credits : Destination
 }
 
 @Composable
@@ -85,6 +103,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val settingsState by viewModel.settingsState.collectAsState()
     val yourFiles by viewModel.yourFiles.collectAsState()
     val search by viewModel.search.collectAsState()
+    val credits by viewModel.credits.collectAsState()
 
     // The Storage Access Framework picker. A tree grant with persistable
     // permission, so the folder survives a reboot rather than being asked for
@@ -108,6 +127,26 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
         runCatching {
             context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
         }
+    }
+
+    // System back, handled everywhere.
+    //
+    // Without this, Android's back gesture drops out of the app from any
+    // sub-screen, which on a phone is the single most common way to feel lost.
+    // Each destination names where back goes rather than relying on a stack,
+    // which keeps the model small enough to hold in your head.
+    val backTarget: Destination? = when (val current = destination) {
+        Destination.Welcome -> null
+        Destination.Connect -> Destination.Welcome
+        is Destination.Main -> if (current.tab == Tab.Shelf) null else Destination.Main(Tab.Shelf)
+        is Destination.AlbumDetail -> Destination.Main()
+        Destination.NowPlaying -> Destination.Main()
+        is Destination.Artwork -> Destination.NowPlaying
+        Destination.Settings, Destination.Privacy, Destination.WhatsAhead,
+        Destination.About, Destination.YourFiles, Destination.Credits -> Destination.Main(Tab.More)
+    }
+    BackHandler(enabled = backTarget != null) {
+        backTarget?.let { destination = it }
     }
 
     Box(
@@ -172,6 +211,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                                     MoreDestination.WhatsAhead -> Destination.WhatsAhead
                                     MoreDestination.About -> Destination.About
                                     MoreDestination.YourFiles -> Destination.YourFiles
+                                    MoreDestination.Credits -> Destination.Credits
                                     // History and the forgotten shelf arrive in
                                     // Phase 3; both read the same play log.
                                     else -> Destination.Main(Tab.More)
@@ -223,6 +263,16 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                 onOpenSource = { open(SOURCE_URL) },
                 onOpenSite = { open("https://kamsiob.com") },
                 onSupport = { open(SUPPORT_URL) },
+                onBack = { destination = Destination.Main(Tab.More) },
+                modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+            )
+
+            Destination.Credits -> CreditsScreen(
+                summary = credits.summary,
+                groups = credits.groups,
+                loadError = credits.loadError,
+                softwareNotices = SOFTWARE_NOTICES,
+                onOpenUrl = { open(it) },
                 onBack = { destination = Destination.Main(Tab.More) },
                 modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
             )
@@ -329,23 +379,30 @@ private fun TabBar(selected: Tab, onSelect: (Tab) -> Unit) {
         ) {
             Tab.entries.forEach { tab ->
                 val isSelected = tab == selected
-                Box(
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         // Comfortably past the 48dp touch target floor.
-                        .height(56.dp)
+                        .height(58.dp)
                         .clickable(role = Role.Tab) { onSelect(tab) }
                         .semantics {
                             contentDescription = if (isSelected) "${tab.label}, showing" else tab.label
                         },
-                    contentAlignment = Alignment.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                 ) {
+                    MeedwellIcon(
+                        icon = tab.icon,
+                        size = 21.dp,
+                        tint = if (isSelected) colors.primaryText else colors.tertiaryText,
+                    )
                     Text(
                         text = tab.label,
-                        style = type.metadata,
-                        // Labelled tabs, and selection carried by ink weight
-                        // rather than by colour alone.
+                        style = type.capsEyebrow.copy(letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified),
+                        // Selection is carried by ink weight rather than by
+                        // color alone, so it survives a color-blind reader.
                         color = if (isSelected) colors.primaryText else colors.tertiaryText,
+                        modifier = Modifier.padding(top = 5.dp),
                     )
                 }
             }
@@ -380,3 +437,19 @@ private fun Placeholder(title: String, body: String, onBack: (() -> Unit)? = nul
 /** The support link. One label, one place, never a coffee cliche. */
 private const val SUPPORT_URL = "https://buymeacoffee.com/kamsiob"
 private const val SOURCE_URL = "https://github.com/Kamsiob/meedwell"
+
+/**
+ * The software this app is built on.
+ *
+ * Listed alongside the recording credits rather than on a separate screen,
+ * because a reader looking for "what is in here and under what terms" wants one
+ * answer, not two.
+ */
+private val SOFTWARE_NOTICES = listOf(
+    SoftwareNotice("Jetpack Compose, Media3, Room", "Apache 2.0", "https://www.apache.org/licenses/LICENSE-2.0"),
+    SoftwareNotice("Kotlin and kotlinx", "Apache 2.0", "https://www.apache.org/licenses/LICENSE-2.0"),
+    SoftwareNotice("OkHttp", "Apache 2.0", "https://square.github.io/okhttp/"),
+    SoftwareNotice("Coil", "Apache 2.0", "https://coil-kt.github.io/coil/"),
+    SoftwareNotice("Instrument Sans and Instrument Serif", "SIL Open Font License 1.1", "https://openfontlicense.org"),
+    SoftwareNotice("Meedwell itself", "AGPL-3.0", "https://github.com/Kamsiob/meedwell"),
+)

@@ -1,6 +1,6 @@
 # Runs on every push and every pull request. Compiles the app, compiles EVERY
 # test source set including the instrumented one that is not part of the
-# default build, runs the unit tests, and runs static analysis.
+# default build, runs the unit tests, and runs static analyzis.
 #
 # Compiling every test source set is what enforces the standing rule that
 # suites must actually compile. An instrumented set that stops compiling rots

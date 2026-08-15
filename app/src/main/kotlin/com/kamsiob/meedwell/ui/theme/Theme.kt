@@ -39,8 +39,8 @@ object MeedwellTheme {
 /**
  * A fully custom theme over Material 3, rather than Material 3 with a tint.
  *
- * Dynamic colour is deliberately not used. The whole design rests on artwork
- * being the only colour that matters and on gold meaning exactly one thing;
+ * Dynamic color is deliberately not used. The whole design rests on artwork
+ * being the only color that matters and on gold meaning exactly one thing;
  * letting the wallpaper repaint the interface would break both.
  */
 @Composable

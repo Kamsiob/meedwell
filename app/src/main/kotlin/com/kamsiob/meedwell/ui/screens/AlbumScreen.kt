@@ -34,6 +34,9 @@ import com.kamsiob.meedwell.core.model.Provenance
 import com.kamsiob.meedwell.core.model.Track
 import com.kamsiob.meedwell.ui.components.Cover
 import com.kamsiob.meedwell.ui.components.CoverThumb
+import com.kamsiob.meedwell.ui.components.IconButton
+import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.combinedClickableCompat
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -157,7 +160,19 @@ fun AlbumScreen(
                                     .clickable(role = Role.Button, onClick = onShuffle),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text("Shuffle", style = type.metadata, color = colors.secondaryText)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    MeedwellIcon(
+                                        icon = MeedwellIcons.Shuffle,
+                                        size = 16.dp,
+                                        tint = colors.secondaryText,
+                                    )
+                                    Text(
+                                        "Shuffle",
+                                        style = type.metadata,
+                                        color = colors.secondaryText,
+                                        modifier = Modifier.padding(start = 7.dp),
+                                    )
+                                }
                             }
                         }
                     }
@@ -269,7 +284,7 @@ private fun TrackRow(
                     )
                 }
             }
-            // The presence marker is a word, not only a dot, so colour and
+            // The presence marker is a word, not only a dot, so color and
             // shape are never the only carrier of meaning.
             if (track.isPresentLocally) {
                 Text(
@@ -291,28 +306,24 @@ private fun TrackRow(
 
 @Composable
 private fun BackButton(onBack: () -> Unit) {
-    Box(
-        Modifier
-            .size(48.dp)
-            .clickable(role = Role.Button, onClick = onBack)
-            .semantics { contentDescription = "Back" },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text("‹", style = MeedwellTheme.typography.sectionHeading, color = MeedwellTheme.colors.primaryText)
-    }
+    IconButton(
+        icon = MeedwellIcons.Back,
+        contentDescription = "Back",
+        onClick = onBack,
+        size = 19.dp,
+        tint = MeedwellTheme.colors.primaryText,
+    )
 }
 
 @Composable
 private fun MenuButton(onClick: () -> Unit) {
-    Box(
-        Modifier
-            .size(48.dp)
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = "More actions for this album" },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text("• • •", style = MeedwellTheme.typography.rowTitle, color = MeedwellTheme.colors.primaryText)
-    }
+    IconButton(
+        icon = MeedwellIcons.Dots,
+        contentDescription = "More actions for this album",
+        onClick = onClick,
+        size = 19.dp,
+        tint = MeedwellTheme.colors.primaryText,
+    )
 }
 
 /** Tabular, and always minutes and seconds rather than a bare count. */

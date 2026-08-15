@@ -20,11 +20,11 @@ Then read the What's Ahead and Privacy screens in the built app. The listing mus
 
 **No lossless streaming claim** unless verification actually found lossless streaming, which is unlikely. Whatever the stream format turns out to be, either name it accurately or do not raise the subject.
 
-**The download claim matches the tier that was decided.** Tier A may say original quality. Tier B names the real format and bitrate plainly. Tier C does not claim in-app downloads at all, and instead describes recognising the files a user downloads from Bandcamp themselves.
+**The download claim matches the tier that was decided.** Tier A may say original quality. Tier B names the real format and bitrate plainly. Tier C does not claim in-app downloads at all, and instead describes recognizing the files a user downloads from Bandcamp themselves.
 
 **Every capability claim is traceable to something verified in the built software.** If a sentence cannot be pointed at a working feature on the device, it does not ship.
 
-**Honest limits appear in the listing, not only in the app.** The most important one: the API exposes only the user's own collection, so there is no store or catalogue search inside Meedwell. Say that plainly rather than letting someone install it expecting a Bandcamp shopping app. It filters out the wrong users before they leave a one-star review, which is worth more than the installs it costs.
+**Honest limits appear in the listing, not only in the app.** The most important one: the API exposes only the user's own collection, so there is no store or catalog search inside Meedwell. Say that plainly rather than letting someone install it expecting a Bandcamp shopping app. It filters out the wrong users before they leave a one-star review, which is worth more than the installs it costs.
 
 **Category:** Music and Audio. **Not** a category implying a store or a social product.
 

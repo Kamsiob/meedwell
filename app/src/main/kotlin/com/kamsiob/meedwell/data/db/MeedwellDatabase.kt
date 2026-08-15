@@ -10,7 +10,7 @@ import androidx.room.RoomDatabase
  *
  * **Deliberately not encrypted.** The standing Kamsiob template specifies an
  * encrypted database with a Keystore-held key, which is right for an app
- * holding personal records and wrong here. This holds an album catalogue and a
+ * holding personal records and wrong here. This holds an album catalog and a
  * play log, and it must stay readable as plain portable SQLite so a future
  * Linux desktop or web build can import it. Encrypting it would break the
  * portability contract in order to protect data that is not sensitive.

@@ -11,7 +11,7 @@ package com.kamsiob.meedwell.core.model
  *     [Album.origin] knows.
  *  2. Tier C means the merge between streamed records and files the user
  *     downloaded themselves is the app's central mechanic rather than a corner
- *     case. Modelling both as the same thing from the start is what keeps that
+ *     case. Modeling both as the same thing from the start is what keeps that
  *     from becoming a special case bolted on later.
  */
 

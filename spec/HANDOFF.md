@@ -31,7 +31,7 @@ Every item here was exercised on the device against the real account, not only c
 - **Connect, sync and the shelf.** Three albums, 60 tracks, artists and genres arrive and render with cover art. Albums, Artists and Genres are sibling views; grid and list both work.
 - **Playback.** Media3 through a `MediaLibraryService`. Audio focus granted, `AudioTrack` live, media button session registered, gapless advance between tracks confirmed. Queue and position are written on every meaningful change.
 - **Album screen**, including the collapsing toolbar and the legibility law: cover complete, hard edge, text only past it.
-- **Now playing**, with the palette-derived wash clamped so white passes. The clamp is swept across 216 colours in a unit test.
+- **Now playing**, with the palette-derived wash clamped so white passes. The clamp is swept across 216 colors in a unit test.
 - **Artwork viewer**, themeless by construction.
 - **Mini player** with the waveform, which stills when paused.
 - **Search**, done locally, with the Bandcamp browser handoff.
@@ -71,13 +71,13 @@ The issue tracker is the item-level inventory from here on.
 - **Calling endpoints directly under the server address.** `https://bandcamp.com/api/subsonic/ping` returns `bad version`, which reads like a protocol mismatch and is actually a wrong path. The real base is `.../api/subsonic/rest/`. This cost the first twenty minutes of verification. The address the user pastes stays as designed; the client appends `/rest/`.
 - **Tuning the protocol version to fix `bad version`.** Every value from 1.8.0 to 1.16.1 returns it on a bad path. The version was never the problem. Do not go down this road again.
 - **Applying `org.jetbrains.kotlin.android` alongside AGP 9.** Fails the build outright: AGP 9 brings its own Kotlin support. The Compose compiler plugin is still applied and still tracks the Kotlin version exactly.
-- **Drawing the mark's cradle with `arcTo` and a rect built from the arc's ends and its lowest point.** The ellipse's lowest point landed below the canvas, the arc was clipped, and the coin floated well clear of it. It looked wrong on the device before anything caught it. Now drawn as two quadratics meeting at the bottom centre, so the join *is* the lowest point, and there is a unit test asserting the coin touches. Worth revisiting only with the test in place.
+- **Drawing the mark's cradle with `arcTo` and a rect built from the arc's ends and its lowest point.** The ellipse's lowest point landed below the canvas, the arc was clipped, and the coin floated well clear of it. It looked wrong on the device before anything caught it. Now drawn as two quadratics meeting at the bottom center, so the join *is* the lowest point, and there is a unit test asserting the coin touches. Worth revisiting only with the test in place.
 - **Capturing script-level values inside a Gradle `doLast`.** Breaks the configuration cache, which slows every build. Capture them as locals in the task registration block instead.
 - **Truth's `assertWithMessage` with `%.2f`.** It takes `%s` placeholders only. Format the number before passing it.
 - **Applying `padding` after a size modifier in Compose.** It shrinks the content inside the size rather than adding around it. The waveform rendered as a row of dots for this reason: a 38dp box with 18dp of padding left 20dp of canvas. Padding goes before the size.
 - **A corner radius taken from bar width alone.** Short bars became circles. Cap the radius against height too.
 - **Assuming a library merges a permission you rely on.** `FOREGROUND_SERVICE` was on the audit allowlist but never declared, and the service crashed the moment it went foreground. The audit fails on permissions that should not be there; it cannot notice one that should.
-- **Adding a database column without bumping the schema version.** Room refuses to open the old database and the app crash-loops. Correct behaviour, badly handled; see #49.
+- **Adding a database column without bumping the schema version.** Room refuses to open the old database and the app crash-loops. Correct behavior, badly handled; see #49.
 
 ## Measurements
 
@@ -86,7 +86,7 @@ Real figures, not impressions.
 - **The owner's collection: 3 albums, 60 tracks, 3.5 hours.** Far too small to validate any large-library work, so the synthetic emulator test (#33) carries that load alone and cannot be skipped on the strength of a fast real sync.
 - **API response times: roughly 200 ms** for metadata calls. 20 rapid sequential calls averaged 105 ms with zero failures and no rate limiting.
 - **Cover art: 700x700 JPEG, about 174 KB.** The `size` parameter is ignored, so the app resizes locally.
-- **Tests: 60 in `:core`, 14 in `:app`.** All passing. The `:app` suite includes the contrast measurements for every token pair, the mark's construction rule, and the wash clamp swept over the colour cube.
+- **Tests: 60 in `:core`, 14 in `:app`.** All passing. The `:app` suite includes the contrast measurements for every token pair, the mark's construction rule, and the wash clamp swept over the color cube.
 - Still to measure: sync duration on a large library, app size, cold start, memory during a large sync.
 
 ## Environment and toolchain notes
@@ -118,7 +118,7 @@ See `DECISIONS.md`. The ones most likely to look wrong without their reasoning:
 - **Validating credentials with `getArtists` rather than `ping`.** Looks like an obvious simplification. `ping` accepts any password.
 - **The unencrypted database and unencrypted export.** Deliberate, and the reason is portability rather than laziness.
 - **The retirement of the adaptive-scrim legibility law.**
-- **Type labels rather than GitHub issue types.** Issue types need an organisation account and this repository is under a user account.
+- **Type labels rather than GitHub issue types.** Issue types need an organization account and this repository is under a user account.
 - **Keeping `unstar` in the client although it always fails.** The app has to be able to explain why a heart will not come off.
 
 ## Waiting on the owner

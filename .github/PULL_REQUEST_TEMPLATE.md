@@ -16,7 +16,7 @@
 
 ## Documents updated
 
-<!-- Behaviour or appearance changes belong in the specification in the same commit. Tick what applies, delete what does not. -->
+<!-- Behavior or appearance changes belong in the specification in the same commit. Tick what applies, delete what does not. -->
 
 - [ ] MASTER_SPEC.md
 - [ ] DESIGN.md

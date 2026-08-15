@@ -3,22 +3,22 @@ package com.kamsiob.meedwell.core.library
 /**
  * Matching files on the phone to records in the collection.
  *
- * Tier C made this the centre of the app rather than a convenience. Bandcamp's
+ * Tier C made this the center of the app rather than a convenience. Bandcamp's
  * API will not release purchased files, so a user downloads them from Bandcamp
- * themselves and Meedwell recognises what arrives. If this is wrong, the
+ * themselves and Meedwell recognizes what arrives. If this is wrong, the
  * ownership story does not work.
  *
  * The rule from `MASTER_SPEC.md` section 7: match on artist plus album plus
  * track, never duplicate, prefer the local file for playback, mark the album as
  * owned. It has to work in both directions, and the reverse case is likelier
  * than it sounds: somebody who downloaded from Bandcamp's website before
- * installing Meedwell should find those files recognised and merged, not
+ * installing Meedwell should find those files recognized and merged, not
  * duplicated alongside the streamed copies.
  */
 object Matching {
 
     /**
-     * Normalises a name for comparison.
+     * Normalizes a name for comparison.
      *
      * Deliberately aggressive, because the two sides of a match come from
      * different places: one from Bandcamp's API, the other from a file name or
@@ -30,7 +30,7 @@ object Matching {
      * would collapse genuinely different releases, which is worse than showing
      * two rows.
      */
-    fun normalise(raw: String): String {
+    fun normalize(raw: String): String {
         val lowered = raw.lowercase().trim()
         val builder = StringBuilder(lowered.length)
         var lastWasSpace = false
@@ -81,9 +81,9 @@ object Matching {
     data class TrackKey(val artist: String, val album: String, val title: String)
 
     fun keyOf(artist: String, album: String, title: String): TrackKey = TrackKey(
-        artist = normalise(artist),
-        album = normalise(album),
-        title = normalise(stripLeadingTrackNumber(title)),
+        artist = normalize(artist),
+        album = normalize(album),
+        title = normalize(stripLeadingTrackNumber(title)),
     )
 
     /**
@@ -97,8 +97,8 @@ object Matching {
     data class AlbumTrackKey(val album: String, val title: String)
 
     fun looseKeyOf(album: String, title: String): AlbumTrackKey = AlbumTrackKey(
-        album = normalise(album),
-        title = normalise(stripLeadingTrackNumber(title)),
+        album = normalize(album),
+        title = normalize(stripLeadingTrackNumber(title)),
     )
 
     /**

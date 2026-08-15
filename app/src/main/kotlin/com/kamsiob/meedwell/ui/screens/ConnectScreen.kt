@@ -53,7 +53,7 @@ import com.kamsiob.meedwell.ui.theme.MeedwellTheme
  *
  * The address prefilled is `https://bandcamp.com/api/subsonic`, exactly what
  * Bandcamp shows the user. The client appends `/rest/` itself, which is
- * standard Subsonic behaviour; showing the user a URL Bandcamp never gave them
+ * standard Subsonic behavior; showing the user a URL Bandcamp never gave them
  * would be confusing and would break if they pasted the real one.
  */
 @Composable
@@ -185,7 +185,7 @@ private fun ConnectError(error: ConnectError, modifier: Modifier = Modifier) {
                 "than anything you typed."
         ConnectError.NotSubsonic ->
             "That address did not answer like Bandcamp" to
-                "Meedwell got a reply, but not one it recognises. Check the server address matches the " +
+                "Meedwell got a reply, but not one it recognizes. Check the server address matches the " +
                 "one on the Subsonic page of your Fan Settings."
         is ConnectError.ServerSaid ->
             "Bandcamp answered with a problem" to error.message

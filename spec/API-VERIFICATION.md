@@ -69,9 +69,9 @@ Reading it as a version problem sends you tuning `v=` through every value from 1
 | Question | Answer | Notes |
 |---|---|---|
 | What format and bitrate does `stream` return? | **MP3 V0.** The redirect target path is literally `/stream/<hash>/mp3-v0/<id>` | Track metadata agrees: `suffix: mp3`, `contentType: audio/mpeg`, `bitRate: 256`. **Never promise lossless** |
-| Are there transcoding parameters, and are they honoured? | Accepted and **ignored.** `format=raw`, `format=flac` and `maxBitRate=320` all return the same `mp3-v0` asset | |
+| Are there transcoding parameters, and are they honored? | Accepted and **ignored.** `format=raw`, `format=flac` and `maxBitRate=320` all return the same `mp3-v0` asset | |
 | Does it support range requests and seeking? | **Yes.** A `Range` header returns 206 with a correct `content-range` | Gapless and seeking have what they need |
-| Behaviour on a track that will not stream | Not reproduced on this collection; all 60 tracks resolved | The "one track that will not play" state is still built, because a beta will produce it eventually |
+| Behavior on a track that will not stream | Not reproduced on this collection; all 60 tracks resolved | The "one track that will not play" state is still built, because a beta will produce it eventually |
 
 ## 4. Downloads, the decision that gates public copy
 
@@ -115,7 +115,7 @@ Reading it as a version problem sends you tuning `v=` through every value from 1
 |---|---|---|
 | Any documented or observed rate limit | **None observed.** 20 rapid sequential calls, zero failures, 105 ms average | |
 | Any required or advisable request pacing during a full sync | **Sequential, no artificial delay, no parallel fan-out.** Decided deliberately | Being an unremarkable client of an open beta is correct and in the app's interest |
-| Does the API return caching headers worth honouring | **No.** No `cache-control`, `etag` or `last-modified` on metadata calls | Local caching is entirely Meedwell's problem |
+| Does the API return caching headers worth honoring | **No.** No `cache-control`, `etag` or `last-modified` on metadata calls | Local caching is entirely Meedwell's problem |
 
 ## 8. What verification changed in the specification
 
