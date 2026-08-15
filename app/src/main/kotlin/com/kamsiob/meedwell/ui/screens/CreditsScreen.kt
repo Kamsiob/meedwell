@@ -132,22 +132,9 @@ fun CreditsScreen(
                                 color = colors.tertiaryText,
                             )
                         }
-                        Text(
-                            // States plainly whether the credit below is a
-                            // condition of use or a courtesy. Both are worth
-                            // saying, and they are not the same thing.
-                            if (group.creditIsRequired) {
-                                "Crediting the maker is a condition of this license."
-                            } else {
-                                "Public domain. No credit is required. These are credited anyway."
-                            },
-                            style = type.metadata,
-                            color = colors.tertiaryText,
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
                         Box(
                             Modifier
-                                .padding(top = 6.dp)
+                                .padding(top = 4.dp)
                                 .defaultMinSize(minHeight = 44.dp)
                                 .clickable(role = Role.Button) { onOpenUrl(group.licenseUrl) }
                                 .semantics { contentDescription = "Read the ${group.licenseLabel} license" },
@@ -247,10 +234,11 @@ fun CreditsScreen(
             }
 
             item(key = "foot") {
+                // CC BY asks that a change to the work be indicated, so the
+                // fact stays. Explaining that it is a legal requirement does
+                // not, because nobody reading a credits page came for that.
                 Text(
-                    "Every recording here was trimmed to its longest clean section, level matched, and " +
-                        "re-encoded. Saying so is a condition of the licenses that require credit, and it " +
-                        "is true of all of them.",
+                    "All of these were trimmed, level matched and re-encoded.",
                     style = type.metadata,
                     color = colors.tertiaryText,
                     modifier = Modifier.padding(top = 26.dp),

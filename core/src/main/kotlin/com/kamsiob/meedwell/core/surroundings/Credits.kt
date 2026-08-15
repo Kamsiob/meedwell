@@ -119,17 +119,22 @@ object Credits {
     fun offerable(sounds: List<SurroundingsSound>): List<SurroundingsSound> =
         sounds.filter { it.attribution.isComplete }
 
-    /** A short summary for the top of the credits screen. */
+    /**
+     * The line at the top of the credits screen.
+     *
+     * Says what the page is and nothing else. An earlier version counted how
+     * many recordings were licensed on condition of credit, which read like the
+     * app explaining licensing law to somebody who came to find out who made
+     * the rain. The obligations are met by the page itself, not by narrating
+     * them.
+     */
     fun summary(sounds: List<SurroundingsSound>): String {
         val offerable = offerable(sounds)
-        val required = offerable.count { it.attribution.creditIsRequired }
+        val people = offerable.map { it.attribution.recordistName }.distinct().size
         return when {
             offerable.isEmpty() -> "No recordings yet."
-            required == 0 ->
-                "${offerable.size} recordings, all public domain. Credited anyway, because somebody made them."
-            else ->
-                "${offerable.size} recordings. ${required} of them are licensed on the condition that " +
-                    "their maker is credited, and all of them were trimmed, level matched and re-encoded."
+            people <= 1 -> "${offerable.size} recordings, and the person who made them."
+            else -> "${offerable.size} recordings, from $people people who put them out for anyone to use."
         }
     }
 }
