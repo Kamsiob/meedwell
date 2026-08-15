@@ -123,7 +123,8 @@ class PlayerController(
         val c = controller ?: return
         if (tracks.isEmpty()) return
         val client = container.client()
-        c.setMediaItems(tracks.map { it.toMediaItem(client) }, startIndex, 0L)
+        val total = wholeRecordCount(tracks)
+        c.setMediaItems(tracks.map { it.toMediaItem(client, total) }, startIndex, 0L)
         c.prepare()
         c.play()
     }
@@ -139,7 +140,8 @@ class PlayerController(
         if (tracks.isEmpty()) return
         if (c.mediaItemCount == 0) return playTracks(tracks)
         val client = container.client()
-        c.addMediaItems(c.currentMediaItemIndex + 1, tracks.map { it.toMediaItem(client) })
+        val total = wholeRecordCount(tracks)
+        c.addMediaItems(c.currentMediaItemIndex + 1, tracks.map { it.toMediaItem(client, total) })
     }
 
     /** Puts tracks at the end of the queue. Same fallback when nothing is playing. */
@@ -148,7 +150,8 @@ class PlayerController(
         if (tracks.isEmpty()) return
         if (c.mediaItemCount == 0) return playTracks(tracks)
         val client = container.client()
-        c.addMediaItems(tracks.map { it.toMediaItem(client) })
+        val total = wholeRecordCount(tracks)
+        c.addMediaItems(tracks.map { it.toMediaItem(client, total) })
     }
 
     /** Jumps to a position in the queue, for the queue sheet. */
@@ -246,6 +249,8 @@ class PlayerController(
                 else -> RepeatMode.Off
             },
             queueSize = player.mediaItemCount,
+            trackNumber = player.currentMediaItem?.mediaMetadata?.trackNumber ?: 0,
+            trackCount = player.currentMediaItem?.mediaMetadata?.totalTrackCount ?: 0,
         )
     }
 
@@ -272,7 +277,31 @@ data class PlaybackState(
     val shuffle: Boolean = false,
     val repeat: RepeatMode = RepeatMode.Off,
     val queueSize: Int = 0,
+    /** The track's own number on its record, and how many there are. */
+    val trackNumber: Int = 0,
+    val trackCount: Int = 0,
 ) {
+    /**
+     * "andante · IV of IX", the programme line.
+     *
+     * Only the parts that are true. See `Programme` for why there is no
+     * dynamic marking in it.
+     */
+    val programmeLine: String
+        get() = com.kamsiob.meedwell.core.library.Programme.line(title, trackNumber, trackCount)
+
+    /** The tempo marking alone, for the mini player's one short line. */
+    /**
+     * The tone voicing in force, named rather than numbered.
+     *
+     * Placeholder until the tone engine exists; it reads "As Recorded", which
+     * is both the default and the honest answer while nothing is being applied.
+     */
+    val toneName: String get() = "As Recorded"
+
+    val tempoMark: String?
+        get() = com.kamsiob.meedwell.core.library.Programme.tempoIn(title)
+
     val progress: Float
         get() = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
 }
@@ -290,6 +319,15 @@ data class QueueItem(
 )
 
 /**
+ * How many tracks a list represents, when it is one whole record.
+ *
+ * Zero for a mixed queue, which is the honest answer: a queue somebody
+ * assembled out of six records is not a programme and has no movement numbers.
+ */
+private fun wholeRecordCount(tracks: List<Track>): Int =
+    if (tracks.isNotEmpty() && tracks.all { it.albumId == tracks.first().albumId }) tracks.size else 0
+
+/**
  * Turns a track into something the player can read.
  *
  * **The local file wins.** If a file for this track is on the phone it is
@@ -297,7 +335,7 @@ data class QueueItem(
  * "prefer the local file for playback" made real, and after Tier C it is how
  * anything a user actually owns gets played.
  */
-internal fun Track.toMediaItem(client: SubsonicClient?): MediaItem {
+internal fun Track.toMediaItem(client: SubsonicClient?, totalTrackCount: Int = 0): MediaItem {
     val uri: Uri = when {
         localPath != null -> localPath!!.toUri()
         client != null -> client.streamUrl(id).toUri()
@@ -316,6 +354,10 @@ internal fun Track.toMediaItem(client: SubsonicClient?): MediaItem {
                 .setArtist(artist)
                 .setAlbumTitle(albumName)
                 .setTrackNumber(trackNumber.takeIf { it > 0 })
+                // How many movements the record has, so the player can say
+                // "IV of IX". Only set when the caller handed over a whole
+                // record; a mixed queue is not a programme and gets nothing.
+                .setTotalTrackCount(totalTrackCount.takeIf { it > 0 })
                 .setArtworkUri(client?.coverArtUrl(coverArtId)?.toUri())
                 .setIsPlayable(uri != Uri.EMPTY)
                 .build()

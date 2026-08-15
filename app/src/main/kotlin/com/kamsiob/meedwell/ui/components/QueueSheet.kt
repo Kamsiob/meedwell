@@ -31,10 +31,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.playback.QueueItem
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
+import com.kamsiob.meedwell.ui.theme.sheetShadow
 
 /**
  * What is playing after this.
@@ -84,7 +83,7 @@ fun QueueSheet(
                 // Tall, but never the whole screen. A sliver of what is behind
                 // it keeps the sheet reading as a sheet.
                 .fillMaxHeight(0.82f)
-                .meedwellShadow(Elevation.sheet, RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
                 .clickable(enabled = false) {}
@@ -104,11 +103,11 @@ fun QueueSheet(
                 Modifier.fillMaxWidth().padding(horizontal = 26.dp).padding(top = 18.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Up next", style = type.sectionHeading, color = colors.primaryText)
+                Text("Up next", style = type.h2, color = colors.primaryText)
                 Box(Modifier.weight(1f))
                 Text(
                     queueCount(items.size, currentIndex),
-                    style = type.metadata,
+                    style = type.meta,
                     color = colors.tertiaryText,
                 )
             }
@@ -160,7 +159,7 @@ private fun QueueRow(item: QueueItem, onPlay: () -> Unit, onRemove: () -> Unit) 
             )
             Text(
                 item.artist,
-                style = type.metadata,
+                style = type.meta,
                 color = colors.tertiaryText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

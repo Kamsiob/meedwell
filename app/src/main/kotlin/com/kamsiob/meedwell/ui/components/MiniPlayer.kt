@@ -22,10 +22,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.playback.PlaybackState
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
 
 /**
  * The mini player, above the tab bar.
@@ -46,65 +44,69 @@ fun MiniPlayer(
 
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
-    val shape = RoundedCornerShape(Radius.floating)
 
-    Row(
-        modifier = modifier
+    Column(
+        modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .meedwellShadow(Elevation.floating, shape)
-            .clip(shape)
-            .background(colors.surfacePanel)
-            .border(0.5.dp, colors.hairline, shape)
+            .background(colors.background)
             .clickable(role = Role.Button, onClick = onOpen)
             .semantics {
                 contentDescription = "Now playing: ${state.title} by ${state.artist}. Open the player."
-            }
-            .padding(horizontal = 11.dp, vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            },
     ) {
-        Cover(
-            url = state.artworkUri,
-            title = state.title,
-            cornerRadius = 5.dp,
-            modifier = Modifier.size(40.dp),
-        )
-        Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
-            Text(
-                text = state.title,
-                // Title and artist were the same size and weight, separated
-                // only by colour. The reference gives the title its own weight.
-                style = type.cardTitle,
-                color = colors.primaryText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = state.artist,
-                style = type.metadata,
-                color = colors.tertiaryText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+        // `.mini .pg`: a 2px rule across the very top, filled in moss as far as
+        // the piece has got. This is the only progress indicator outside the
+        // player itself, and it is a rule rather than a bar because there are
+        // no filled containers in this design to put a bar inside.
+        Box(Modifier.fillMaxWidth().height(2.dp).background(colors.hairline)) {
+            Box(
+                Modifier
+                    .fillMaxWidth(state.progress.coerceIn(0f, 1f))
+                    .height(2.dp)
+                    .background(colors.moss)
             )
         }
-        Waveform(
-            progress = state.progress,
-            animate = state.isPlaying,
-            // Eight bars, as the reference draws it. The default of 28 needed
-            // 67dp of gaps inside a 64dp box, so every bar clamped to one
-            // physical pixel and the row rendered as a grey smear that read
-            // like a loading skeleton.
-            barCount = 8,
-            modifier = Modifier
-                .padding(end = 10.dp)
-                .size(width = 80.dp, height = 22.dp),
-        )
-        IconButton(
-            icon = if (state.isPlaying) MeedwellIcons.Pause else MeedwellIcons.Play,
-            contentDescription = if (state.isPlaying) "Pause" else "Play",
-            onClick = onPlayPause,
-            size = 20.dp,
-            tint = colors.primaryText,
-        )
+
+        Row(
+            // `.mini { padding: 9px 22px 10px }`.
+            Modifier.padding(start = 22.dp, end = 22.dp, top = 9.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Cover(
+                url = state.artworkUri,
+                title = state.title,
+                // `.mini .ar { width:34px; height:34px; border-radius:4px }`.
+                cornerRadius = Radius.miniArtwork,
+                modifier = Modifier.size(34.dp),
+            )
+            Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
+                Text(
+                    text = state.title,
+                    style = type.miniTitle,
+                    color = colors.primaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    // The grid shows "Bride Callanan · andante": the performer
+                    // and the tempo, not a running time. Dynamics replace
+                    // numbers wherever a number would otherwise do.
+                    text = listOfNotNull(state.artist.takeIf { it.isNotBlank() }, state.tempoMark)
+                        .joinToString(" · "),
+                    style = type.miniSub,
+                    color = colors.tertiaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 1.dp),
+                )
+            }
+            IconButton(
+                icon = if (state.isPlaying) MeedwellIcons.Pause else MeedwellIcons.Play,
+                contentDescription = if (state.isPlaying) "Pause" else "Play",
+                onClick = onPlayPause,
+                size = 15.dp,
+                tint = colors.primaryText,
+            )
+        }
     }
 }

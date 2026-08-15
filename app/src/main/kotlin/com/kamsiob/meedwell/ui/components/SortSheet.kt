@@ -28,10 +28,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.data.ShelfScope
 import com.kamsiob.meedwell.data.ShelfSort
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
+import com.kamsiob.meedwell.ui.theme.sheetShadow
 
 /**
  * How the shelf is ordered, and what it is showing.
@@ -71,7 +70,7 @@ fun SortSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-                .meedwellShadow(Elevation.sheet, RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
                 .clickable(enabled = false) {}
@@ -90,7 +89,7 @@ fun SortSheet(
 
             Text(
                 "ORDER",
-                style = type.capsEyebrow,
+                style = type.section,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 20.dp, bottom = 2.dp),
             )
@@ -105,7 +104,7 @@ fun SortSheet(
 
             Text(
                 "SHOWING",
-                style = type.capsEyebrow,
+                style = type.section,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 22.dp, bottom = 2.dp),
             )
@@ -146,7 +145,7 @@ private fun PickRow(label: String, note: String?, selected: Boolean, onClick: ()
                 color = if (selected) colors.primaryText else colors.secondaryText,
             )
             if (note != null) {
-                Text(note, style = type.metadata, color = colors.tertiaryText, modifier = Modifier.padding(top = 2.dp))
+                Text(note, style = type.meta, color = colors.tertiaryText, modifier = Modifier.padding(top = 2.dp))
             }
         }
         // A dot rather than a tick, and only when chosen. Selection is carried

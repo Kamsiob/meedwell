@@ -33,10 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Track
-import com.kamsiob.meedwell.ui.components.AmbientGlow
 import com.kamsiob.meedwell.ui.components.CoverSquare
 import com.kamsiob.meedwell.ui.components.CoverThumb
-import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.IconButton
 import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
@@ -63,7 +61,6 @@ fun HistoryScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Teal)
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
             IconButton(
                 icon = MeedwellIcons.Back,
@@ -74,10 +71,10 @@ fun HistoryScreen(
                 edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
-            Text("History", style = type.largeHeading, color = colors.primaryText)
+            Text("History", style = type.h1, color = colors.primaryText)
             Text(
                 "The same log the forgotten shelf reads from",
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -94,7 +91,7 @@ fun HistoryScreen(
                     item(key = "d-" + day.label) {
                         Text(
                             day.label.uppercase(),
-                            style = type.capsEyebrow,
+                            style = type.section,
                             color = colors.secondaryText,
                             modifier = Modifier.padding(top = 14.dp, bottom = 2.dp),
                         )
@@ -120,13 +117,13 @@ fun HistoryScreen(
                                     )
                                     Text(
                                         entry.subtitle,
-                                        style = type.metadata,
+                                        style = type.meta,
                                         color = colors.tertiaryText,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                 }
-                                Text(entry.time, style = type.metadata, color = colors.tertiaryText)
+                                Text(entry.time, style = type.meta, color = colors.tertiaryText)
                             }
                             Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
                         }
@@ -135,7 +132,7 @@ fun HistoryScreen(
                 item(key = "foot") {
                     Text(
                         "One database, on this phone. Erase it any time in Settings.",
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
@@ -165,7 +162,6 @@ fun ForgottenShelfScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Rose)
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
             IconButton(
                 icon = MeedwellIcons.Back,
@@ -176,10 +172,10 @@ fun ForgottenShelfScreen(
                 edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
-            Text("Forgotten shelf", style = type.largeHeading, color = colors.primaryText)
+            Text("Forgotten shelf", style = type.h1, color = colors.primaryText)
             Text(
                 "Bought, loved, and quietly waiting",
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -217,7 +213,7 @@ fun ForgottenShelfScreen(
                         )
                         Text(
                             forgotten.album.name,
-                            style = type.metadata,
+                            style = type.meta,
                             color = colors.primaryText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -225,7 +221,7 @@ fun ForgottenShelfScreen(
                         )
                         Text(
                             forgotten.album.artist,
-                            style = type.metadata,
+                            style = type.meta,
                             color = colors.tertiaryText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -235,7 +231,7 @@ fun ForgottenShelfScreen(
                         // why you might have forgotten it".
                         Text(
                             forgotten.reason,
-                            style = type.provenance.copy(fontStyle = FontStyle.Italic),
+                            style = type.meta.copy(fontStyle = FontStyle.Italic),
                             color = colors.secondaryText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -247,7 +243,7 @@ fun ForgottenShelfScreen(
                     Text(
                         "Worked out on this phone from your own listening. No algorithm, no feed, nothing " +
                             "sent anywhere.",
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
@@ -277,19 +273,18 @@ fun ListsScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Teal)
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
             Row(
                 Modifier.fillMaxWidth().padding(top = 18.dp),
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Lists", style = type.largeHeading, color = colors.primaryText)
+                    Text("Lists", style = type.h1, color = colors.primaryText)
                     Text(
                         // Honest. The old line said "Kept in step with your
                         // Bandcamp collection", which the API cannot support.
                         "Kept on this phone",
-                        style = type.voiceSmall,
+                        style = type.voice,
                         color = colors.secondaryText,
                         modifier = Modifier.padding(top = 8.dp),
                     )
@@ -339,7 +334,7 @@ fun ListsScreen(
                                 "Bandcamp's API has no way to make or change a playlist, so lists will " +
                                     "live on this phone when they arrive. Loved above is real, and it " +
                                     "does reach your account.",
-                                style = type.metadata,
+                                style = type.meta,
                                 color = colors.tertiaryText,
                                 modifier = Modifier.padding(top = 10.dp),
                             )
@@ -371,7 +366,6 @@ fun LovedScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Rose)
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
             IconButton(
                 icon = MeedwellIcons.Back,
@@ -382,10 +376,10 @@ fun LovedScreen(
                 edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
-            Text("Loved", style = type.largeHeading, color = colors.primaryText)
+            Text("Loved", style = type.h1, color = colors.primaryText)
             Text(
                 "Hearts that live in your account, not this app",
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -412,11 +406,11 @@ fun LovedScreen(
                             CoverThumb(url = null, title = track.title, size = 40.dp)
                             Column(Modifier.weight(1f).padding(start = 12.dp)) {
                                 Text(track.title, style = type.rowTitle, color = colors.primaryText, maxLines = 1)
-                                Text(track.artist, style = type.metadata, color = colors.tertiaryText, maxLines = 1)
+                                Text(track.artist, style = type.meta, color = colors.tertiaryText, maxLines = 1)
                             }
                             Text(
                                 formatDuration(track.durationSeconds),
-                                style = type.metadata,
+                                style = type.meta,
                                 color = colors.tertiaryText,
                             )
                         }
@@ -427,7 +421,7 @@ fun LovedScreen(
                     Text(
                         "A heart set here reaches your Bandcamp account. Taking one off is broken on their " +
                             "side at the moment, so that has to be done on their website.",
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(top = 22.dp),
@@ -459,7 +453,6 @@ fun ArtistScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Teal)
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
             IconButton(
                 icon = MeedwellIcons.Back,
@@ -470,10 +463,10 @@ fun ArtistScreen(
                 edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
-            Text(state.name, style = type.sectionHeading, color = colors.primaryText)
+            Text(state.name, style = type.h2, color = colors.primaryText)
             Text(
                 state.voiceLine,
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -497,13 +490,13 @@ fun ArtistScreen(
                                 Text(album.name, style = type.rowTitle, color = colors.primaryText, maxLines = 1)
                                 Row {
                                     if (album.year > 0) {
-                                        Text("${album.year}", style = type.metadata, color = colors.tertiaryText)
+                                        Text("${album.year}", style = type.meta, color = colors.tertiaryText)
                                     }
                                     if (album.isFullyPresent) {
-                                        Text(" · ", style = type.metadata, color = colors.tertiaryText)
+                                        Text(" · ", style = type.meta, color = colors.tertiaryText)
                                         Text(
                                             "yours",
-                                            style = type.provenance.copy(fontStyle = FontStyle.Italic),
+                                            style = type.meta.copy(fontStyle = FontStyle.Italic),
                                             color = colors.secondaryText,
                                         )
                                     }
@@ -518,7 +511,7 @@ fun ArtistScreen(
             Text(
                 "Their full discography, merch, and whatever's next live on their page. Money spent there " +
                     "goes to them. Meedwell never takes a cut of anything.",
-                style = type.metadata,
+                style = type.meta,
                 color = colors.secondaryText,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
@@ -556,7 +549,7 @@ private fun ListRow(
                     Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(colors.surfacePanel),
+                        .background(colors.background),
                     contentAlignment = Alignment.Center,
                 ) {
                     com.kamsiob.meedwell.ui.components.MeedwellIcon(
@@ -570,7 +563,7 @@ private fun ListRow(
             }
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(title, style = type.rowTitle, color = colors.primaryText, maxLines = 1)
-                Text(subtitle, style = type.metadata, color = colors.tertiaryText, maxLines = 1)
+                Text(subtitle, style = type.meta, color = colors.tertiaryText, maxLines = 1)
             }
         }
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
@@ -581,7 +574,7 @@ private fun ListRow(
 private fun EmptyNote(text: String) {
     Text(
         text,
-        style = MeedwellTheme.typography.metadata,
+        style = MeedwellTheme.typography.meta,
         color = MeedwellTheme.colors.secondaryText,
         modifier = Modifier.padding(top = 26.dp),
     )

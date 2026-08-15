@@ -29,9 +29,11 @@
 
     <!-- The coin. Its lower edge touches the inside of the cradle stroke at the
          cradle's lowest point: center 63.0, radius 8.58, so the coin's bottom
-         reaches 71.58 and the stroke's inner edge sits at 72.5 - 0.89 = 71.59.
-         Those two numbers meeting is the construction rule, not a coincidence.
-         The fractions they come from live in ui/components/Mark.kt. -->
+         reaches 71.58 and the stroke's inner edge sits at 72.5 - 0.89 = 71.61.
+         Those two meeting is the construction rule, not a coincidence. The
+         remaining 0.03 is a seventh of a pixel at the 512 store size, below
+         anything that can be drawn; tools/make-store-art.py asserts it stays
+         there. The fractions they come from live in ui/components/Mark.kt. -->
     <path
         android:pathData="M54,63.0 m-8.58,0 a8.58,8.58 0 1,0 17.16,0 a8.58,8.58 0 1,0 -17.16,0"
         android:fillColor="#AE6738" />

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meedwell · floating Surroundings card</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F4EC; --paper-2:#EFEBDF; --ink:#1C2420; --ink-2:#3D473F; --ink-3:#57605A;
+  --hair:rgba(28,36,32,.12); --hair-2:rgba(28,36,32,.22);
+  --moss:#5C7358; --moss-deep:#43563F; --copper:#AE6738;
+  --lamp:#12160F; --lamp-ink:#EFEEE6; --lamp-2:#B4B8AC; --lamp-3:#8A8F84;
+  --lamp-hair:rgba(239,238,230,.12); --lamp-hair-2:rgba(239,238,230,.2); --lamp-moss:#7E9478;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+body{background:#E8E4D8;color:var(--ink);font-family:'Instrument Sans',sans-serif;padding:60px 30px 120px;}
+.head{max-width:1500px;margin:0 auto 40px;}
+.head h1{font-family:'Instrument Serif',serif;font-style:italic;font-size:38px;}
+.head p{color:var(--ink-2);font-size:14.5px;line-height:1.65;max-width:840px;margin-top:14px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,330px);gap:58px 44px;justify-content:center;max-width:1500px;margin:0 auto;}
+.cell{width:330px;}
+.cap{margin-top:15px;}
+.cap .ix{font-size:10.5px;font-weight:600;letter-spacing:2px;color:var(--ink-3);}
+.cap .h{font-size:13px;font-weight:600;margin-top:4px;}
+.cap .d{font-size:12.5px;color:var(--ink-3);line-height:1.55;margin-top:4px;}
+
+.ph{width:330px;height:716px;border-radius:44px;position:relative;overflow:hidden;background:var(--paper);
+  box-shadow:0 0 0 1px rgba(28,36,32,.11),0 44px 88px -44px rgba(28,36,32,.5);}
+.ph.dk{background:var(--lamp);color:var(--lamp-ink);box-shadow:0 0 0 1px rgba(0,0,0,.5),0 44px 88px -44px rgba(0,0,0,.85);}
+.sc{position:absolute;inset:0;display:flex;flex-direction:column;padding:0 22px;}
+.st{display:flex;justify-content:space-between;padding-top:15px;font-size:11px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;}
+.dk .st{color:var(--lamp-3);}
+.sr{font-family:'Instrument Serif',serif;font-style:italic;}
+.h1{font-size:21px;font-weight:700;letter-spacing:-.1px;}
+.sec{font-size:10.5px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-3);}
+.dk .sec{color:var(--lamp-3);}
+.meta{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;}
+.dk .meta{color:var(--lamp-3);}
+.staff{display:flex;flex-direction:column;gap:3px;flex:1;}
+.staff i{display:block;height:1px;background:var(--hair);}
+.staff i:nth-child(3){background:var(--hair-2);}
+.dk .staff i{background:var(--lamp-hair);}
+.dk .staff i:nth-child(3){background:var(--lamp-hair-2);}
+.shead{display:flex;align-items:center;gap:11px;}
+.spill{display:flex;align-items:center;gap:6px;border:1px solid var(--hair-2);border-radius:999px;padding:6px 12px;}
+.spill span{font-size:12.5px;font-weight:600;}
+.dk .spill{border-color:var(--lamp-hair-2);}
+
+.cov{border-radius:5px;position:relative;overflow:hidden;}
+.c-mist{background:linear-gradient(178deg,#C9D2C5,#E8E4D4 68%,#D8CEB7);}
+.c-river{background:linear-gradient(178deg,#B6C3C5,#8DA2A4 54%,#5C7274);}
+.c-dawn{background:linear-gradient(178deg,#E9DFC9,#D8BE9F 58%,#B78D6D);}
+.c-reed{background:linear-gradient(178deg,#E3E0D2,#C7C5AD);}
+.cov .hz{position:absolute;left:0;right:0;height:1.5px;background:rgba(28,36,32,.32);}
+.cov .sn{position:absolute;border-radius:50%;background:rgba(246,244,236,.82);}
+
+.dayline{position:relative;height:26px;}
+.dayline .ln{position:absolute;left:0;right:0;top:19px;height:1.5px;background:var(--hair-2);}
+.dayline .tk{position:absolute;top:19px;width:1px;height:5px;background:var(--hair-2);}
+.dayline .sun{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--copper);}
+.dk .dayline .ln,.dk .dayline .tk{background:var(--lamp-hair-2);}
+.dk .dayline .sun{background:var(--lamp-2);}
+
+/* ---------- mini player ---------- */
+.mini{position:absolute;left:0;right:0;bottom:68px;background:var(--paper);border-top:1px solid var(--hair);
+  padding:9px 22px 10px;display:flex;align-items:center;gap:11px;}
+.dk .mini{background:var(--lamp);border-top-color:var(--lamp-hair);}
+.mini .pg{position:absolute;left:0;right:0;top:0;height:2px;background:var(--hair);}
+.dk .mini .pg{background:var(--lamp-hair);}
+.mini .pg i{display:block;height:100%;background:var(--moss);}
+.dk .mini .pg i{background:var(--lamp-moss);}
+.mini .ar{width:34px;height:34px;border-radius:4px;flex:0 0 34px;position:relative;overflow:hidden;}
+.mini .mt{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mini .ma{font-size:11px;color:var(--ink-3);margin-top:1px;}
+.dk .mini .ma{color:var(--lamp-3);}
+
+/* ---------- THE FLOATING SURROUNDINGS CARD ----------
+   Paper-tinted scrim at 88%, hairline border, no blur, no frost.
+   Content ghosts through rather than being frosted out.            */
+.sur{position:absolute;left:14px;right:14px;border-radius:16px;
+  background:rgba(246,244,236,.88);
+  border:1px solid rgba(28,36,32,.16);
+  box-shadow:0 10px 26px -14px rgba(28,36,32,.42);
+  overflow:hidden;}
+.dk .sur{background:rgba(18,22,15,.88);border-color:rgba(239,238,230,.16);
+  box-shadow:0 10px 26px -14px rgba(0,0,0,.8);}
+.sur.collapsed{bottom:126px;padding:10px 14px 11px;}
+.sur.expanded{bottom:126px;padding:12px 14px 13px;}
+.sur .top{display:flex;align-items:center;gap:10px;}
+.sur .nm{flex:1;font-size:12.5px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sur .ch{font-size:11px;color:var(--ink-3);}
+.dk .sur .ch{color:var(--lamp-3);}
+.sur .vol{margin-top:9px;position:relative;height:3px;background:rgba(28,36,32,.14);border-radius:2px;}
+.dk .sur .vol{background:rgba(239,238,230,.16);}
+.sur .vol i{position:absolute;left:0;top:0;bottom:0;background:var(--moss);border-radius:2px;}
+.dk .sur .vol i{background:var(--lamp-moss);}
+.sur .vol b{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--moss);}
+.dk .sur .vol b{background:var(--lamp-moss);}
+.sur .ends{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-top:6px;}
+.dk .sur .ends{color:var(--lamp-3);}
+.sur .rule{height:1px;background:rgba(28,36,32,.12);margin:11px 0 2px;}
+.dk .sur .rule{background:rgba(239,238,230,.12);}
+.sur .it{display:flex;align-items:center;gap:9px;padding:8px 0;font-size:12.5px;}
+.sur .it .d{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;}
+.dk .sur .it .d{color:var(--lamp-3);}
+.sur .it.on{color:var(--moss-deep);font-weight:600;}
+.dk .sur .it.on{color:var(--lamp-moss);}
+.sur .all{display:flex;justify-content:space-between;align-items:center;padding-top:9px;margin-top:2px;
+  border-top:1px solid rgba(28,36,32,.12);font-size:11.5px;font-weight:600;}
+.dk .sur .all{border-top-color:rgba(239,238,230,.12);}
+
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;background:var(--paper);border-top:1px solid var(--hair);padding:9px 4px 18px;}
+.dk .tabs{background:var(--lamp);border-top-color:var(--lamp-hair);}
+.tabs .tb{flex:1;text-align:center;font-size:10px;font-weight:600;color:var(--ink-3);}
+.dk .tabs .tb{color:var(--lamp-3);}
+.tabs .tb.on{color:var(--ink);}
+.dk .tabs .tb.on{color:var(--lamp-ink);}
+.tabs .tb i{display:block;margin:0 auto 4px;height:17px;}
+.livedot{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--moss);vertical-align:top;margin-left:3px;}
+.dk .livedot{background:var(--lamp-moss);}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>The floating Surroundings card</h1>
+  <p>Appears only while a background sound is playing, sitting above the music mini player as a clearly separate layer. Collapsed it is a name and a volume line. Tapped, it grows downward to reveal the other sounds already on the phone. Semi-transparent as a paper-tinted scrim at 88 percent with a hairline, so what is behind ghosts through rather than being frosted: no blur, no glass, no gradient.</p>
+</div>
+
+<div class="grid">
+
+<!-- 01 COLLAPSED, DAYLIGHT -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px">
+    <div class="h1">Shelf</div>
+    <div class="spill"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"/><path d="M10.6,10.6 L14.5,14.5"/></svg><span>Search</span></div>
+  </div>
+  <div class="dayline" style="margin-top:9px">
+    <div class="ln"></div><div class="tk" style="left:0"></div><div class="tk" style="left:50%"></div><div class="tk" style="right:0"></div>
+    <div class="sun" style="left:26%;top:9px"></div>
+  </div>
+  <div style="display:flex;gap:21px;margin-top:8px;color:var(--ink-3)">
+    <div style="text-align:center;font-size:10px;font-weight:600;color:var(--ink)">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3,17 L11,3 L19,17 Z"/><path d="M8,17 L8,7 M11,17 L11,5 M14,17 L14,7"/></svg>Albums</div>
+    <div style="text-align:center;font-size:10px;font-weight:600">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7,17 C4,14 4,7 8,4 C12,1 17,4 16,8 C15,12 10,12 9,9"/><path d="M13,14 L18,18"/></svg>Composers</div>
+    <div style="text-align:center;font-size:10px;font-weight:600">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="5" width="16" height="11" rx="1"/><path d="M7,5 L7,12 M11,5 L11,12 M15,5 L15,12"/></svg>Shelves</div>
+  </div>
+  <div class="sr" style="font-size:15px;color:var(--ink-2);margin-top:13px">Ninety-one albums, all of them patient.</div>
+  <div class="shead" style="margin-top:16px"><span class="sec">Newly shelved</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:12px">
+    <div><div class="cov c-mist" style="height:120px"><div class="hz" style="top:62%"></div><div class="sn" style="width:22px;height:22px;left:27px;top:31px"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Nocturnes for a Small Room</div></div>
+    <div><div class="cov c-river" style="height:120px"><div class="hz" style="top:47%;background:rgba(246,244,236,.5)"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">The River Ordinary</div></div>
+    <div><div class="cov c-dawn" style="height:120px"><div class="sn" style="width:28px;height:28px;left:50%;top:33px;transform:translateX(-50%)"></div><div class="hz" style="top:66%"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Harp Music for Early Hours</div></div>
+    <div><div class="cov c-reed" style="height:120px"><div class="hz" style="top:29%"></div><div class="hz" style="top:33%"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Hinterland, Original Score</div></div>
+  </div>
+
+  <div class="sur collapsed">
+    <div class="top">
+      <svg width="16" height="13" viewBox="0 0 18 14" fill="none"><circle cx="9" cy="5" r="3.5" fill="#5C7358"/><path d="M1,10.5 H17" stroke="#5C7358" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span class="nm">Rain, steady</span>
+      <span class="ch">⌃</span>
+    </div>
+    <div class="vol"><i style="width:44%"></i><b style="left:44%"></b></div>
+    <div class="ends"><span class="sr">pp</span><span class="sr">ff</span></div>
+  </div>
+
+  <div class="mini">
+    <div class="pg"><i style="width:29%"></i></div>
+    <div class="ar c-dawn"><div class="hz" style="top:66%"></div><div class="sn" style="width:9px;height:9px;left:12px;top:8px"></div></div>
+    <div style="flex:1;min-width:0"><div class="mt">The Long Field at Dusk</div><div class="ma">Bride Callanan · andante</div></div>
+    <div style="font-size:15px">❚❚</div>
+  </div>
+  <div class="tabs">
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" fill="#5C7358"/><path d="M2,11 H16" stroke="#5C7358" stroke-width="1.5" stroke-linecap="round"/></svg></i>Surroundings<span class="livedot"></span></div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">01</div><div class="h">Collapsed</div><div class="d">Name, volume, and the ends marked pp and ff rather than numbers. Inset 14px from each edge so it reads as floating above the mini player rather than as another full-width bar. The chevron is the only affordance; the whole card is the tap target.</div></div>
+</div>
+
+<!-- 02 EXPANDED, DAYLIGHT -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px">
+    <div class="h1">Shelf</div>
+    <div class="spill"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"/><path d="M10.6,10.6 L14.5,14.5"/></svg><span>Search</span></div>
+  </div>
+  <div class="dayline" style="margin-top:9px">
+    <div class="ln"></div><div class="tk" style="left:0"></div><div class="tk" style="left:50%"></div><div class="tk" style="right:0"></div>
+    <div class="sun" style="left:26%;top:9px"></div>
+  </div>
+  <div style="display:flex;gap:21px;margin-top:8px;color:var(--ink-3)">
+    <div style="text-align:center;font-size:10px;font-weight:600;color:var(--ink)">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3,17 L11,3 L19,17 Z"/><path d="M8,17 L8,7 M11,17 L11,5 M14,17 L14,7"/></svg>Albums</div>
+    <div style="text-align:center;font-size:10px;font-weight:600">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7,17 C4,14 4,7 8,4 C12,1 17,4 16,8 C15,12 10,12 9,9"/><path d="M13,14 L18,18"/></svg>Composers</div>
+    <div style="text-align:center;font-size:10px;font-weight:600">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="5" width="16" height="11" rx="1"/><path d="M7,5 L7,12 M11,5 L11,12 M15,5 L15,12"/></svg>Shelves</div>
+  </div>
+  <div class="sr" style="font-size:15px;color:var(--ink-2);margin-top:13px">Ninety-one albums, all of them patient.</div>
+  <div class="shead" style="margin-top:16px"><span class="sec">Newly shelved</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:12px">
+    <div><div class="cov c-mist" style="height:120px"><div class="hz" style="top:62%"></div><div class="sn" style="width:22px;height:22px;left:27px;top:31px"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Nocturnes for a Small Room</div></div>
+    <div><div class="cov c-river" style="height:120px"><div class="hz" style="top:47%;background:rgba(246,244,236,.5)"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">The River Ordinary</div></div>
+    <div><div class="cov c-dawn" style="height:120px"><div class="sn" style="width:28px;height:28px;left:50%;top:33px;transform:translateX(-50%)"></div><div class="hz" style="top:66%"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Harp Music for Early Hours</div></div>
+    <div><div class="cov c-reed" style="height:120px"><div class="hz" style="top:29%"></div><div class="hz" style="top:33%"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Hinterland, Original Score</div></div>
+  </div>
+
+  <div class="sur expanded">
+    <div class="top">
+      <svg width="16" height="13" viewBox="0 0 18 14" fill="none"><circle cx="9" cy="5" r="3.5" fill="#5C7358"/><path d="M1,10.5 H17" stroke="#5C7358" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span class="nm">Rain, steady</span>
+      <span class="ch">⌄</span>
+    </div>
+    <div class="vol"><i style="width:44%"></i><b style="left:44%"></b></div>
+    <div class="ends"><span class="sr">pp</span><span class="sr">ff</span></div>
+    <div class="rule"></div>
+    <div class="it on">
+      <svg width="14" height="11" viewBox="0 0 18 14" fill="none"><circle cx="9" cy="5" r="3.2" fill="#5C7358"/><path d="M1,10.5 H17" stroke="#5C7358" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Rain, steady<span class="d">playing</span></div>
+    <div class="it">
+      <svg width="14" height="11" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      Fireplace<span class="d">8:09</span></div>
+    <div class="it">
+      <svg width="14" height="11" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      Forest at night<span class="d">4:53</span></div>
+    <div class="it">
+      <svg width="14" height="11" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      Ocean, calm shore<span class="d">12:20</span></div>
+    <div class="all"><span>All recordings</span><span style="color:var(--ink-3)">›</span></div>
+  </div>
+
+  <div class="mini">
+    <div class="pg"><i style="width:29%"></i></div>
+    <div class="ar c-dawn"><div class="hz" style="top:66%"></div><div class="sn" style="width:9px;height:9px;left:12px;top:8px"></div></div>
+    <div style="flex:1;min-width:0"><div class="mt">The Long Field at Dusk</div><div class="ma">Bride Callanan · andante</div></div>
+    <div style="font-size:15px">❚❚</div>
+  </div>
+  <div class="tabs">
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" fill="#5C7358"/><path d="M2,11 H16" stroke="#5C7358" stroke-width="1.5" stroke-linecap="round"/></svg></i>Surroundings<span class="livedot"></span></div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">02</div><div class="h">Expanded</div><div class="d">Grows downward from the same anchor, so the volume line does not move under your finger. A hairline separates the control from the list. Only what is on the phone appears here, four items at most, with "All recordings" as the route to the full library. Not a second browser.</div></div>
+</div>
+
+<!-- 03 LAMPLIGHT -->
+<div class="cell">
+<div class="ph dk"><div class="sc">
+  <div class="st"><span>22:04</span><span>◐ 41%</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px">
+    <div class="h1">Shelf</div>
+    <div class="spill"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"/><path d="M10.6,10.6 L14.5,14.5"/></svg><span>Search</span></div>
+  </div>
+  <div class="dayline" style="margin-top:9px">
+    <div class="ln"></div><div class="tk" style="left:0"></div><div class="tk" style="left:50%"></div><div class="tk" style="right:0"></div>
+    <div class="sun" style="left:95%;top:22px;width:10px;height:10px"></div>
+  </div>
+  <div class="sr" style="font-size:15px;color:var(--lamp-2);margin-top:14px">Ninety-one albums, all of them patient.</div>
+  <div class="shead" style="margin-top:16px"><span class="sec">Newly shelved</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:12px">
+    <div><div class="cov" style="height:120px;background:linear-gradient(178deg,#39493C,#21301E)"><div class="hz" style="top:58%;background:rgba(239,238,230,.3)"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Vespers</div></div>
+    <div><div class="cov c-river" style="height:120px"><div class="hz" style="top:47%;background:rgba(246,244,236,.4)"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">The River Ordinary</div></div>
+    <div><div class="cov" style="height:120px;background:linear-gradient(178deg,#3A4148,#232A2E)"><div class="hz" style="top:64%;background:rgba(239,238,230,.28)"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Winter Antiphons</div></div>
+    <div><div class="cov" style="height:120px;background:linear-gradient(178deg,#43423A,#2A2A24)"><div class="hz" style="top:33%;background:rgba(239,238,230,.22)"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Hinterland, Original Score</div></div>
+  </div>
+
+  <div class="sur collapsed">
+    <div class="top">
+      <svg width="16" height="13" viewBox="0 0 18 14" fill="none"><circle cx="9" cy="5" r="3.5" fill="#7E9478"/><path d="M1,10.5 H17" stroke="#7E9478" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span class="nm">Fireplace</span>
+      <span class="ch">⌃</span>
+    </div>
+    <div class="vol"><i style="width:31%"></i><b style="left:31%"></b></div>
+    <div class="ends"><span class="sr">pp</span><span class="sr">ff</span></div>
+  </div>
+
+  <div class="mini">
+    <div class="pg"><i style="width:62%"></i></div>
+    <div class="ar" style="background:linear-gradient(178deg,#39493C,#21301E)"></div>
+    <div style="flex:1;min-width:0"><div class="mt">Vespers, IV</div><div class="ma">Fenwick Consort · lento</div></div>
+    <div style="font-size:15px">❚❚</div>
+  </div>
+  <div class="tabs">
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" fill="#7E9478"/><path d="M2,11 H16" stroke="#7E9478" stroke-width="1.5" stroke-linecap="round"/></svg></i>Surroundings<span class="livedot"></span></div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">03</div><div class="h">Lamplight</div><div class="d">The same card against deep pine at 88 percent opacity. In the dark theme the translucency reads more clearly, since the covers behind it are darker than the card. Moss becomes its Lamplight variant; nothing else changes.</div></div>
+</div>
+
+</div>
+
+<div style="max-width:1500px;margin:70px auto 0;padding-top:24px;border-top:1px solid rgba(28,36,32,.12)">
+  <div style="font-size:11px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px">Build notes</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px 40px;color:var(--ink-2);font-size:13px;line-height:1.6">
+    <div><b>Transparency, precisely.</b> Background is the theme's own paper or lamp colour at 88 percent alpha, with a 1px border at 16 percent ink. No backdrop blur, no frosted glass, no gradient. Content behind ghosts through rather than being obscured, which is what keeps it from reading as a Material dialog.</div>
+    <div><b>It appears only while a sound plays.</b> Nothing floats by default. It slides in when a sound starts and leaves when it stops. Because it appears in response to the listener's own action, it should not read as an intrusion.</div>
+    <div><b>Expanding grows downward from a fixed anchor.</b> The volume line stays where it was, so a finger already on it is not displaced. Collapsed is roughly 62dp, expanded roughly 210dp.</div>
+    <div><b>The list is not a browser.</b> Only recordings already on the phone, four at most, sorted by recent use. Anything longer belongs on the Surroundings tab, which is what "All recordings" opens.</div>
+    <div><b>Gestures.</b> Tap anywhere to expand or collapse. Drag along the volume line to set level. Swipe the card down to stop the sound and dismiss. Long press is unused.</div>
+    <div><b>It never blocks the last row.</b> Whatever list is behind it gets bottom padding equal to the card's height plus the mini player, so nothing is permanently hidden underneath.</div>
+    <div><b>On the player spread it does not appear at all.</b> The Surroundings page already holds a full volume control and library, so the card would duplicate it. It shows on Shelf, Search, Lists and More only.</div>
+    <div><b>Accessibility.</b> Expanded state announced, volume as a slider with pp to ff described in plain words, and every row 44dp minimum. Survives 200 percent font scale by allowing the card to grow rather than truncate.</div>
+  </div>
+</div>
+
+</body>
+</html>

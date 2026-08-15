@@ -9,17 +9,20 @@ import com.kamsiob.meedwell.ui.components.CRADLE_LEFT
 import com.kamsiob.meedwell.ui.components.CRADLE_RIGHT
 import com.kamsiob.meedwell.ui.components.CRADLE_STROKE
 import com.kamsiob.meedwell.ui.components.COIN_RADIUS
-import com.kamsiob.meedwell.ui.theme.DarkBackground
-import com.kamsiob.meedwell.ui.theme.DarkGold
-import com.kamsiob.meedwell.ui.theme.DarkPrimaryText
-import com.kamsiob.meedwell.ui.theme.DarkSecondaryText
-import com.kamsiob.meedwell.ui.theme.DarkTertiaryText
-import com.kamsiob.meedwell.ui.theme.LightBackground
-import com.kamsiob.meedwell.ui.theme.LightGold
-import com.kamsiob.meedwell.ui.theme.LightPrimaryText
-import com.kamsiob.meedwell.ui.theme.LightSecondaryText
-import com.kamsiob.meedwell.ui.theme.LightSecondaryTextSoft
-import com.kamsiob.meedwell.ui.theme.LightTertiaryText
+import com.kamsiob.meedwell.ui.theme.Alarm
+import com.kamsiob.meedwell.ui.theme.Copper
+import com.kamsiob.meedwell.ui.theme.DaylightColors
+import com.kamsiob.meedwell.ui.theme.GoldInk
+import com.kamsiob.meedwell.ui.theme.Ink
+import com.kamsiob.meedwell.ui.theme.Ink2
+import com.kamsiob.meedwell.ui.theme.Ink3
+import com.kamsiob.meedwell.ui.theme.Lamp
+import com.kamsiob.meedwell.ui.theme.Lamp2
+import com.kamsiob.meedwell.ui.theme.Lamp3
+import com.kamsiob.meedwell.ui.theme.LamplightColors
+import com.kamsiob.meedwell.ui.theme.LampInk
+import com.kamsiob.meedwell.ui.theme.MossDeep
+import com.kamsiob.meedwell.ui.theme.Paper
 import org.junit.Test
 import kotlin.math.max
 import kotlin.math.min
@@ -61,45 +64,65 @@ class DesignRulesTest {
     }
 
     @Test
-    fun `dark theme ink passes AA against the warm near-black`() {
-        assertContrast("dark primary on background", DarkPrimaryText, DarkBackground, 4.5)
-        assertContrast("dark secondary on background", DarkSecondaryText, DarkBackground, 4.5)
-        assertContrast("dark tertiary on background", DarkTertiaryText, DarkBackground, 4.5)
+    fun `Daylight ink passes AA on paper, and the tertiary floor holds`() {
+        // The floor is law: nothing on paper is fainter than --ink-3. It is the
+        // value the grid calls "tertiary, the floor. nothing lighter".
+        assertContrast("ink on paper", Ink, Paper, 4.5)
+        assertContrast("ink-2 on paper", Ink2, Paper, 4.5)
+        assertContrast("ink-3 on paper", Ink3, Paper, 4.5)
     }
 
     @Test
-    fun `light theme ink passes AA against paper, and the floor holds`() {
-        // The light mode ink floor is law: nothing lighter than slate #56525E
-        // on paper, ever. It was corrected twice in design.
-        assertContrast("light primary on paper", LightPrimaryText, LightBackground, 4.5)
-        assertContrast("light secondary on paper", LightSecondaryText, LightBackground, 4.5)
-        assertContrast("light secondary soft on paper", LightSecondaryTextSoft, LightBackground, 4.5)
-        assertContrast("light tertiary floor on paper", LightTertiaryText, LightBackground, 4.5)
+    fun `Lamplight ink passes AA on deep pine`() {
+        assertContrast("lamp ink on lamp", LampInk, Lamp, 4.5)
+        assertContrast("lamp-2 on lamp", Lamp2, Lamp, 4.5)
+        assertContrast("lamp-3 on lamp", Lamp3, Lamp, 4.5)
+    }
+
+    /**
+     * The reserved colors have to be legible where they are actually used, and
+     * each one is used in exactly one place.
+     */
+    @Test
+    fun `the reserved colors are legible where they appear`() {
+        // Gold ink, on the support blocks, on paper only.
+        assertContrast("gold ink on paper", GoldInk, Paper, 4.5)
+        // Alarm, on destructive rows, on paper only.
+        assertContrast("alarm on paper", Alarm, Paper, 4.5)
+        // Moss as ink, on a playing row.
+        assertContrast("moss ink on paper", MossDeep, Paper, 4.5)
+        // Moss on Lamplight, where it is lifted for exactly this reason.
+        assertContrast("lamp moss on lamp", LamplightColors.mossInk, Lamp, 4.5)
+    }
+
+    /**
+     * Copper is the mark and the sun, and it never carries text.
+     *
+     * So it is checked as a **graphic** against the 3:1 floor for non-text
+     * content rather than against 4.5:1. Holding it to a text ratio would be
+     * measuring the wrong thing and would push the mark's own color away from
+     * what the design says it is.
+     */
+    @Test
+    fun `copper reads as a graphic on paper`() {
+        assertContrast("copper on paper", Copper, Paper, 3.0)
     }
 
     @Test
-    fun `the documented light ink measurements still hold`() {
-        // DESIGN.md section 2 states these figures. If a token moves, the
-        // document is now wrong, and this is where that gets caught.
-        assertThat(contrast(LightPrimaryText, LightBackground)).isWithin(0.15).of(16.3)
-        assertThat(contrast(LightSecondaryText, LightBackground)).isWithin(0.15).of(11.6)
-        assertThat(contrast(LightSecondaryTextSoft, LightBackground)).isWithin(0.15).of(9.0)
-        assertThat(contrast(LightTertiaryText, LightBackground)).isWithin(0.15).of(6.9)
+    fun `the two grounds are the ones the grid names`() {
+        // Daylight is the default. If this ever flips, the app opens dark and
+        // the whole design reads differently before anything else is judged.
+        assertThat(DaylightColors.background).isEqualTo(Paper)
+        assertThat(DaylightColors.isDark).isFalse()
+        assertThat(LamplightColors.background).isEqualTo(Lamp)
+        assertThat(LamplightColors.isDark).isTrue()
     }
 
     @Test
-    fun `gold passes AA in both themes, including the correction that made it`() {
-        // Light gold was #9A6F1E at 4.06:1 and failed AA for a 14sp label. It
-        // is now #8A6215 at 4.93:1. This test is the reason it cannot drift back.
-        assertContrast("gold on paper", LightGold, LightBackground, 4.5)
-        assertContrast("gold on near-black", DarkGold, DarkBackground, 4.5)
-        assertThat(contrast(LightGold, LightBackground)).isWithin(0.1).of(4.93)
-        assertThat(contrast(DarkGold, DarkBackground)).isWithin(0.15).of(11.5)
-    }
-
-    @Test
-    fun `neither theme uses pure black or pure white`() {
-        listOf(DarkBackground, LightBackground, DarkPrimaryText, LightPrimaryText).forEach { color ->
+    fun `neither ground is pure black or pure white`() {
+        // Paper is warm and Lamplight is deep pine. Both were chosen against
+        // the neutral defaults, and this is what stops them drifting back.
+        listOf(Paper, Lamp, Ink, LampInk).forEach { color ->
             assertThat(color).isNotEqualTo(Color(0xFF000000))
             assertThat(color).isNotEqualTo(Color(0xFFFFFFFF))
         }

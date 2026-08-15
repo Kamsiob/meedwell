@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meedwell by Kamsiob · screen grid v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --paper:#F6F4EC;        /* daylight ground, the default theme      */
+  --paper-2:#EFEBDF;      /* recessed surfaces on paper              */
+  --ink:#1C2420;          /* primary                                 */
+  --ink-2:#3D473F;        /* secondary                               */
+  --ink-3:#57605A;        /* tertiary, the floor. nothing lighter    */
+  --hair:rgba(28,36,32,.12);
+  --hair-2:rgba(28,36,32,.22);
+  --moss:#5C7358;         /* the single working accent               */
+  --moss-deep:#43563F;
+  --copper:#AE6738;       /* the mark, and the sun. nothing else     */
+  --gold-ink:#8A6215;     /* support only                            */
+  --alarm:#8C4A2F;        /* destructive only                        */
+
+  --lamp:#12160F;         /* Lamplight ground                        */
+  --lamp-ink:#EFEEE6;
+  --lamp-2:#B4B8AC;
+  --lamp-3:#8A8F84;
+  --lamp-hair:rgba(239,238,230,.12);
+  --lamp-hair-2:rgba(239,238,230,.2);
+  --lamp-moss:#7E9478;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+body{background:#E8E4D8;color:var(--ink);font-family:'Instrument Sans',sans-serif;
+  padding:64px 30px 140px;font-size:14px;}
+
+/* ============================================================
+   PAGE CHROME
+   ============================================================ */
+.masthead{max-width:1580px;margin:0 auto 10px;}
+.masthead .mk{display:flex;align-items:center;gap:13px;}
+.masthead h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
+  font-size:42px;letter-spacing:.2px;line-height:1;}
+.masthead .sub{color:var(--ink-3);font-size:11px;font-weight:600;letter-spacing:2.6px;
+  text-transform:uppercase;margin-top:14px;}
+.masthead p{color:var(--ink-2);font-size:14.5px;line-height:1.65;max-width:860px;margin-top:16px;}
+.legend{max-width:1580px;margin:34px auto 0;display:flex;flex-wrap:wrap;gap:10px 26px;
+  padding:18px 0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);}
+.legend div{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-2);}
+.sw{width:13px;height:13px;border-radius:3px;flex:0 0 13px;}
+
+.band{max-width:1580px;margin:76px auto 24px;display:flex;align-items:baseline;gap:16px;}
+.band .n{font-family:'Instrument Serif',serif;font-style:italic;font-size:20px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;}
+.band .t{font-size:12px;font-weight:600;letter-spacing:2.6px;text-transform:uppercase;}
+.band .r{flex:1;height:1px;background:var(--hair);}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,330px);gap:60px 44px;
+  justify-content:center;max-width:1580px;margin:0 auto;}
+.cell{width:330px;}
+.cap{margin-top:15px;}
+.cap .ix{font-size:10.5px;font-weight:600;letter-spacing:2px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;}
+.cap .h{font-size:13px;font-weight:600;margin-top:4px;}
+.cap .d{font-size:12.5px;color:var(--ink-3);line-height:1.55;margin-top:4px;}
+
+/* ============================================================
+   DEVICE
+   ============================================================ */
+.ph{width:330px;height:716px;border-radius:44px;position:relative;overflow:hidden;
+  background:var(--paper);color:var(--ink);
+  box-shadow:0 0 0 1px rgba(28,36,32,.11), 0 44px 88px -44px rgba(28,36,32,.5);}
+.ph.dk{background:var(--lamp);color:var(--lamp-ink);
+  box-shadow:0 0 0 1px rgba(0,0,0,.5), 0 44px 88px -44px rgba(0,0,0,.85);}
+.sc{position:absolute;inset:0;display:flex;flex-direction:column;padding:0 22px;}
+/* NOTE: no background ruling anywhere. removed by SPEC-REVISION-01 item 7. */
+
+.st{display:flex;justify-content:space-between;padding-top:15px;font-size:11px;
+  font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.2px;}
+.dk .st{color:var(--lamp-3);}
+
+/* ---------- type ---------- */
+.sr{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;}
+.h1{font-size:21px;font-weight:700;letter-spacing:-.1px;}
+.h2{font-size:18px;font-weight:700;}
+.voice{font-family:'Instrument Serif',serif;font-style:italic;font-size:15px;color:var(--ink-2);}
+.dk .voice{color:var(--lamp-2);}
+.bd{font-size:13.5px;line-height:1.62;color:var(--ink-2);}
+.dk .bd{color:var(--lamp-2);}
+.sec{font-size:10.5px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-3);}
+.dk .sec{color:var(--lamp-3);}
+.meta{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;}
+.dk .meta{color:var(--lamp-3);}
+.plate{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-3);}
+.num{font-variant-numeric:tabular-nums;}
+
+/* ---------- the staff: ONLY at section heads, scrubber, tone curve ---------- */
+.staff{display:flex;flex-direction:column;gap:3px;flex:1;}
+.staff i{display:block;height:1px;background:var(--hair);}
+.staff i:nth-child(3){background:var(--hair-2);}
+.dk .staff i{background:var(--lamp-hair);}
+.dk .staff i:nth-child(3){background:var(--lamp-hair-2);}
+.shead{display:flex;align-items:center;gap:11px;}
+
+.hr{height:1px;background:var(--hair);}
+.dk .hr{background:var(--lamp-hair);}
+
+/* ---------- the mark ---------- */
+.mark{position:relative;flex:0 0 auto;}
+.mark .c{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;background:var(--copper);}
+.mark .l{position:absolute;background:var(--copper);border-radius:2px;}
+.mark.s44{width:44px;height:44px;}
+.mark.s44 .c{top:9px;width:20px;height:20px;}
+.mark.s44 .l{left:4px;right:4px;top:29px;height:2.5px;}
+.mark.s58{width:58px;height:58px;}
+.mark.s58 .c{top:11px;width:27px;height:27px;}
+.mark.s58 .l{left:5px;right:5px;top:39px;height:3px;}
+
+/* ---------- day line: sun position tracks the status bar clock ---------- */
+.dayline{position:relative;height:26px;}
+.dayline .ln{position:absolute;left:0;right:0;top:19px;height:1.5px;background:var(--hair-2);}
+.dayline .tk{position:absolute;top:19px;width:1px;height:5px;background:var(--hair-2);}
+.dayline .sun{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--copper);}
+.dk .dayline .ln,.dk .dayline .tk{background:var(--lamp-hair-2);}
+.dk .dayline .sun{background:var(--lamp-2);}
+
+/* ---------- covers ---------- */
+.cov{border-radius:5px;position:relative;overflow:hidden;}
+.c-mist{background:linear-gradient(178deg,#C9D2C5,#E8E4D4 68%,#D8CEB7);}
+.c-river{background:linear-gradient(178deg,#B6C3C5,#8DA2A4 54%,#5C7274);}
+.c-dawn{background:linear-gradient(178deg,#E9DFC9,#D8BE9F 58%,#B78D6D);}
+.c-reed{background:linear-gradient(178deg,#E3E0D2,#C7C5AD);}
+.c-pine{background:linear-gradient(178deg,#39493C,#21301E);}
+.c-slate{background:linear-gradient(178deg,#C2C4C0,#8E9490 60%,#6A716C);}
+.cov .hz{position:absolute;left:0;right:0;height:1.5px;background:rgba(28,36,32,.32);}
+.cov .sn{position:absolute;border-radius:50%;background:rgba(246,244,236,.82);}
+
+/* ---------- rows ---------- */
+.row{display:flex;align-items:center;gap:11px;padding:13px 0;border-bottom:1px solid var(--hair);}
+.dk .row{border-bottom-color:var(--lamp-hair);}
+.row:last-child{border-bottom:none;}
+.row .gr{flex:1;min-width:0;}
+.row .t{font-size:13.5px;font-weight:500;}
+.row .s{font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.4;}
+.dk .row .s{color:var(--lamp-3);}
+.row .r{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;flex:0 0 auto;}
+.dk .row .r{color:var(--lamp-3);}
+.row.on .t{color:var(--moss-deep);font-weight:600;}
+.dk .row.on .t{color:var(--lamp-moss);}
+
+/* ---------- movement rows ---------- */
+.mv{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--hair);}
+.mv .n{width:25px;font-family:'Instrument Serif',serif;font-style:italic;font-size:12.5px;color:var(--ink-3);}
+.mv .nm{flex:1;font-size:13px;}
+.mv .tp{font-family:'Instrument Serif',serif;font-style:italic;font-size:11px;color:var(--ink-3);}
+.mv .ln{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;}
+.mv.on .nm{color:var(--moss-deep);font-weight:600;}
+.mv.on .n{color:var(--moss-deep);}
+.dk .mv{border-bottom-color:var(--lamp-hair);}
+.dk .mv .n,.dk .mv .tp,.dk .mv .ln{color:var(--lamp-3);}
+.dk .mv.on .nm,.dk .mv.on .n{color:var(--lamp-moss);}
+
+/* ---------- controls ---------- */
+.btn{display:block;text-align:center;border-radius:999px;padding:13px 18px;
+  font-weight:600;font-size:14px;letter-spacing:.1px;}
+.btn.pri{background:var(--ink);color:var(--paper);}
+.btn.gho{border:1px solid var(--hair-2);color:var(--ink);}
+.btn.sup{border:1px solid rgba(138,98,21,.4);color:var(--gold-ink);}
+.dk .btn.pri{background:var(--lamp-ink);color:var(--lamp);}
+.dk .btn.gho{border-color:var(--lamp-hair-2);color:var(--lamp-ink);}
+
+.tr{display:flex;justify-content:center;align-items:center;gap:34px;font-size:18px;}
+.tr .p{width:56px;height:56px;border-radius:50%;background:var(--ink);color:var(--paper);
+  display:flex;align-items:center;justify-content:center;font-size:17px;}
+.dk .tr .p{background:var(--lamp-ink);color:var(--lamp);}
+.tr .p.ms{background:var(--moss);color:#fff;}
+.dk .tr .p.ms{background:var(--lamp-moss);color:var(--lamp);}
+
+.subrow{display:flex;justify-content:space-between;align-items:center;color:var(--ink-3);font-size:14px;padding:0 3px;}
+.dk .subrow{color:var(--lamp-3);}
+
+.tog{width:38px;height:22px;border-radius:999px;background:var(--hair-2);position:relative;flex:0 0 38px;}
+.tog.on{background:var(--moss);}
+.tog b{position:absolute;top:2.5px;left:2.5px;width:17px;height:17px;border-radius:50%;background:var(--paper);}
+.tog.on b{left:18.5px;}
+.dk .tog{background:var(--lamp-hair-2);}
+.dk .tog b{background:var(--lamp-ink);}
+
+.chip{display:inline-block;border:1px solid var(--hair-2);border-radius:999px;
+  padding:6px 13px;font-size:12px;font-weight:600;}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.dk .chip{border-color:var(--lamp-hair-2);}
+.dk .chip.on{background:var(--lamp-ink);color:var(--lamp);border-color:var(--lamp-ink);}
+
+/* volume / slider */
+.sld{position:relative;height:2.5px;background:var(--hair);border-radius:2px;}
+.sld i{position:absolute;left:0;top:0;bottom:0;background:var(--moss);border-radius:2px;}
+.sld b{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;
+  border-radius:50%;background:var(--moss);}
+.dk .sld{background:var(--lamp-hair-2);}
+.dk .sld i,.dk .sld b{background:var(--lamp-moss);}
+.sldends{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);margin-top:8px;}
+.dk .sldends{color:var(--lamp-3);}
+
+/* search field */
+.sfield{display:flex;align-items:center;gap:9px;border:1px solid var(--hair-2);
+  border-radius:999px;padding:9px 14px;}
+.sfield .ph2{font-size:13px;color:var(--ink-3);}
+.spill{display:flex;align-items:center;gap:6px;border:1px solid var(--hair-2);
+  border-radius:999px;padding:6px 12px;flex:0 0 auto;}
+.spill span{font-size:12.5px;font-weight:600;}
+
+/* ---------- page marks, the player spread affordance ---------- */
+.pmarks{display:flex;justify-content:center;align-items:flex-end;gap:26px;}
+.pm{position:relative;padding-bottom:7px;}
+.pm .ul{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:16px;height:2px;
+  background:var(--moss);border-radius:2px;}
+.dk .pm .ul{background:var(--lamp-moss);}
+.edge{position:absolute;top:0;bottom:0;width:7px;background:rgba(28,36,32,.045);}
+.edge.r{right:0;border-left:1px solid var(--hair);}
+.edge.l{left:0;border-right:1px solid var(--hair);}
+.dk .edge{background:rgba(239,238,230,.045);}
+.dk .edge.r{border-left-color:var(--lamp-hair);}
+.dk .edge.l{border-right-color:var(--lamp-hair);}
+
+/* ---------- mini player ---------- */
+.mini{position:absolute;left:0;right:0;bottom:68px;background:var(--paper);
+  border-top:1px solid var(--hair);padding:9px 22px 10px;display:flex;align-items:center;gap:11px;}
+.mini .pg{position:absolute;left:0;right:0;top:0;height:2px;background:var(--hair);}
+.mini .pg i{display:block;height:100%;background:var(--moss);}
+.mini .ar{width:34px;height:34px;border-radius:4px;flex:0 0 34px;position:relative;overflow:hidden;}
+.mini .mt{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mini .ma{font-size:11px;color:var(--ink-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ---------- tab bar: 4 destinations. Lists folded into the Shelf switcher. ---------- */
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;background:var(--paper);
+  border-top:1px solid var(--hair);padding:9px 4px 18px;}
+.dk .tabs{background:var(--lamp);border-top-color:var(--lamp-hair);}
+.tabs .tb{flex:1;text-align:center;font-size:10px;font-weight:600;color:var(--ink-3);letter-spacing:.1px;}
+.dk .tabs .tb{color:var(--lamp-3);}
+.tabs .tb.on{color:var(--ink);}
+.dk .tabs .tb.on{color:var(--lamp-ink);}
+.tabs .tb i{display:block;margin:0 auto 4px;height:17px;}
+.livedot{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--moss);
+  vertical-align:top;margin-left:3px;}
+.dk .livedot{background:var(--lamp-moss);}
+
+.bot{color:var(--ink-3);}
+.dk .bot{color:var(--lamp-3);}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--paper);
+  border-top:1px solid var(--hair-2);border-radius:20px 20px 0 0;padding:18px 22px 26px;
+  box-shadow:0 -18px 40px -24px rgba(28,36,32,.4);}
+.grab{width:34px;height:3.5px;border-radius:2px;background:var(--hair-2);margin:0 auto 16px;}
+.scrim{position:absolute;inset:0;background:rgba(28,36,32,.34);}
+.flexspace{flex:1;}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mk">
+    <div class="mark s58"><div class="c"></div><div class="l"></div></div>
+    <h1>Meedwell by Kamsiob</h1>
+  </div>
+  <div class="sub">Screen grid v2 · 25 screens · supersedes v1</div>
+  <p>Every screen redrawn against SPEC-REVISION-01. The full-bleed manuscript ruling is gone; the five-line staff now appears only at section heads, behind the contour scrubber, and behind the tone curve. The player is a two-page spread. Surroundings is a first-class destination. Tone voicings are named by musical umbrella. The fermata replaces the moon. There are no badges, streaks, or progress rings anywhere.</p>
+</div>
+
+<div class="legend">
+  <div><span class="sw" style="background:#F6F4EC;box-shadow:inset 0 0 0 1px rgba(28,36,32,.15)"></span>Paper, daylight ground</div>
+  <div><span class="sw" style="background:#12160F"></span>Lamplight, evening ground</div>
+  <div><span class="sw" style="background:#1C2420"></span>Ink, primary</div>
+  <div><span class="sw" style="background:#5C7358"></span>Moss, the one accent</div>
+  <div><span class="sw" style="background:#AE6738"></span>Copper, mark and sun only</div>
+  <div><span class="sw" style="background:#8A6215"></span>Gold ink, support only</div>
+  <div><span class="sw" style="background:#8C4A2F"></span>Alarm, destructive only</div>
+  <div>Instrument Serif italic, voice · Instrument Sans, everything else</div>
+</div>
+
+<!-- ============================================================
+     I. ARRIVAL
+     ============================================================ -->
+<div class="band"><span class="n">I</span><span class="t">Arrival</span><span class="r"></span></div>
+<div class="grid">
+
+<!-- 01 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="margin:38px auto 0"><div class="mark s58"><div class="c"></div><div class="l"></div></div></div>
+  <div style="text-align:center;font-weight:700;font-size:25px;margin-top:20px;letter-spacing:-.2px">Meedwell</div>
+  <div class="shead" style="margin-top:22px"><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div class="sr" style="font-size:29px;line-height:1.2;margin-top:22px">Music to sit with.</div>
+  <p class="bd" style="margin-top:14px">A player for music you own, built around listening without words: chamber works, solo piano, Celtic strings, ambient, film and game scores.</p>
+  <p class="bd" style="margin-top:11px">It plays whatever is in your collection, all of it, exactly as you bought it. But this is the listening it was made for, and it does not pretend otherwise.</p>
+  <svg style="margin:22px auto 0;display:block;color:var(--ink-3);opacity:.85" width="178" height="84" viewBox="0 0 178 84" fill="none" stroke="currentColor" stroke-width="1.05" stroke-linecap="round">
+    <path d="M89,84 C89,55 87,34 83,12 M83,12 C78,22 73,27 66,30 M83,12 C87,24 93,30 100,33 M85,38 C79,43 72,45 65,45 M86,52 C93,54 100,54 106,51"/>
+    <path d="M45,84 C45,64 42,49 37,36 M37,36 C33,42 28,46 22,47 M38,51 C43,55 49,56 54,55"/>
+    <path d="M131,84 C131,67 134,52 139,41 M139,41 C143,46 149,49 155,49 M136,55 C131,59 125,60 120,59"/>
+    <path d="M8,84 L170,84" stroke-width="1.3"/>
+    <circle cx="83" cy="8" r="2.3" fill="currentColor" stroke="none"/><circle cx="37" cy="32" r="1.9" fill="currentColor" stroke="none"/><circle cx="139" cy="37" r="1.9" fill="currentColor" stroke="none"/>
+  </svg>
+  <div class="flexspace"></div>
+  <div class="btn pri">Good, that is what I listen to</div>
+  <div style="height:9px"></div>
+  <div class="btn gho">Understood, carry on anyway</div>
+  <div style="height:24px"></div>
+</div></div>
+<div class="cap"><div class="ix">01</div><div class="h">The declaration</div><div class="d">Said once, plainly, with a second button that refuses nobody. The engraved plate of seed heads sets the register before a single album loads. A staff sits under the wordmark because this is a section head; nothing else on the screen is ruled.</div></div>
+</div>
+
+<!-- 02 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div class="sr" style="font-size:27px;line-height:1.22;margin-top:52px">Where is your music?</div>
+  <p class="bd" style="margin-top:14px">Meedwell reads a Bandcamp collection, files already on this phone, or both together on one shelf.</p>
+  <div class="shead" style="margin-top:28px"><span class="sec">Bandcamp</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <p class="bd" style="margin-top:12px;font-size:13px">Your purchases, hearts, and playlists. Meedwell talks to Bandcamp's own service and to nothing else. It never sees your password.</p>
+  <div class="btn pri" style="margin-top:14px">Connect Bandcamp</div>
+  <div class="shead" style="margin-top:28px"><span class="sec">This phone</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <p class="bd" style="margin-top:12px;font-size:13px">Choose folders and Meedwell reads what is in them. No account, no connection, nothing leaves the device.</p>
+  <div class="btn gho" style="margin-top:14px">Choose folders</div>
+  <div class="flexspace"></div>
+  <p class="meta" style="line-height:1.5">Either way, Meedwell collects nothing about you and has no server of its own. You can add the other one later.</p>
+  <div style="height:26px"></div>
+</div></div>
+<div class="cap"><div class="ix">02</div><div class="h">Two ways in, equally weighted</div><div class="d">Local-only is a first-class path, not a fallback, so it gets the same amount of page. The privacy statement sits at the foot as fact rather than reassurance. Two section heads, two staves, and no other ruling.</div></div>
+</div>
+
+<!-- 03 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div class="sr" style="font-size:27px;line-height:1.22;margin-top:52px">One thing before you start.</div>
+  <p class="bd" style="margin-top:14px">Meedwell ships with a tone voicing already chosen: <b style="font-weight:600;color:var(--ink)">Orchestral &amp; Scores</b>. It trims rumble and adds a little air. It only ever cuts, so nothing clips.</p>
+  <p class="bd" style="margin-top:11px">If you would rather hear files exactly as they were mastered, choose <b style="font-weight:600;color:var(--ink)">As Recorded</b> and nothing at all is applied.</p>
+  <div class="shead" style="margin-top:26px"><span class="sec">Tone</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:6px">
+    <div class="row"><div class="gr"><div class="t">Orchestral &amp; Scores</div><div class="s">Rumble trimmed, a little air</div></div><span style="color:var(--moss-deep);font-size:15px">✓</span></div>
+    <div class="row"><div class="gr"><div class="t">As Recorded</div><div class="s">Nothing applied. What the engineer left</div></div></div>
+  </div>
+  <p class="meta" style="margin-top:16px;line-height:1.5">All five voicings live in More, and you can change this at any time. Your phone's own audio processing sits outside Meedwell and cannot be turned off from here.</p>
+  <div class="flexspace"></div>
+  <div class="btn pri">Take me to my shelf</div>
+  <div style="height:26px"></div>
+</div></div>
+<div class="cap"><div class="ix">03</div><div class="h">Tone disclosed at onboarding</div><div class="d">A default that alters playback has to be declared, not discovered. The honest limit about OEM processing appears here rather than only in a help screen, because this is the moment the claim is made.</div></div>
+</div>
+
+</div>
+
+<!-- ============================================================
+     II. THE SHELF
+     ============================================================ -->
+<div class="band"><span class="n">II</span><span class="t">The shelf</span><span class="r"></span></div>
+<div class="grid">
+
+<!-- 04 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px">
+    <div class="h1">Shelf</div>
+    <div class="spill"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"/><path d="M10.6,10.6 L14.5,14.5"/></svg><span>Search</span></div>
+  </div>
+  <div class="dayline" style="margin-top:9px">
+    <div class="ln"></div><div class="tk" style="left:0"></div><div class="tk" style="left:50%"></div><div class="tk" style="right:0"></div>
+    <div class="sun" style="left:26%;top:9px"></div>
+  </div>
+  <div style="display:flex;gap:21px;margin-top:8px;color:var(--ink-3)">
+    <div style="text-align:center;font-size:10px;font-weight:600;color:var(--ink)">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3,17 L11,3 L19,17 Z"/><path d="M8,17 L8,7 M11,17 L11,5 M14,17 L14,7"/></svg>Albums</div>
+    <div style="text-align:center;font-size:10px;font-weight:600">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7,17 C4,14 4,7 8,4 C12,1 17,4 16,8 C15,12 10,12 9,9"/><path d="M13,14 L18,18"/></svg>Composers</div>
+    <div style="text-align:center;font-size:10px;font-weight:600">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="5" width="16" height="11" rx="1"/><path d="M7,5 L7,12 M11,5 L11,12 M15,5 L15,12"/></svg>Shelves</div>
+  </div>
+  <div class="voice" style="margin-top:13px">Ninety-one albums, all of them patient.</div>
+  <div class="shead" style="margin-top:16px"><span class="sec">Newly shelved</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:12px">
+    <div><div class="cov c-mist" style="height:120px"><div class="hz" style="top:62%"></div><div class="sn" style="width:22px;height:22px;left:27px;top:31px"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Nocturnes for a Small Room</div><div class="plate" style="margin-top:3px">Marren · piano</div></div>
+    <div><div class="cov c-river" style="height:120px"><div class="hz" style="top:47%;background:rgba(246,244,236,.5)"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">The River Ordinary</div><div class="plate" style="margin-top:3px">Fenwick · consort</div></div>
+    <div><div class="cov c-dawn" style="height:120px"><div class="sn" style="width:28px;height:28px;left:50%;top:33px;transform:translateX(-50%)"></div><div class="hz" style="top:66%"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Harp Music for Early Hours</div><div class="plate" style="margin-top:3px">Callanan · harp</div></div>
+    <div><div class="cov c-reed" style="height:120px"><div class="hz" style="top:29%"></div><div class="hz" style="top:33%"></div><div class="hz" style="top:37%"></div></div>
+      <div style="font-size:12.5px;font-weight:600;margin-top:7px;line-height:1.3">Hinterland, Original Score</div><div class="plate" style="margin-top:3px">Voss · orchestra</div></div>
+  </div>
+  <div class="mini">
+    <div class="pg"><i style="width:29%"></i></div>
+    <div class="ar c-dawn"><div class="hz" style="top:66%"></div><div class="sn" style="width:9px;height:9px;left:12px;top:8px"></div></div>
+    <div style="flex:1;min-width:0"><div class="mt">The Long Field at Dusk</div><div class="ma">Bride Callanan · andante</div></div>
+    <div style="font-size:15px">❚❚</div>
+  </div>
+  <div class="tabs">
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" stroke="currentColor" stroke-width="1.3"/><path d="M2,11 H16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></i>Surroundings</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">04</div><div class="h">Shelf, four destinations</div><div class="d">Lists is folded into the view switcher as Shelves, freeing width so Surroundings fits as a full word. The day line's sun sits at 26 percent, matching 9:41 against a dawn-to-dusk span. Search is a labelled pill, fixed and never scrolling away.</div></div>
+</div>
+
+<!-- 05 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px">
+    <div class="h1">Shelf</div>
+    <div class="spill"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"/><path d="M10.6,10.6 L14.5,14.5"/></svg><span>Search</span></div>
+  </div>
+  <div class="dayline" style="margin-top:9px">
+    <div class="ln"></div><div class="tk" style="left:0"></div><div class="tk" style="left:50%"></div><div class="tk" style="right:0"></div>
+    <div class="sun" style="left:26%;top:9px"></div>
+  </div>
+  <div style="display:flex;gap:21px;margin-top:8px;color:var(--ink-3)">
+    <div style="text-align:center;font-size:10px;font-weight:600">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3,17 L11,3 L19,17 Z"/><path d="M8,17 L8,7 M11,17 L11,5 M14,17 L14,7"/></svg>Albums</div>
+    <div style="text-align:center;font-size:10px;font-weight:600;color:var(--ink)">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7,17 C4,14 4,7 8,4 C12,1 17,4 16,8 C15,12 10,12 9,9"/><path d="M13,14 L18,18"/></svg>Composers</div>
+    <div style="text-align:center;font-size:10px;font-weight:600">
+      <svg style="display:block;margin:0 auto 3px" width="21" height="18" viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="5" width="16" height="11" rx="1"/><path d="M7,5 L7,12 M11,5 L11,12 M15,5 L15,12"/></svg>Shelves</div>
+  </div>
+  <div class="voice" style="margin-top:13px">Thirty-eight hands on ninety-one records.</div>
+  <div class="shead" style="margin-top:16px"><span class="sec">By surname</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:2px">
+    <div class="row"><div class="gr"><div class="t">Callanan, Bride</div><div class="s">harp · 4 albums</div></div><span class="r">3 hr 42 min</span></div>
+    <div class="row"><div class="gr"><div class="t">Fenwick Consort</div><div class="s">early music ensemble · 6 albums</div></div><span class="r">5 hr 08 min</span></div>
+    <div class="row"><div class="gr"><div class="t">Marren, Ilse</div><div class="s">piano · 3 albums</div></div><span class="r">2 hr 31 min</span></div>
+    <div class="row"><div class="gr"><div class="t">Ó Riada, Sorcha</div><div class="s">fiddle, viola · 5 albums</div></div><span class="r">4 hr 12 min</span></div>
+    <div class="row"><div class="gr"><div class="t">Voss, Meara</div><div class="s">scores · 7 albums</div></div><span class="r">6 hr 55 min</span></div>
+    <div class="row"><div class="gr"><div class="t">Weatherall, Tomas</div><div class="s">organ · 2 albums</div></div><span class="r">1 hr 48 min</span></div>
+  </div>
+  <div class="mini">
+    <div class="pg"><i style="width:29%"></i></div>
+    <div class="ar c-dawn"><div class="hz" style="top:66%"></div><div class="sn" style="width:9px;height:9px;left:12px;top:8px"></div></div>
+    <div style="flex:1;min-width:0"><div class="mt">The Long Field at Dusk</div><div class="ma">Bride Callanan · andante</div></div>
+    <div style="font-size:15px">❚❚</div>
+  </div>
+  <div class="tabs">
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" stroke="currentColor" stroke-width="1.3"/><path d="M2,11 H16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></i>Surroundings</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">05</div><div class="h">Composers</div><div class="d">A view that means everything to one listener and nothing to another, which is the whole positioning in one tab. Sorted by surname, with time held rather than play counts, and the instrument named on every row.</div></div>
+</div>
+
+<!-- 06 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span>
+    <div class="sfield" style="flex:1"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--ink-3)" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"/><path d="M10.6,10.6 L14.5,14.5"/></svg><span class="ph2">callanan</span></div>
+  </div>
+  <div class="shead" style="margin-top:20px"><span class="sec">Albums · 4</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="display:flex;gap:11px;margin-top:12px">
+    <div class="cov c-dawn" style="width:58px;height:58px;flex:0 0 58px"><div class="sn" style="width:16px;height:16px;left:50%;top:15px;transform:translateX(-50%)"></div><div class="hz" style="top:66%"></div></div>
+    <div style="flex:1"><div style="font-size:13.5px;font-weight:600;line-height:1.3">Harp Music for Early Hours</div><div class="meta" style="margin-top:3px">Bride Callanan · 2025 · 9 pieces</div><div class="plate" style="margin-top:4px">on this phone</div></div>
+  </div>
+  <div style="display:flex;gap:11px;margin-top:14px">
+    <div class="cov c-slate" style="width:58px;height:58px;flex:0 0 58px"><div class="hz" style="top:52%"></div></div>
+    <div style="flex:1"><div style="font-size:13.5px;font-weight:600;line-height:1.3">Wire and Gut</div><div class="meta" style="margin-top:3px">Bride Callanan · 2022 · 11 pieces</div></div>
+  </div>
+  <div class="shead" style="margin-top:24px"><span class="sec">Pieces · 7</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:2px">
+    <div class="row"><div class="gr"><div class="t">The Long Field at Dusk</div><div class="s">Harp Music for Early Hours</div></div><span class="r">7:31</span></div>
+    <div class="row"><div class="gr"><div class="t">Callanan's Lament</div><div class="s">Wire and Gut</div></div><span class="r">9:04</span></div>
+    <div class="row"><div class="gr"><div class="t">Two Cranes Over Water</div><div class="s">Harp Music for Early Hours</div></div><span class="r">5:12</span></div>
+  </div>
+  <div class="flexspace"></div>
+  <p class="meta" style="line-height:1.5;padding-bottom:20px">Searching looks at your shelf only. Nothing you type leaves this phone.</p>
+</div></div>
+<div class="cap"><div class="ix">06</div><div class="h">Search</div><div class="d">Results grouped by kind, each group under its own staff. The line at the foot is a plain statement of fact rather than a privacy badge, which is the register the whole app uses for these claims.</div></div>
+</div>
+
+</div>
+
+<!-- ============================================================
+     III. ALBUM AND THE PLAYER SPREAD
+     ============================================================ -->
+<div class="band"><span class="n">III</span><span class="t">Album and the player spread</span><span class="r"></span></div>
+<div class="grid">
+
+<!-- 07 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div style="display:flex;justify-content:space-between;color:var(--ink-3);font-size:15px;margin-top:15px">
+    <span>‹</span><span style="letter-spacing:6px">♡⋯</span>
+  </div>
+  <div class="cov c-mist" style="height:206px;margin-top:11px"><div class="hz" style="top:62%"></div><div class="sn" style="width:36px;height:36px;left:38px;top:46px"></div></div>
+  <div class="plate" style="text-align:center;margin-top:9px">Lowlight Editions · MMXXIV · shelved March 2025</div>
+  <div class="shead" style="margin-top:12px"><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="text-align:center;margin-top:13px">
+    <div style="font-size:20px;font-weight:700;line-height:1.2;letter-spacing:-.1px">Nocturnes for a Small Room</div>
+    <div class="sr" style="font-size:14px;color:var(--ink-2);margin-top:4px">Ilse Marren, piano</div>
+    <div class="meta" style="margin-top:5px">9 pieces · 51 min</div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Programme</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:3px">
+    <div class="mv"><span class="n">I</span><span class="nm">Nocturne in the Old Kitchen</span><span class="tp">adagio</span><span class="ln">5:44</span></div>
+    <div class="mv"><span class="n">II</span><span class="nm">A Window Left Open</span><span class="tp">andante</span><span class="ln">6:02</span></div>
+    <div class="mv"><span class="n">III</span><span class="nm">Three Chairs</span><span class="tp">lento</span><span class="ln">4:18</span></div>
+    <div class="mv" style="border-bottom:none"><span class="n">IV</span><span class="nm">The Hour Before Guests</span><span class="tp">andante</span><span class="ln">5:31</span></div>
+  </div>
+  <svg style="margin:8px auto 0;display:block;color:var(--ink-3);opacity:.8" width="108" height="26" viewBox="0 0 108 26" fill="none" stroke="currentColor" stroke-width="1.05" stroke-linecap="round">
+    <path d="M6,21 C29,8 79,8 102,21 M54,13 C54,9 54,6 54,3 M54,3 C50,6 46,7 42,7 M54,3 C58,6 62,7 66,7"/>
+  </svg>
+  <div class="flexspace"></div>
+  <div class="tabs">
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" stroke="currentColor" stroke-width="1.3"/><path d="M2,11 H16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></i>Surroundings</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">07</div><div class="h">Album, set as a programme</div><div class="d">Centred titling, label and year in Roman numerals on a plate line, movements numbered with tempo where the tags carry it. The engraved sprig closes the sheet the way a printed score closes a page. Artwork is shown complete, never scrimmed or written on.</div></div>
+</div>
+
+<!-- 08 -->
+<div class="cell">
+<div class="ph">
+  <div class="edge r"></div>
+  <div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="position:absolute;top:42px;left:22px;color:var(--ink-3);font-size:15px">⌄</div>
+  <div style="position:absolute;top:42px;right:22px;color:var(--ink-3);font-size:15px">⋯</div>
+  <div class="pmarks" style="margin-top:12px">
+    <div class="pm">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7.5" r="4.4" fill="#AE6738"/><path d="M2.5,15 H19.5" stroke="#AE6738" stroke-width="2" stroke-linecap="round"/></svg>
+      <div class="ul"></div>
+    </div>
+    <div class="pm">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7.5" r="4" stroke="rgba(28,36,32,.3)" stroke-width="1.4"/><path d="M2.5,15 H19.5" stroke="rgba(28,36,32,.3)" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <div class="cov c-dawn" style="height:210px;margin-top:15px"><div class="sn" style="width:38px;height:38px;left:50%;top:52px;transform:translateX(-50%)"></div><div class="hz" style="top:66%"></div></div>
+  <div style="text-align:center;margin-top:15px">
+    <div style="font-size:19px;font-weight:700;letter-spacing:-.1px">The Long Field at Dusk</div>
+    <div style="font-size:12.5px;color:var(--ink-2);margin-top:3px">Bride Callanan · Harp Music for Early Hours</div>
+    <div class="sr" style="font-size:13px;color:var(--ink-3);margin-top:7px">andante &nbsp;·&nbsp; IV of IX &nbsp;·&nbsp; <b style="font-weight:700">mp</b></div>
+  </div>
+  <div style="position:relative;height:64px;margin-top:14px">
+    <svg viewBox="0 0 286 64" preserveAspectRatio="none" style="width:100%;height:100%">
+      <g stroke="rgba(28,36,32,.1)" stroke-width="1"><path d="M0,10 H286"/><path d="M0,23 H286"/><path d="M0,36 H286"/><path d="M0,49 H286"/><path d="M0,62 H286"/></g>
+      <path d="M0,45 C20,41 34,31 52,33 C70,35 82,24 100,26 C112,28 118,37 118,37" fill="none" stroke="#5C7358" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M118,37 C132,39 142,20 160,24 C178,28 188,41 206,39 C224,37 236,28 254,32 C268,35 278,43 286,41" fill="none" stroke="rgba(28,36,32,.24)" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="118" cy="37" r="4.6" fill="#5C7358"/>
+    </svg>
+  </div>
+  <div style="display:flex;justify-content:space-between" class="meta"><span>2:12</span><span>7:31</span></div>
+  <div class="tr" style="margin-top:15px"><span>⏮</span><div class="p">❚❚</div><span>⏭</span></div>
+  <div class="subrow" style="margin-top:19px">
+    <span>♡</span><span style="font-size:15px">𝄐</span><span class="sr" style="font-size:12.5px">Tone: Orchestral</span><span>≡</span><span>↗</span>
+  </div>
+  <div style="height:22px"></div>
+</div></div>
+<div class="cap"><div class="ix">08</div><div class="h">Player, left page: music</div><div class="d">The copper mark is inked and underlined; the sun beside it is outlined because nothing is playing underneath. The staff behind the contour is one of only three places it appears. A seven pixel sliver of the facing page shows at the right edge. Dynamics replace a percentage.</div></div>
+</div>
+
+<!-- 09 -->
+<div class="cell">
+<div class="ph">
+  <div class="edge l"></div>
+  <div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="position:absolute;top:42px;left:22px;color:var(--ink-3);font-size:15px">⌄</div>
+  <div style="position:absolute;top:42px;right:22px;color:var(--ink-3);font-size:15px">⋯</div>
+  <div class="pmarks" style="margin-top:12px">
+    <div class="pm">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7.5" r="4" stroke="rgba(28,36,32,.3)" stroke-width="1.4"/><path d="M2.5,15 H19.5" stroke="rgba(28,36,32,.3)" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </div>
+    <div class="pm">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7.5" r="4.4" fill="#5C7358"/><path d="M2.5,15 H19.5" stroke="#5C7358" stroke-width="2" stroke-linecap="round"/></svg>
+      <div class="ul"></div>
+    </div>
+  </div>
+  <div style="position:relative;height:142px;margin-top:15px;border-radius:5px;overflow:hidden;background:linear-gradient(178deg,#CDD5C7,#E6E2D2 64%,#D5CCB8)">
+    <div style="position:absolute;left:0;right:0;top:58%;height:1.5px;background:rgba(28,36,32,.28)"></div>
+    <svg style="position:absolute;left:0;right:0;bottom:0;width:100%" height="58" viewBox="0 0 286 58" fill="none" preserveAspectRatio="none">
+      <g stroke="rgba(28,36,32,.2)" stroke-width="1" stroke-linecap="round">
+        <path d="M14,3 L9,25"/><path d="M42,0 L36,28"/><path d="M70,5 L64,23"/><path d="M98,1 L92,27"/><path d="M126,7 L120,21"/>
+        <path d="M154,0 L148,26"/><path d="M182,4 L176,24"/><path d="M210,2 L204,28"/><path d="M238,6 L232,22"/><path d="M266,1 L260,25"/>
+        <path d="M28,13 L23,33"/><path d="M84,15 L79,31"/><path d="M140,12 L135,34"/><path d="M196,14 L191,32"/><path d="M252,13 L247,33"/>
+      </g>
+    </svg>
+  </div>
+  <div style="text-align:center;margin-top:13px">
+    <div style="font-size:19px;font-weight:700;letter-spacing:-.1px">Rain, steady</div>
+    <div class="sr" style="font-size:13px;color:var(--ink-2);margin-top:4px">a suburban street, before dawn</div>
+    <div class="meta" style="margin-top:6px;font-size:10.5px;line-height:1.45">Recorded by <b style="font-weight:600">hollowpine</b> · CC0 · 9:14</div>
+  </div>
+  <div style="margin-top:15px">
+    <div class="sld"><i style="width:44%"></i><b style="left:44%"></b></div>
+    <div class="sldends"><span class="sr">pp</span><span class="sr">ff</span></div>
+  </div>
+  <div class="tr" style="margin-top:14px"><span style="font-size:15px;color:var(--ink-3)">↺</span><div class="p ms">❚❚</div><span style="font-size:15px;color:var(--ink-3)">⇄</span></div>
+  <div class="shead" style="margin-top:18px"><span class="sec">On this phone</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row on" style="padding:10px 0"><svg width="15" height="12" viewBox="0 0 18 14" fill="none"><circle cx="9" cy="5" r="3.4" fill="#5C7358"/><path d="M1,10.5 H17" stroke="#5C7358" stroke-width="1.5" stroke-linecap="round"/></svg><div class="gr"><div class="t">Rain, steady</div></div><span class="r">playing</span></div>
+    <div class="row" style="padding:10px 0"><svg width="15" height="12" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3.2"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg><div class="gr"><div class="t">Fireplace</div></div><span class="r">11:02</span></div>
+    <div class="row" style="padding:10px 0;border-bottom:none"><svg width="15" height="12" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3.2"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg><div class="gr"><div class="t">Ocean, calm shore</div></div><span class="r">12:20</span></div>
+  </div>
+  <div class="subrow" style="margin-top:12px">
+    <span class="sr" style="font-size:12.5px">𝄐 &nbsp;45:00</span><span style="font-size:12px">All recordings ›</span>
+  </div>
+  <div style="height:20px"></div>
+</div></div>
+<div class="cap"><div class="ix">09</div><div class="h">Player, right page: Surroundings</div><div class="d">One swipe right. The sun is now inked and underlined and the copper mark has gone to outline. Volume is independent and labelled in dynamics. Attribution is one tertiary line, tappable. One sound plays at a time; there is no mixer, deliberately.</div></div>
+</div>
+
+<!-- 10 -->
+<div class="cell">
+<div class="ph dk">
+  <div class="edge l"></div>
+  <div class="sc">
+  <div class="st"><span>22:04</span><span>◐ 41%</span></div>
+  <div style="position:absolute;top:42px;left:22px;color:var(--lamp-3);font-size:15px">⌄</div>
+  <div style="position:absolute;top:42px;right:22px;color:var(--lamp-3);font-size:15px">⋯</div>
+  <div class="pmarks" style="margin-top:12px">
+    <div class="pm">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7.5" r="4.4" fill="#AE6738"/><path d="M2.5,15 H19.5" stroke="#AE6738" stroke-width="2" stroke-linecap="round"/></svg>
+      <div class="ul"></div>
+    </div>
+    <div class="pm">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7.5" r="4.2" fill="#7E9478"/><path d="M2.5,15 H19.5" stroke="#7E9478" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <div class="dayline" style="margin-top:10px">
+    <div class="ln"></div><div class="tk" style="left:0"></div><div class="tk" style="left:50%"></div><div class="tk" style="right:0"></div>
+    <div class="sun" style="left:95%;top:22px;width:10px;height:10px"></div>
+  </div>
+  <div class="cov c-pine" style="height:196px;margin-top:10px"><div class="hz" style="top:58%;background:rgba(239,238,230,.32)"></div><div class="sn" style="width:19px;height:19px;left:52px;top:46px;background:rgba(239,238,230,.5)"></div></div>
+  <div style="text-align:center;margin-top:14px">
+    <div style="font-size:19px;font-weight:700">Vespers, IV</div>
+    <div style="font-size:12.5px;color:var(--lamp-2);margin-top:3px">Fenwick Consort · The River Ordinary</div>
+    <div class="sr" style="font-size:13px;color:var(--lamp-3);margin-top:7px">lento &nbsp;·&nbsp; IV of VII &nbsp;·&nbsp; <b style="font-weight:700">pp</b></div>
+  </div>
+  <div style="position:relative;height:60px;margin-top:13px">
+    <svg viewBox="0 0 286 60" preserveAspectRatio="none" style="width:100%;height:100%">
+      <g stroke="rgba(239,238,230,.09)" stroke-width="1"><path d="M0,9 H286"/><path d="M0,21 H286"/><path d="M0,33 H286"/><path d="M0,45 H286"/><path d="M0,57 H286"/></g>
+      <path d="M0,40 C24,36 44,27 70,31 C96,35 110,44 140,40 C160,37 168,33 168,33" fill="none" stroke="#7E9478" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M168,33 C190,29 206,22 228,28 C250,34 268,43 286,39" fill="none" stroke="rgba(239,238,230,.28)" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="168" cy="33" r="4.6" fill="#7E9478"/>
+    </svg>
+  </div>
+  <div style="display:flex;justify-content:space-between" class="meta"><span>5:56</span><span>9:40</span></div>
+  <div class="tr" style="margin-top:14px"><span>⏮</span><div class="p">❚❚</div><span>⏭</span></div>
+  <div class="subrow" style="margin-top:17px">
+    <span>♡</span><span class="sr" style="color:var(--lamp-moss);font-size:12.5px">𝄐 28:00</span><span class="sr" style="font-size:12.5px">Tone: Strings</span><span>≡</span>
+  </div>
+  <div class="sr" style="text-align:center;font-size:12px;color:var(--lamp-3);margin-top:12px">Ritardando to silence at 22:32.</div>
+  <div style="height:18px"></div>
+</div></div>
+<div class="cap"><div class="ix">10</div><div class="h">Lamplight, with a sound running</div><div class="d">Deep pine rather than violet-black, and no drifting washes. Both page marks are lit, which is how you know rain is playing without leaving the music page. The sun has set past the right end of the day line. The fermata carries the timer and its own meaning: hold, then rest.</div></div>
+</div>
+
+<!-- 11 -->
+<div class="cell">
+<div class="ph dk"><div class="sc">
+  <div class="st"><span>22:04</span><span>◐ 41%</span></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:13px">
+    <span style="color:var(--lamp-3);font-size:15px">‹</span>
+    <span class="sec">This evening</span>
+    <span style="color:var(--lamp-3);font-size:15px">⋯</span>
+  </div>
+  <div style="text-align:center;margin-top:14px">
+    <div style="font-size:22px;font-weight:700">The programme</div>
+    <div class="meta" style="margin-top:5px">4 pieces remaining · 27 min</div>
+  </div>
+  <div class="shead" style="margin-top:18px"><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:14px">
+    <div style="display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--lamp-hair)">
+      <span class="sr" style="width:22px;color:var(--lamp-moss);font-size:13px">I</span>
+      <div style="flex:1"><div style="font-size:13.5px;color:var(--lamp-moss);font-weight:600">Vespers, IV</div><div class="meta" style="margin-top:2px">Fenwick Consort · playing</div></div>
+      <span class="meta">9:40</span></div>
+    <div style="display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--lamp-hair)">
+      <span class="sr" style="width:22px;color:var(--lamp-3);font-size:13px">II</span>
+      <div style="flex:1"><div style="font-size:13.5px">Three Chairs</div><div class="meta" style="margin-top:2px">Ilse Marren · lento</div></div>
+      <span class="meta">4:18</span></div>
+    <div style="display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--lamp-hair)">
+      <span class="sr" style="width:22px;color:var(--lamp-3);font-size:13px">III</span>
+      <div style="flex:1"><div style="font-size:13.5px">The Long Field at Dusk</div><div class="meta" style="margin-top:2px">Bride Callanan · andante</div></div>
+      <span class="meta">7:31</span></div>
+    <div style="display:flex;gap:11px;padding:11px 0">
+      <span class="sr" style="width:22px;color:var(--lamp-3);font-size:13px">IV</span>
+      <div style="flex:1"><div style="font-size:13.5px">Hinterland, main title</div><div class="meta" style="margin-top:2px">Meara Voss · largo</div></div>
+      <span class="meta">6:04</span></div>
+  </div>
+  <div class="flexspace"></div>
+  <div class="sr" style="text-align:center;font-size:12.5px;color:var(--lamp-3)">𝄐 &nbsp;Holding until the piece ends, then resting.</div>
+  <svg style="margin:14px auto 0;display:block;color:var(--lamp-3);opacity:.6" width="116" height="34" viewBox="0 0 116 34" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+    <path d="M58,34 C58,22 56,14 53,5 M53,5 C49,10 45,13 40,14 M53,5 C56,11 60,15 65,17 M55,19 C50,23 45,24 40,23"/>
+    <path d="M12,34 L104,34" stroke-width="1.2"/>
+  </svg>
+  <div style="height:20px"></div>
+</div></div>
+<div class="cap"><div class="ix">11</div><div class="h">The queue, as a printed bill</div><div class="d">Movements numbered, tempo under each piece, remaining time stated once at the top. The engraved sprig closes the bill. No shuffle-everything affordance here; the queue is something you assembled, not a slot machine.</div></div>
+</div>
+
+<!-- 12 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="text-align:center;margin-top:64px">
+    <div class="mark s44" style="margin:0 auto"><div class="c"></div><div class="l"></div></div>
+  </div>
+  <div class="sr" style="font-size:26px;line-height:1.24;margin-top:26px;text-align:center">Nothing on the shelf yet.</div>
+  <p class="bd" style="margin-top:14px;text-align:center">Connect a Bandcamp collection or point Meedwell at folders on this phone, and everything you own appears here.</p>
+  <svg style="margin:26px auto 0;display:block;color:var(--ink-3);opacity:.8" width="158" height="76" viewBox="0 0 158 76" fill="none" stroke="currentColor" stroke-width="1.05" stroke-linecap="round">
+    <path d="M79,76 C79,52 77,33 74,13 M74,13 C70,21 65,26 59,29 M74,13 C78,23 83,29 89,32 M76,36 C71,41 64,43 58,43"/>
+    <path d="M40,76 C40,58 37,45 33,34 M33,34 C29,39 25,43 19,44 M34,47 C38,51 44,52 48,51"/>
+    <path d="M118,76 C118,60 121,47 125,37 M125,37 C129,41 134,44 140,44"/>
+    <path d="M8,76 L150,76" stroke-width="1.3"/>
+  </svg>
+  <div class="flexspace"></div>
+  <div class="btn pri">Connect Bandcamp</div>
+  <div style="height:9px"></div>
+  <div class="btn gho">Choose folders on this phone</div>
+  <div style="height:14px"></div>
+  <p class="meta" style="text-align:center">Surroundings works right now, with no account and no connection.</p>
+  <div style="height:22px"></div>
+  <div class="tabs">
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" stroke="currentColor" stroke-width="1.3"/><path d="M2,11 H16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></i>Surroundings</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">12</div><div class="h">Empty shelf</div><div class="d">An engraved plate at a rest point, which is the only kind of place they appear. The last line points at the one thing that already works offline, so a first launch with no connection is never a dead end.</div></div>
+</div>
+
+</div>
+
+<!-- ============================================================
+     IV. SURROUNDINGS
+     ============================================================ -->
+<div class="band"><span class="n">IV</span><span class="t">Surroundings</span><span class="r"></span></div>
+<div class="grid">
+
+<!-- 13 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px">
+    <div class="h1">Surroundings</div>
+    <div class="spill"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"/><path d="M10.6,10.6 L14.5,14.5"/></svg><span>Search</span></div>
+  </div>
+  <div class="voice" style="margin-top:11px">Places to put underneath the music, or to sit in on their own.</div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Playing</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div class="row on" style="padding:12px 0;border-bottom:none">
+    <svg width="16" height="13" viewBox="0 0 18 14" fill="none"><circle cx="9" cy="5" r="3.6" fill="#5C7358"/><path d="M1,10.5 H17" stroke="#5C7358" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <div class="gr"><div class="t">Rain, steady</div><div class="s">a suburban street, before dawn</div></div>
+    <span class="r">9:14</span>
+  </div>
+  <div class="shead" style="margin-top:14px"><span class="sec">Nine groups</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Water &amp; Weather</div><div class="s">14 recordings, 2 on this phone</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Rainforest &amp; Jungle</div><div class="s">7 recordings, none yet</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Water Bodies</div><div class="s">11 recordings, 1 on this phone</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Wind &amp; Air</div><div class="s">8 recordings, none yet</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Fire</div><div class="s">5 recordings, 1 on this phone</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Forest &amp; Countryside</div><div class="s">12 recordings, none yet</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Human Spaces</div><div class="s">9 recordings, none yet</div></div><span class="r">›</span></div>
+  </div>
+  <div class="mini">
+    <div class="pg"><i style="width:29%"></i></div>
+    <div class="ar c-dawn"><div class="hz" style="top:66%"></div><div class="sn" style="width:9px;height:9px;left:12px;top:8px"></div></div>
+    <div style="flex:1;min-width:0"><div class="mt">The Long Field at Dusk</div><div class="ma">Bride Callanan · andante</div></div>
+    <div style="font-size:15px">❚❚</div>
+  </div>
+  <div class="tabs">
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" fill="#5C7358"/><path d="M2,11 H16" stroke="#5C7358" stroke-width="1.5" stroke-linecap="round"/></svg></i>Surroundings<span class="livedot"></span></div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">13</div><div class="h">Library</div><div class="d">The tab icon is filled and carries a moss dot while something plays. Groups state what is held and what is on the phone in the Shelf's own voice. What is playing sits at the top so stopping it never requires hunting.</div></div>
+</div>
+
+<!-- 14 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span>
+    <div class="h2">Water &amp; Weather</div>
+  </div>
+  <div class="voice" style="margin-top:11px">Fourteen recordings. Two are here already.</div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Rain</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row on" style="padding:12px 0">
+      <svg width="15" height="12" viewBox="0 0 18 14" fill="none"><circle cx="9" cy="5" r="3.4" fill="#5C7358"/><path d="M1,10.5 H17" stroke="#5C7358" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="gr"><div class="t">Rain, steady</div><div class="s">a suburban street before dawn · hollowpine</div></div><span class="r">9:14</span></div>
+    <div class="row" style="padding:12px 0">
+      <svg width="15" height="12" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3.2"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      <div class="gr"><div class="t">Rain, gentle</div><div class="s">on leaves, no traffic · kestrel</div></div><span class="r">3.4 MB</span></div>
+    <div class="row" style="padding:12px 0">
+      <svg width="15" height="12" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3.2"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      <div class="gr"><div class="t">Rain, heavy</div><div class="s">a downpour on stone, drains running · duneland</div></div><span class="r">4.6 MB</span></div>
+    <div class="row" style="padding:12px 0">
+      <svg width="15" height="12" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3.2"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      <div class="gr"><div class="t">Rain on a window</div><div class="s">indoors, traffic distant · hollowpine</div></div><span class="r">3.2 MB</span></div>
+    <div class="row" style="padding:12px 0;border-bottom:none">
+      <svg width="15" height="12" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3.2"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      <div class="gr"><div class="t">Rain on a tin roof</div><div class="s">a shed in summer · m.arbogast</div></div><span class="r">4.1 MB</span></div>
+  </div>
+  <div class="shead" style="margin-top:16px"><span class="sec">Thunder</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0">
+      <svg width="15" height="12" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3.2"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      <div class="gr"><div class="t">Thunderstorm</div><div class="s">close, with heavy rain · kestrel</div></div><span class="r">5.2 MB</span></div>
+    <div class="row" style="padding:12px 0;border-bottom:none">
+      <svg width="15" height="12" viewBox="0 0 18 14" fill="none" stroke="rgba(28,36,32,.35)" stroke-width="1.3"><circle cx="9" cy="5" r="3.2"/><path d="M1,10.5 H17" stroke-linecap="round"/></svg>
+      <div class="gr"><div class="t">Distant thunder</div><div class="s">rolling, over a valley · duneland</div></div><span class="r">4.4 MB</span></div>
+  </div>
+  <div class="flexspace"></div>
+  <div class="hr"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0 20px">
+    <span style="font-size:12.5px;font-weight:600">Get this whole group</span><span class="meta">31.8 MB</span>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">14</div><div class="h">Group</div><div class="d">Recordings distinguished by what they contain rather than by numbering, with the recordist named on every row from the first surface. Installed items show duration; uninstalled show size. The whole-group action sits at the foot with its real total.</div></div>
+</div>
+
+<!-- 15 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="opacity:.42;padding-top:9px">
+    <div style="display:flex;align-items:center;gap:12px"><span style="color:var(--ink-3);font-size:16px">‹</span><div class="h2">Water &amp; Weather</div></div>
+    <div class="voice" style="margin-top:11px">Fourteen recordings. Two are here already.</div>
+    <div class="shead" style="margin-top:18px"><span class="sec">Rain</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  </div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div style="font-size:18px;font-weight:700">Rain on a tin roof</div>
+    <div class="sr" style="font-size:13.5px;color:var(--ink-2);margin-top:5px">a shed in summer, heavy drops on corrugated steel</div>
+    <p class="bd" style="font-size:12.5px;margin-top:12px">Recorded under a farm outbuilding during an afternoon storm. The roof rings at its own pitch and the rain thickens twice across the recording. Distant thunder toward the end.</p>
+    <div class="shead" style="margin-top:18px"><span class="sec">Credit</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+    <div style="margin-top:11px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0"><span style="color:var(--ink-3)">Recorded by</span><span style="font-weight:600">m.arbogast</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0"><span style="color:var(--ink-3)">Licence</span><span style="font-weight:600">CC BY 4.0</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0"><span style="color:var(--ink-3)">Length</span><span class="num" style="font-weight:600">10:40</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0"><span style="color:var(--ink-3)">Download</span><span class="num" style="font-weight:600">4.1 MB</span></div>
+    </div>
+    <p class="meta" style="margin-top:12px;line-height:1.5">Trimmed, loudness matched, and re-encoded by Meedwell. Source page and full licence in Open source licences.</p>
+    <div class="btn pri" style="margin-top:16px">Get this recording</div>
+    <div class="meta" style="text-align:center;margin-top:11px">Downloads over wifi only, per your settings</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">15</div><div class="h">Recording detail</div><div class="d">A sheet, not a screen. The description says what is audible so a choice can be made without listening first. Credit is a proper block with the licence version, and the modification statement is present because CC BY requires it.</div></div>
+</div>
+
+<!-- 16 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span><div class="h2">Surroundings storage</div>
+  </div>
+  <div class="voice" style="margin-top:12px">Four recordings, 42 minutes, 16.9 MB.</div>
+  <div class="shead" style="margin-top:20px"><span class="sec">Came with the app</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Rain, steady</div><div class="s">hollowpine · CC0</div></div><span class="r">3.5 MB</span></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Fireplace</div><div class="s">kestrel · CC BY 4.0</div></div><span class="r">4.2 MB</span></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Ocean, calm shore</div><div class="s">duneland · CC0</div></div><span class="r">4.7 MB</span></div>
+  </div>
+  <p class="meta" style="margin-top:10px;line-height:1.5">These three are built in and cannot be removed. They are why Surroundings works with no connection.</p>
+  <div class="shead" style="margin-top:20px"><span class="sec">Downloaded</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Rain on a window</div><div class="s">hollowpine · CC0 · 8:12</div></div><span style="color:var(--alarm);font-size:12px;font-weight:600">Remove</span></div>
+  </div>
+  <div class="flexspace"></div>
+  <div class="hr"></div>
+  <div style="padding:14px 0"><div style="font-size:13px;font-weight:600;color:var(--alarm)">Remove all downloaded recordings</div>
+    <div class="s" style="font-size:11.5px;color:var(--ink-3);margin-top:3px;line-height:1.45">Frees 3.2 MB. Anything removed can be fetched again whenever you want it.</div></div>
+  <div style="height:16px"></div>
+</div></div>
+<div class="cap"><div class="ix">16</div><div class="h">Storage</div><div class="d">Bundled and downloaded held apart, since one can be removed and the other cannot. The destructive action states what is freed and, in the same breath, that nothing is truly lost. Alarm colour appears here and almost nowhere else.</div></div>
+</div>
+
+</div>
+
+<!-- ============================================================
+     V. TONE, MORE, AND THE HONEST SCREENS
+     ============================================================ -->
+<div class="band"><span class="n">V</span><span class="t">Tone, More, and the honest screens</span><span class="r"></span></div>
+<div class="grid">
+
+<!-- 17 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span><div class="h1">Tone</div>
+  </div>
+  <div class="voice" style="margin-top:11px">Voiced for instruments and rooms.</div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Orchestral &amp; Scores, in use</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <svg viewBox="0 0 286 82" style="width:100%;height:82px;margin-top:9px">
+    <g stroke="rgba(28,36,32,.1)" stroke-width="1"><path d="M0,12 H286"/><path d="M0,26 H286"/><path d="M0,40 H286"/><path d="M0,54 H286"/><path d="M0,68 H286"/></g>
+    <path d="M0,55 C22,49 40,43 70,41 C120,39 170,41 210,39 C240,37 264,31 286,27" fill="none" stroke="#5C7358" stroke-width="2.4" stroke-linecap="round"/>
+    <g fill="#57605A" font-size="8.5" font-family="Instrument Sans" letter-spacing="1">
+      <text x="0" y="81">40Hz</text><text x="66" y="81">160</text><text x="130" y="81">800</text><text x="194" y="81">3k</text><text x="256" y="81">12k</text>
+    </g>
+  </svg>
+  <div style="margin-top:6px;border-top:1px solid var(--hair)">
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Orchestral &amp; Scores</div><div class="s">Symphony, opera, film and game scores</div></div><span style="color:var(--moss-deep);font-size:15px">✓</span></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Strings &amp; Traditional</div><div class="s">Celtic harp and fiddle, quartets, early music</div></div></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Piano &amp; Keys</div><div class="s">Solo piano, harpsichord, organ</div></div></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Ambient &amp; Nature</div><div class="s">Drone, minimalism, field recordings</div></div></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">As Recorded</div><div class="s">Nothing applied. What the engineer left</div></div></div>
+  </div>
+  <p class="meta" style="margin-top:13px;line-height:1.5">Five voicings, all gentle, all cuts rather than boosts, so nothing clips. There is no bass boost, no loudness, and no sliders. That is a decision, not an omission.</p>
+  <p class="meta" style="margin-top:9px;line-height:1.5">Anything but As Recorded turns off audio offload, which costs a little battery. Your phone's own processing sits outside Meedwell and cannot be switched off from here.</p>
+  <div style="height:20px"></div>
+</div></div>
+<div class="cap"><div class="ix">17</div><div class="h">Tone</div><div class="d">Genre names, because a list containing no rock, no electronic and no bass anything says more by what it omits than any wording could. The curve sits on a staff, one of its three sanctioned appearances. Both honest limits are stated where the claim is made.</div></div>
+</div>
+
+<!-- 18 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div class="h1" style="margin-top:11px">More</div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Listening</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Tone</div></div><span class="r sr" style="font-size:12px">Orchestral &amp; Scores ›</span></div>
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Sleep timer</div></div><span class="r sr" style="font-size:12px">𝄐 45:00 ›</span></div>
+    <div class="row" style="padding:13px 0;border-bottom:none"><div class="gr"><div class="t">Downloads</div></div><span class="r">31 albums ›</span></div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Your shelf</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Bandcamp connection</div></div><span class="r">synced 9:12 ›</span></div>
+    <div class="row" style="padding:13px 0;border-bottom:none"><div class="gr"><div class="t">Folders on this phone</div></div><span class="r">3 ›</span></div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Meedwell</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Settings</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Privacy</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Being considered</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Not planned</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:13px 0;border-bottom:none"><div class="gr"><div class="t">About Meedwell</div></div><span class="r">›</span></div>
+  </div>
+  <div class="flexspace"></div>
+  <div class="tabs">
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="14" height="10" rx="1"/><path d="M6,3 L6,10 M9,3 L9,10 M12,3 L12,10"/></svg></i>Shelf</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="7" r="4.6"/><path d="M11.6,10.6 L15.5,14.5"/></svg></i>Search</div>
+    <div class="tb"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none"><circle cx="9" cy="6" r="3.4" fill="#5C7358"/><path d="M2,11 H16" stroke="#5C7358" stroke-width="1.5" stroke-linecap="round"/></svg></i>Surroundings<span class="livedot"></span></div>
+    <div class="tb on"><i><svg width="18" height="17" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="8" r="6"/><path d="M9,4.6 L9,8.4"/></svg></i>More</div>
+  </div>
+</div></div>
+<div class="cap"><div class="ix">18</div><div class="h">More</div><div class="d">Rows carry their current value on the right rather than only a chevron, so the state of the app is readable without opening anything. Three groups, three staves. The transparency screens sit beside Settings as peers, not buried under it.</div></div>
+</div>
+
+<!-- 19 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span><div class="h1">Settings</div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Look and feel</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Theme</div></div><span class="r">Lamplight after dark ›</span></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">App icon</div></div><span class="r">Copper ›</span></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Shelf view</div></div><span class="r">Grid ›</span></div>
+  </div>
+  <p class="meta" style="margin-top:9px;line-height:1.5">Meedwell follows your phone's reduce-motion setting rather than adding its own.</p>
+  <div class="shead" style="margin-top:18px"><span class="sec">Playback</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Gapless playback</div></div><div class="tog on"><b></b></div></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Remember position on long pieces</div><div class="s">Anything over twenty minutes</div></div><div class="tog on"><b></b></div></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Resume the queue on opening</div></div><div class="tog on"><b></b></div></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Start playing when headphones connect</div><div class="s">Off, so Meedwell never begins on its own</div></div><div class="tog"><b></b></div></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Surroundings loop crossfade</div><div class="s">Longer joins are smoother, shorter are tighter</div></div><span class="r">2.5 s ›</span></div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Library</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Download over wifi only</div></div><div class="tog on"><b></b></div></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Where downloads go</div><div class="s">Music/Meedwell, fixed so any player can read them</div></div></div>
+  </div>
+  <div style="height:18px"></div>
+</div></div>
+<div class="cap"><div class="ix">19</div><div class="h">Settings, upper half</div><div class="d">Every row states its consequence rather than only its name, and every toggle has a visible effect. The reduce-motion line is a statement, not a duplicate control. The fixed download location explains itself instead of being a dead row.</div></div>
+</div>
+
+<!-- 20 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span><div class="h1">Settings</div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Permissions</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Notifications</div><div class="s">Allowed. Used only for playback controls</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Music and audio files</div><div class="s">Allowed. Needed to read your folders</div></div><span class="r">›</span></div>
+  </div>
+  <p class="meta" style="margin-top:9px;line-height:1.5">No location, no contacts, no microphone. Not ever.</p>
+  <div class="shead" style="margin-top:18px"><span class="sec">Your data</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Export everything</div><div class="s">One file holding your lists, history and settings</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Restore from a file</div><div class="s">Replaces what is here now, all at once</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Automatic backup</div><div class="s">Last backed up 26 July</div></div><div class="tog on"><b></b></div></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t" style="color:var(--alarm)">Erase listening history</div><div class="s">The forgotten shelf and your hours go quiet</div></div></div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Help and honesty</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Open source licences</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Send feedback</div><div class="s">Opens your mail app. Carries version only</div></div><span class="r">↗</span></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Version</div></div><span class="r num">1.0.0 · 118</span></div>
+  </div>
+  <div class="flexspace"></div>
+  <p class="meta" style="line-height:1.55;text-align:center">Built and carried by one person. If software made this way matters to you, there is a place to stand behind it. Either way, it is yours.</p>
+  <div class="btn sup" style="margin-top:12px">Support this work</div>
+  <div style="height:20px"></div>
+</div></div>
+<div class="cap"><div class="ix">20</div><div class="h">Settings, lower half</div><div class="d">Destructive rows name what is lost. The feedback row says what leaves the phone. The support block sits at the foot with the terms before the invitation, gold ink used here and only here, and no ceiling implied.</div></div>
+</div>
+
+<!-- 21 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span>
+  </div>
+  <div style="margin-top:22px"><div class="mark s44"><div class="c"></div><div class="l"></div></div></div>
+  <div style="font-weight:700;font-size:24px;margin-top:14px;letter-spacing:-.2px">Meedwell</div>
+  <div class="plate num" style="margin-top:6px">Version 1.0.0 · AGPL-3.0 · by Kamsiob</div>
+  <div class="sr" style="font-size:22px;line-height:1.28;margin-top:22px">Music you own, on a shelf, in a room.</div>
+  <p class="bd" style="margin-top:13px">Meedwell reads a Bandcamp collection and the files already on your phone, and puts them on one shelf. It keeps no account of you, holds no server, and asks for nothing beyond the permissions it visibly needs.</p>
+  <p class="bd" style="margin-top:11px">It was built around instrumental listening, and it plays whatever you own. Both of those are true at once, and neither is a marketing position.</p>
+  <div class="shead" style="margin-top:22px"><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:6px">
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Source code</div></div><span class="r">GitHub ↗</span></div>
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Videos</div></div><span class="r">YouTube ↗</span></div>
+    <div class="row" style="padding:13px 0"><div class="gr"><div class="t">Everything else</div></div><span class="r">kamsiob.com ↗</span></div>
+    <div class="row" style="padding:13px 0;border-bottom:none"><div class="gr"><div class="t">Feedback</div></div><span class="r">hello@kamsiob.com ↗</span></div>
+  </div>
+  <div class="hr" style="margin-top:2px"></div>
+  <div class="row" style="padding:13px 0;border-bottom:none"><div class="gr"><div class="t">Open source licences</div></div><span class="r">›</span></div>
+  <p class="meta" style="margin-top:8px;line-height:1.5">Not affiliated with, endorsed by, or connected to Bandcamp.</p>
+  <div class="flexspace"></div>
+  <p class="meta" style="line-height:1.55">Built and carried by one person. If software made this way matters to you, there is a place to stand behind it. Either way, it is yours.</p>
+  <div class="btn sup" style="margin-top:12px">Support this work</div>
+  <div style="height:22px"></div>
+</div></div>
+<div class="cap"><div class="ix">21</div><div class="h">About, rebuilt</div><div class="d">Serif opening line as the emotional centre, then two short paragraphs rather than one dense block. External links and internal destinations sit in separate groups divided by a rule. Non-affiliation at tertiary ink directly under the links, never floating. The screen most likely to be photographed, so held to the highest finish.</div></div>
+</div>
+
+<!-- 22 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span><div class="h1">Not planned</div>
+  </div>
+  <div class="voice" style="margin-top:11px">Decisions, not gaps.</div>
+  <div class="shead" style="margin-top:18px"><span class="sec">In the app</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Accounts or a Meedwell login</div><div class="s">There is no server to log in to, and there will not be</div></div></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Cloud sync</div><div class="s">It would mean hosting your listening. Export and restore instead</div></div></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Badges, streaks, and achievements</div><div class="s">Listening is not a task to complete</div></div></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Recommendations from strangers</div><div class="s">Your shelf is the whole catalogue here</div></div></div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">In Surroundings</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Mixing several sounds at once</div><div class="s">These are real recordings of whole places. Layering two stacks two noise floors and two rooms, and sounds worse than either alone</div></div></div>
+    <div class="row" style="padding:12px 0"><div class="gr"><div class="t">Generated or synthetic sound</div><div class="s">Tried, and it could not reach the realism of a real recording</div></div></div>
+    <div class="row" style="padding:12px 0;border-bottom:none"><div class="gr"><div class="t">Streaming instead of downloading</div><div class="s">Everything works offline, which needs no service to keep running</div></div></div>
+  </div>
+  <div class="flexspace"></div>
+  <p class="meta" style="line-height:1.5;padding-bottom:20px">Things being weighed rather than ruled out live under Being considered.</p>
+</div></div>
+<div class="cap"><div class="ix">22</div><div class="h">Not planned</div><div class="d">Every entry names its actual reason, so a refusal reads as a position rather than a shortfall. The mixing entry gives the technical argument in plain words, which is the only honest way to decline something every competitor offers.</div></div>
+</div>
+
+<!-- 23 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span><div class="h1">Sleep timer</div>
+  </div>
+  <div class="voice" style="margin-top:11px">Stops the music and the surroundings together.</div>
+  <div style="display:flex;gap:8px;margin-top:20px">
+    <span class="chip">15</span><span class="chip">30</span><span class="chip on">45</span><span class="chip">60</span>
+    <span class="chip" style="border-style:dashed">min</span>
+  </div>
+  <div style="margin-top:26px">
+    <div class="sld"><i style="width:47%"></i><b style="left:47%"></b></div>
+    <div class="sldends"><span class="num">5 min</span><span class="num">3 hr</span></div>
+  </div>
+  <div class="shead" style="margin-top:26px"><span class="sec">Or</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:13px 0;border-bottom:none"><div class="gr"><div class="t">Stop at the end of this piece</div><div class="s">Ends at 22:32, after The Long Field at Dusk</div></div><span class="r">›</span></div>
+  </div>
+  <div style="text-align:center;margin-top:34px">
+    <div style="font-size:38px;color:var(--ink-2)">𝄐</div>
+    <div class="num" style="font-size:31px;font-weight:700;margin-top:6px;letter-spacing:-.5px">45:00</div>
+    <div class="sr" style="font-size:13px;color:var(--ink-3);margin-top:8px">Ritardando to silence at 10:26.</div>
+  </div>
+  <p class="meta" style="text-align:center;margin-top:18px;line-height:1.5">Playback eases down over the last thirty seconds rather than stopping dead.</p>
+  <div class="flexspace"></div>
+  <div class="btn gho">Clear the timer</div>
+  <div style="height:22px"></div>
+</div></div>
+<div class="cap"><div class="ix">23</div><div class="h">Sleep timer</div><div class="d">Four presets plus a slider, with stop-at-the-end-of-the-piece as a peer rather than an afterthought. The fermata is the mark and lends the copy its meaning. The fade is disclosed with its real clock time, since a timer that lies about when it ends is worse than none.</div></div>
+</div>
+
+<!-- 24 -->
+<div class="cell">
+<div class="ph"><div class="sc">
+  <div class="st"><span>9:41</span><span>◐ 87%</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:11px">
+    <span style="color:var(--ink-3);font-size:16px">‹</span><div class="h1">Open source licences</div>
+  </div>
+  <div class="voice" style="margin-top:11px">Everything Meedwell is built on, and everything it plays.</div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Recordings · public domain</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Rain, steady</div><div class="s">hollowpine · CC0 1.0 · trimmed and re-encoded</div></div><span class="r">↗</span></div>
+    <div class="row" style="padding:11px 0;border-bottom:none"><div class="gr"><div class="t">Ocean, calm shore</div><div class="s">duneland · CC0 1.0 · trimmed and re-encoded</div></div><span class="r">↗</span></div>
+  </div>
+  <div class="shead" style="margin-top:16px"><span class="sec">Recordings · attribution</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Fireplace</div><div class="s">kestrel · CC BY 4.0 · trimmed and re-encoded</div></div><span class="r">↗</span></div>
+    <div class="row" style="padding:11px 0;border-bottom:none"><div class="gr"><div class="t">Rain on a tin roof</div><div class="s">m.arbogast · CC BY 4.0 · trimmed and re-encoded</div></div><span class="r">↗</span></div>
+  </div>
+  <div class="shead" style="margin-top:16px"><span class="sec">Software</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">AndroidX Media3</div><div class="s">Apache 2.0</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t">Kotlin standard library</div><div class="s">Apache 2.0</div></div><span class="r">›</span></div>
+    <div class="row" style="padding:11px 0;border-bottom:none"><div class="gr"><div class="t">Coil</div><div class="s">Apache 2.0</div></div><span class="r">›</span></div>
+  </div>
+  <div class="flexspace"></div>
+  <p class="meta" style="line-height:1.5;padding-bottom:20px">Meedwell itself is AGPL-3.0. Recording credits are generated from the library, so this list cannot drift out of date.</p>
+</div></div>
+<div class="cap"><div class="ix">24</div><div class="h">Open source licences</div><div class="d">Recordings and software on one screen, grouped by licence. Every entry states that the file was trimmed and re-encoded, which CC BY 4.0 requires. Generated from the manifest rather than maintained by hand, which is the only way a list like this stays true.</div></div>
+</div>
+
+<!-- 25 -->
+<div class="cell">
+<div class="ph dk"><div class="sc">
+  <div class="st"><span>22:04</span><span>◐ 41%</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:11px">
+    <div class="h1">Surroundings</div>
+    <div class="spill" style="border-color:var(--lamp-hair-2)"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"/><path d="M10.6,10.6 L14.5,14.5"/></svg><span>Search</span></div>
+  </div>
+  <div class="voice" style="margin-top:11px">Somewhere to be while the house is quiet.</div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Playing</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div class="row on" style="padding:12px 0;border-bottom:none">
+    <svg width="16" height="13" viewBox="0 0 18 14" fill="none"><circle cx="9" cy="5" r="3.6" fill="#7E9478"/><path d="M1,10.5 H17" stroke="#7E9478" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <div class="gr"><div class="t">Fireplace</div><div class="s">a small hearth, seasoned oak</div></div>
+    <span class="r">11:02</span>
+  </div>
+  <div class="shead" style="margin-top:16px"><span class="sec">Getting · 2 of 5</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:8px">
+    <div style="display:flex;justify-content:space-between;font-size:12.5px"><span>Rainforest, night</span><span class="meta">4.1 MB</span></div>
+    <div class="sld" style="margin-top:7px"><i style="width:62%"></i></div>
+    <div class="meta" style="margin-top:6px">Two of five recordings. Wifi only, so this pauses if you leave the house.</div>
+  </div>
+  <div class="shead" style="margin-top:18px"><span class="sec">Not downloaded</span><div class="staff"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div style="margin-top:1px">
+    <div class="row" style="padding:11px 0"><div class="gr"><div class="t" style="color:var(--lamp-3)">Creek, snowmelt</div><div class="s">needs a connection</div></div><span class="r">3.8 MB</span></div>
+    <div class="row" style="padding:11px 0;border-bottom:none"><div class="gr"><div class="t" style="color:var(--lamp-3)">Wind across a moor</div><div class="s">needs a connection</div></div><span class="r">4.2 MB</span></div>
+  </div>
+  <div class="flexspace"></div>
+  <p class="meta" style="line-height:1.5;padding-bottom:18px">Anything already on this phone plays with no connection at all, including the three that came with the app.</p>
+</div></div>
+<div class="cap"><div class="ix">25</div><div class="h">Downloading, in Lamplight</div><div class="d">Progress stated in recordings and megabytes rather than a spinner, and the wifi-only condition named before it interrupts anyone. Uninstalled rows say plainly that they need a connection instead of failing on tap. Nothing here is an error state.</div></div>
+</div>
+
+</div>
+
+<div style="max-width:1580px;margin:80px auto 0;padding-top:24px;border-top:1px solid var(--hair)">
+  <p style="color:var(--ink-3);font-size:12.5px;line-height:1.65;max-width:860px">
+    Album titles, artists, and recordist handles are invented for this grid and are not real releases or real Freesound users. Actual recording credits come from the pipeline's attribution manifest. Durations, sizes, and megabyte figures are representative of the expected library rather than measured. Where this grid and SPEC-REVISION-01 disagree, the revision governs.
+  </p>
+</div>
+
+</body>
+</html>

@@ -22,10 +22,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.data.SyncFailure
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
+import com.kamsiob.meedwell.ui.theme.sheetShadow
 
 /**
  * Screen 31 in the visual reference: Connection trouble.
@@ -65,33 +64,33 @@ fun SyncTroubleSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-                .meedwellShadow(Elevation.sheet, RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
                 .clickable(enabled = false) {}
                 .navigationBarsPadding()
                 .padding(horizontal = 26.dp, vertical = 22.dp),
         ) {
-            Text("Bandcamp didn't answer", style = type.sectionHeading, color = colors.primaryText)
+            Text("Bandcamp didn't answer", style = type.h2, color = colors.primaryText)
 
             // Reassurance first. Somebody whose music app says something went
             // wrong wants to know their music is fine before they want a cause.
             Text(
                 "Your music on this phone is untouched and playing fine.",
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 10.dp),
             )
             Text(
                 failure.explanation(),
-                style = type.metadata,
+                style = type.meta,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 14.dp),
             )
 
             Text(
                 "WHAT HAPPENED",
-                style = type.capsEyebrow,
+                style = type.section,
                 color = colors.tertiaryText,
                 modifier = Modifier.padding(top = 18.dp),
             )
@@ -100,7 +99,7 @@ fun SyncTroubleSheet(
                     .fillMaxWidth()
                     .padding(top = 8.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(colors.surfacePanel)
+                    .background(colors.background)
                     .padding(12.dp),
             ) {
                 Text(failure.detail(), style = type.numeric, color = colors.tertiaryText)
@@ -136,7 +135,7 @@ private fun TroubleLink(label: String, modifier: Modifier = Modifier, onClick: (
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = MeedwellTheme.typography.metadata, color = MeedwellTheme.colors.secondaryText)
+        Text(label, style = MeedwellTheme.typography.meta, color = MeedwellTheme.colors.secondaryText)
     }
 }
 

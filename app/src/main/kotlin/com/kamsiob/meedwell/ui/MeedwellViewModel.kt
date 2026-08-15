@@ -760,6 +760,14 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
      * `unstar` errors whatever is sent, so this is the truthful answer rather
      * than a control that fails silently.
      */
+    fun showSleepTimerComing() {
+        _notice.value = "The sleep timer is not built yet. It is on What's ahead."
+    }
+
+    fun showToneComing() {
+        _notice.value = "Tone is not built yet. Everything plays as recorded."
+    }
+
     fun showLoveLimit() {
         _notice.value = "Bandcamp cannot take a heart off yet. Their website can."
     }

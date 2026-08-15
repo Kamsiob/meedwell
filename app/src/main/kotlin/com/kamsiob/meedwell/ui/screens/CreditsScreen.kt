@@ -73,7 +73,7 @@ fun CreditsScreen(
             edge = IconEdge.Start,
             modifier = Modifier.padding(top = 6.dp),
         )
-        Text("Credits", style = type.largeHeading, color = colors.primaryText)
+        Text("Credits", style = type.h1, color = colors.primaryText)
 
         LazyColumn(contentPadding = PaddingValues(top = 10.dp, bottom = 40.dp)) {
 
@@ -86,7 +86,7 @@ fun CreditsScreen(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                             .clip(RoundedCornerShape(13.dp))
-                            .background(colors.surfacePanel)
+                            .background(colors.background)
                             .padding(14.dp),
                     ) {
                         Text(
@@ -98,13 +98,13 @@ fun CreditsScreen(
                             "This is a bug worth reporting, because these recordings are used under " +
                                 "licenses that require their makers to be credited. The full credits are " +
                                 "also published at github.com/Kamsiob/meedwell-surroundings.",
-                            style = type.metadata,
+                            style = type.meta,
                             color = colors.secondaryText,
                             modifier = Modifier.padding(top = 6.dp),
                         )
                         Text(
                             loadError,
-                            style = type.metadata,
+                            style = type.meta,
                             color = colors.tertiaryText,
                             modifier = Modifier.padding(top = 8.dp),
                         )
@@ -112,7 +112,7 @@ fun CreditsScreen(
                 } else {
                     Text(
                         summary,
-                        style = type.voiceSmall,
+                        style = type.voice,
                         color = colors.secondaryText,
                         modifier = Modifier.padding(bottom = 6.dp),
                     )
@@ -125,7 +125,7 @@ fun CreditsScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 group.licenseLabel.uppercase(),
-                                style = type.capsEyebrow,
+                                style = type.section,
                                 color = colors.primaryText,
                             )
                             Text(
@@ -144,7 +144,7 @@ fun CreditsScreen(
                         ) {
                             Text(
                                 "Read the license ↗",
-                                style = type.metadata,
+                                style = type.meta,
                                 color = colors.secondaryText,
                             )
                         }
@@ -168,14 +168,14 @@ fun CreditsScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     entry.title,
-                                    style = type.metadata,
+                                    style = type.meta,
                                     color = colors.primaryText,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 Text(
                                     entry.recordist,
-                                    style = type.metadata,
+                                    style = type.meta,
                                     color = colors.tertiaryText,
                                     maxLines = 1,
                                 )
@@ -184,7 +184,7 @@ fun CreditsScreen(
                                 entry.extraConditions?.let {
                                     Text(
                                         it,
-                                        style = type.metadata,
+                                        style = type.meta,
                                         color = colors.secondaryText,
                                         modifier = Modifier.padding(top = 3.dp),
                                     )
@@ -205,7 +205,7 @@ fun CreditsScreen(
                 item(key = "software-head") {
                     Text(
                         "SOFTWARE",
-                        style = type.capsEyebrow,
+                        style = type.section,
                         color = colors.primaryText,
                         modifier = Modifier.padding(top = 30.dp, bottom = 8.dp),
                     )
@@ -221,8 +221,8 @@ fun CreditsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text(notice.name, style = type.metadata, color = colors.primaryText)
-                                Text(notice.license, style = type.metadata, color = colors.tertiaryText)
+                                Text(notice.name, style = type.meta, color = colors.primaryText)
+                                Text(notice.license, style = type.meta, color = colors.tertiaryText)
                             }
                             MeedwellIcon(
                                 icon = MeedwellIcons.ChevronRight,
@@ -241,7 +241,7 @@ fun CreditsScreen(
                 // not, because nobody reading a credits page came for that.
                 Text(
                     "All of these were trimmed, level matched and re-encoded.",
-                    style = type.metadata,
+                    style = type.meta,
                     color = colors.tertiaryText,
                     modifier = Modifier.padding(top = 26.dp),
                 )
@@ -270,10 +270,10 @@ fun RecordingCredit(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(colors.surfacePanel)
+            .background(colors.background)
             .padding(14.dp),
     ) {
-        Text("RECORDED BY", style = type.capsEyebrow, color = colors.tertiaryText)
+        Text("RECORDED BY", style = type.section, color = colors.tertiaryText)
         Text(
             block.recordist,
             style = type.rowTitle,
@@ -284,7 +284,7 @@ fun RecordingCredit(
         block.extraConditions?.let {
             Text(
                 it,
-                style = type.metadata,
+                style = type.meta,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -294,13 +294,13 @@ fun RecordingCredit(
             // The version is never dropped: CC BY 3.0 and CC BY 4.0 are
             // different licenses with different terms.
             block.licenseFullName,
-            style = type.metadata,
+            style = type.meta,
             color = colors.secondaryText,
             modifier = Modifier.padding(top = 10.dp),
         )
         Text(
             block.modificationNote,
-            style = type.metadata,
+            style = type.meta,
             color = colors.tertiaryText,
             modifier = Modifier.padding(top = 6.dp),
         )
@@ -321,7 +321,7 @@ private fun LinkChip(label: String, onClick: () -> Unit) {
             .padding(end = 18.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
-        Text(label, style = MeedwellTheme.typography.metadata, color = MeedwellTheme.colors.secondaryText)
+        Text(label, style = MeedwellTheme.typography.meta, color = MeedwellTheme.colors.secondaryText)
     }
 }
 
@@ -348,7 +348,7 @@ fun RecordingCreditLine(
     ) {
         Text(
             text,
-            style = MeedwellTheme.typography.metadata,
+            style = MeedwellTheme.typography.meta,
             color = MeedwellTheme.colors.tertiaryText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

@@ -30,13 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kamsiob.meedwell.ui.theme.GlowEmber
-import com.kamsiob.meedwell.ui.theme.GlowRose
-import com.kamsiob.meedwell.ui.theme.GlowTeal
-import com.kamsiob.meedwell.ui.theme.GlowViolet
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
 
 /**
  * Shared pieces of the interface, built once here so a control keeps the same
@@ -47,66 +41,15 @@ import com.kamsiob.meedwell.ui.theme.meedwellShadow
  * that a later layout change cannot quietly shrink one below the floor.
  */
 
-enum class GlowTone { Violet, Teal, Rose, Ember }
-
-/**
- * The ambient wash: a soft radial field that drifts over roughly 16 seconds.
+/*
+ * The ambient glow is gone.
  *
- * Gated behind reduced motion, which is not optional. When the system asks for
- * reduced motion the field is still drawn, because it carries the warmth of the
- * screen, but it does not move at all.
+ * It was a drifting radial field in violet, teal, rose or ember behind every
+ * screen. The design has one working accent and no gradients at all, so a
+ * coloured wash was four reserved colours doing decorative work in a place the
+ * grid leaves as plain paper. Removing it is most of what stops the app reading
+ * as generic.
  */
-@Composable
-fun AmbientGlow(
-    tone: GlowTone,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MeedwellTheme.colors
-    val reducedMotion = MeedwellTheme.reducedMotion
-
-    val color = when (tone) {
-        GlowTone.Violet -> GlowViolet
-        GlowTone.Teal -> GlowTeal
-        GlowTone.Rose -> GlowRose
-        GlowTone.Ember -> GlowEmber
-    }
-    // Half opacity in light theme, per DESIGN.md section 2.
-    val tuned = if (colors.isDark) color else color.copy(alpha = color.alpha * 0.5f)
-
-    val drift = if (reducedMotion) {
-        0.5f
-    } else {
-        val transition = rememberInfiniteTransition(label = "ambient drift")
-        transition.animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 16_000),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "ambient drift position",
-        ).value
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(360.dp)
-            .drawBehind {
-                val centerX = size.width * (0.44f + 0.12f * drift)
-                val centerY = size.height * (0.30f + 0.10f * drift)
-                val radius = size.maxDimension * (0.62f + 0.06f * drift)
-                drawRect(
-                    brush = Brush.radialGradient(
-                        colors = listOf(tuned, Color.Transparent),
-                        center = Offset(centerX, centerY),
-                        radius = radius,
-                    ),
-                    size = Size(size.width, size.height),
-                )
-            }
-    )
-}
 
 /**
  * The primary action. High contrast, one per screen, and it says exactly what
@@ -122,7 +65,6 @@ fun PillButton(
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = 52.dp)
-            .meedwellShadow(Elevation.button, CircleShape)
             .clip(CircleShape)
             .background(colors.primaryText)
             .clickable(role = Role.Button, onClick = onClick),
@@ -155,7 +97,7 @@ fun TextButtonRow(
     ) {
         Text(
             text = label,
-            style = MeedwellTheme.typography.metadata,
+            style = MeedwellTheme.typography.meta,
             color = MeedwellTheme.colors.primaryText.copy(alpha = 0.68f),
             textAlign = TextAlign.Center,
         )
@@ -183,7 +125,6 @@ fun SupportButton(
             // The faint glow DESIGN.md section 3 asks for. A gold shadow under
             // a gold hairline, which on near-black reads as the button being
             // lit rather than outlined.
-            .meedwellShadow(10.dp, CircleShape)
             .clip(CircleShape)
             .border(1.dp, colors.gold.copy(alpha = 0.55f), CircleShape)
             .clickable(role = Role.Button, onClick = onClick),
@@ -198,7 +139,7 @@ fun SupportButton(
         )
         Text(
             text = label,
-            style = MeedwellTheme.typography.metadata,
+            style = MeedwellTheme.typography.meta,
             color = colors.gold,
             modifier = Modifier.padding(start = 8.dp),
         )

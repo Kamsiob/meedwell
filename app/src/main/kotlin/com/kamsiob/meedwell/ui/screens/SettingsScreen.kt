@@ -77,7 +77,7 @@ fun SettingsScreen(
             modifier = Modifier.padding(top = 6.dp),
         )
 
-        Text("Settings", style = type.largeHeading, color = colors.primaryText)
+        Text("Settings", style = type.h1, color = colors.primaryText)
 
         Section("Look and feel")
         SettingRow(
@@ -160,7 +160,7 @@ fun SettingsScreen(
         Box(Modifier.fillMaxWidth().padding(top = 24.dp).height(0.5.dp).background(colors.hairline))
         Text(
             "Free no matter what. Nothing held back, nothing unlocked later. One person carries it.",
-            style = type.metadata,
+            style = type.meta,
             color = colors.secondaryText,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
@@ -177,7 +177,7 @@ fun SettingsScreen(
 private fun Section(title: String) {
     Text(
         title.uppercase(),
-        style = MeedwellTheme.typography.capsEyebrow,
+        style = MeedwellTheme.typography.section,
         color = MeedwellTheme.colors.secondaryText,
         modifier = Modifier.padding(top = 22.dp, bottom = 2.dp),
     )
@@ -215,14 +215,14 @@ private fun ToggleRow(
             Column(Modifier.weight(1f)) {
                 Text(title, style = type.rowTitle, color = colors.primaryText)
                 if (subtitle != null) {
-                    Text(subtitle, style = type.metadata, color = colors.tertiaryText, modifier = Modifier.padding(top = 3.dp))
+                    Text(subtitle, style = type.meta, color = colors.tertiaryText, modifier = Modifier.padding(top = 3.dp))
                 }
             }
             // The state is carried by a word as well as by the switch, so
             // color and position are never the only carrier of meaning.
             Text(
                 if (checked) "On" else "Off",
-                style = type.metadata,
+                style = type.meta,
                 color = colors.tertiaryText,
                 modifier = Modifier.padding(end = 10.dp),
             )
@@ -230,7 +230,7 @@ private fun ToggleRow(
                 Modifier
                     .size(width = 40.dp, height = 24.dp)
                     .clip(CircleShape)
-                    .background(if (checked) colors.primaryText else colors.surfacePanel),
+                    .background(if (checked) colors.primaryText else colors.background),
                 contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart,
             ) {
                 Box(
@@ -247,7 +247,7 @@ private fun ToggleRow(
 }
 
 data class SettingsState(
-    val theme: ThemeChoice = ThemeChoice.Dark,
+    val theme: ThemeChoice = ThemeChoice.Daylight,
     val shelfGrid: Boolean = true,
     val gapless: Boolean = true,
     val rememberLongTrackPosition: Boolean = true,
@@ -316,13 +316,13 @@ data class SettingsState(
 }
 
 private fun ThemeChoice.label(): String = when (this) {
-    ThemeChoice.Dark -> "Dark"
-    ThemeChoice.Light -> "Light"
+    ThemeChoice.Daylight -> "Daylight"
+    ThemeChoice.Lamplight -> "Lamplight"
     ThemeChoice.System -> "System"
 }
 
 private fun ThemeChoice.next(): ThemeChoice = when (this) {
-    ThemeChoice.Dark -> ThemeChoice.Light
-    ThemeChoice.Light -> ThemeChoice.System
-    ThemeChoice.System -> ThemeChoice.Dark
+    ThemeChoice.Daylight -> ThemeChoice.Lamplight
+    ThemeChoice.Lamplight -> ThemeChoice.System
+    ThemeChoice.System -> ThemeChoice.Daylight
 }

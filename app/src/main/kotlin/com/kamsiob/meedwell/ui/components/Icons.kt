@@ -57,27 +57,81 @@ enum class MeedwellIcons(
     Search(listOf("M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14", "M20 20l-3.5-3.5")),
 
     /** The four tab icons. */
+    /**
+     * A shelf of spines, from the grid: a rectangle with three uprights.
+     *
+     * It was a four-square grid, which is the universal icon for "app drawer"
+     * and says nothing about records standing on a shelf.
+     */
     TabShelf(
         listOf(
-            "M5.5 3.5h3.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2z",
-            "M15 3.5h3.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2z",
-            "M5.5 13h3.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2z",
-            "M15 13h3.5a2 2 0 0 1 2 2v3.5a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2z",
+            "M3 6.5h18v10.5H3z",
+            "M8.5 6.5v8.5M12 6.5v8.5M15.5 6.5v8.5",
         )
     ),
     TabSearch(listOf("M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14", "M20 20l-3.5-3.5")),
-    TabLists(
+    /**
+     * Surroundings: the sun on the horizon, which is the app's own sign for it.
+     *
+     * A circle above a line. It is the same shape as the day line's sun and as
+     * the right-hand page mark on the player spread, so the three places
+     * Surroundings appears all carry one mark. Deliberately **not** a leaf, a
+     * moon, or a speaker.
+     */
+    TabSurroundings(
         listOf(
-            "M4 6h13M4 12h13M4 18h8",
-            "M19.5 14.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5",
-            "M19.5 14.5V7l2.5 1",
+            "M12 8a4.4 4.4 0 1 0 0 8.8a4.4 4.4 0 1 0 0-8.8",
+            "M2.5 17.5H21.5",
         )
     ),
+    /**
+     * More: a circle with a short stem, from the grid.
+     *
+     * It was a sun with eight rays, which is now the mark that means
+     * Surroundings. Two suns in one tab bar would have been the clearest
+     * possible way to make both meaningless.
+     */
     TabMore(
         listOf(
-            "M12 8.8a3.2 3.2 0 1 0 0 6.4a3.2 3.2 0 1 0 0-6.4",
-            "M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3",
-            "M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1",
+            "M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16",
+            "M12 8.5v5",
+        )
+    ),
+
+    /**
+     * Albums, from the grid: a music stand seen from the front.
+     *
+     * A triangle of legs with the desk's ribs inside it. Not a stack of discs
+     * and not a grid of squares, both of which mean "media" in general.
+     */
+    AlbumsView(
+        listOf(
+            "M3.5 19L12 3.5L20.5 19Z",
+            "M9 19V8M12 19V5.8M15 19V8",
+        )
+    ),
+
+    /**
+     * The composer glyph from the grid: a treble-clef-like curve with a stem.
+     */
+    Composers(
+        listOf(
+            "M8.5 21C4.5 17.5 4.5 8.5 9.5 5C14.5 1.5 20.5 5 19 10C17.5 15 11.5 15 10.5 11",
+            "M15.5 17L21 22",
+        )
+    ),
+
+    /**
+     * The fermata: a hold, then a rest. The sleep timer's mark everywhere.
+     *
+     * **There is no moon in this app.** A moon means night; a fermata means
+     * hold this, then stop, which is what a sleep timer actually does and what
+     * the copy on that screen is written around.
+     */
+    Fermata(
+        listOf(
+            "M3.5 16.5a8.5 8.5 0 0 1 17 0",
+            "M12 14.2a1.9 1.9 0 1 0 0 3.8a1.9 1.9 0 1 0 0-3.8",
         )
     ),
 

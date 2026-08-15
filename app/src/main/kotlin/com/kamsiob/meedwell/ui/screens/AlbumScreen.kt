@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.model.Album
@@ -35,8 +36,14 @@ import com.kamsiob.meedwell.core.model.Track
 import com.kamsiob.meedwell.ui.components.Cover
 import com.kamsiob.meedwell.ui.components.CoverThumb
 import com.kamsiob.meedwell.ui.components.IconButton
+import androidx.compose.ui.text.font.FontWeight
+import com.kamsiob.meedwell.core.library.Programme
+import com.kamsiob.meedwell.ui.components.Hairline
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import androidx.compose.foundation.layout.width
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
+import com.kamsiob.meedwell.ui.components.SectionHead
+import com.kamsiob.meedwell.ui.components.StaffRule
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.combinedClickableCompat
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -120,33 +127,51 @@ fun AlbumScreen(
 
                     // Everything below here is on theme surface, past the art's
                     // hard edge. Nothing above it carries a word.
+                    // A record is **set as a programme**: a plate line, a
+                    // staff, centred titling, then the movements. Not a header
+                    // with a track list under it.
                     Column(Modifier.padding(horizontal = 22.dp)) {
-                        album.shelfSince()?.let { since ->
+                        // The plate line: label, year in Roman numerals, and
+                        // when it landed here. Small caps, letterspaced,
+                        // centred, exactly as a printed plate line is set.
+                        Text(
+                            text = album.plateLine().uppercase(),
+                            style = type.plate,
+                            color = colors.tertiaryText,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(top = 9.dp),
+                        )
+
+                        // A staff with no label, closing the plate and opening
+                        // the titling. One of its three sanctioned appearances.
+                        StaffRule(Modifier.padding(top = 12.dp))
+
+                        Column(
+                            Modifier.fillMaxWidth().padding(top = 13.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
                             Text(
-                                text = since,
-                                style = type.voiceSmall,
+                                text = album.name,
+                                style = type.programme,
+                                color = colors.primaryText,
+                                textAlign = TextAlign.Center,
+                            )
+                            // The performer in the serif, the way a programme
+                            // sets "Ilse Marren, piano".
+                            Text(
+                                text = album.artist,
+                                style = type.voice,
                                 color = colors.secondaryText,
-                                modifier = Modifier.padding(top = 14.dp),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                            Text(
+                                text = album.detailLine(tracks),
+                                style = type.meta,
+                                color = colors.tertiaryText,
+                                modifier = Modifier.padding(top = 5.dp),
                             )
                         }
-                        Text(
-                            text = album.name,
-                            style = type.sectionHeading,
-                            color = colors.primaryText,
-                            modifier = Modifier.padding(top = 5.dp),
-                        )
-                        Text(
-                            text = album.artist,
-                            style = type.body,
-                            color = colors.secondaryText,
-                            modifier = Modifier.padding(top = 3.dp),
-                        )
-                        Text(
-                            text = album.detailLine(tracks),
-                            style = type.capsEyebrow,
-                            color = colors.tertiaryText,
-                            modifier = Modifier.padding(top = 10.dp),
-                        )
 
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
@@ -169,13 +194,15 @@ fun AlbumScreen(
                                     )
                                     Text(
                                         "Shuffle",
-                                        style = type.metadata,
+                                        style = type.meta,
                                         color = colors.secondaryText,
                                         modifier = Modifier.padding(start = 7.dp),
                                     )
                                 }
                             }
                         }
+
+                        SectionHead("Programme", Modifier.padding(top = 18.dp, bottom = 3.dp))
                     }
                 }
             }
@@ -193,7 +220,7 @@ fun AlbumScreen(
                 item(key = "empty") {
                     Text(
                         text = "The track list has not arrived yet. It fills in on the next sync.",
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         modifier = Modifier.padding(horizontal = 22.dp, vertical = 24.dp),
                     )
@@ -217,7 +244,7 @@ fun AlbumScreen(
                     CoverThumb(url = album.coverUrl, title = album.name, size = 30.dp)
                     Text(
                         text = album.name,
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.primaryText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -230,7 +257,7 @@ fun AlbumScreen(
                             .clickable(role = Role.Button, onClick = onPlay),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("Play", style = type.metadata, color = colors.secondaryText)
+                        Text("Play", style = type.meta, color = colors.secondaryText)
                     }
                     MenuButton(onAlbumMenu)
                 }
@@ -240,6 +267,23 @@ fun AlbumScreen(
     }
 }
 
+/**
+ * One movement on the programme.
+ *
+ * ```
+ * .mv{display:flex;align-items:baseline;gap:10px;padding:9px 0;
+ *     border-bottom:1px solid var(--hair);}
+ * .mv .n{width:25px;...italic...}   .mv .nm{flex:1;font-size:13px;}
+ * .mv .tp{...italic;font-size:11px;}   .mv .ln{font-size:11.5px;}
+ * ```
+ *
+ * The number is a **Roman numeral in the serif italic**, the tempo marking sits
+ * beside the name in the same italic, and the running time closes the line. It
+ * is a bill of movements, not a numbered track list.
+ *
+ * The tempo is read out of the title rather than invented, so most popular
+ * records show none at all and the row is simply shorter. See `Programme`.
+ */
 @Composable
 private fun TrackRow(
     track: Track,
@@ -249,59 +293,59 @@ private fun TrackRow(
 ) {
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
+    val tempo = Programme.tempoIn(track.title)
 
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 56.dp)
+                .defaultMinSize(minHeight = 48.dp)
                 .combinedClickableCompat(onClick = onClick, onLongClick = onLongClick)
-                .padding(horizontal = 22.dp, vertical = 10.dp)
+                .padding(horizontal = 22.dp, vertical = 9.dp)
                 .semantics { contentDescription = track.accessibilityLabel(isPlaying) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = track.trackNumber.takeIf { it > 0 }?.toString().orEmpty(),
-                style = type.metadata,
-                color = if (isPlaying) colors.primaryText else colors.tertiaryText,
-                modifier = Modifier.size(width = 22.dp, height = 20.dp),
+                text = track.trackNumber.takeIf { it > 0 }?.let { Programme.roman(it) }.orEmpty(),
+                style = type.movementNumeral,
+                color = if (isPlaying) colors.mossInk else colors.tertiaryText,
+                modifier = Modifier.width(25.dp),
             )
-            Column(Modifier.weight(1f).padding(start = 4.dp)) {
+            Column(Modifier.weight(1f).padding(end = 10.dp)) {
                 Text(
                     text = track.title,
-                    style = type.rowTitle,
-                    color = colors.primaryText,
-                    maxLines = 1,
+                    style = type.movementName,
+                    // The playing movement is moss ink and heavier, which is
+                    // the grid's `.mv.on`. Not a colored bar, not a highlight.
+                    color = if (isPlaying) colors.mossInk else colors.primaryText,
+                    fontWeight = if (isPlaying) FontWeight.SemiBold else null,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                // A resume point on a long piece, surfaced where it matters
-                // rather than hidden in a menu.
                 track.resumeLabel()?.let { label ->
                     Text(
                         text = label,
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         modifier = Modifier.padding(top = 2.dp),
                     )
                 }
             }
-            // The presence marker is a word, not only a dot, so color and
-            // shape are never the only carrier of meaning.
-            if (track.isPresentLocally) {
+            if (tempo != null) {
                 Text(
-                    text = "here",
-                    style = type.metadata,
+                    text = tempo,
+                    style = type.tempo,
                     color = colors.tertiaryText,
                     modifier = Modifier.padding(end = 10.dp),
                 )
             }
             Text(
                 text = formatDuration(track.durationSeconds),
-                style = type.metadata,
+                style = type.meta,
                 color = colors.tertiaryText,
             )
         }
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+        Hairline(Modifier.padding(horizontal = 22.dp))
     }
 }
 
@@ -368,6 +412,19 @@ private fun Track.accessibilityLabel(isPlaying: Boolean): String = buildString {
     if (isPresentLocally) append(", here as a file")
     if (isPlaying) append(", playing")
 }
+
+/**
+ * The plate line: the year in Roman numerals, and when it landed here.
+ *
+ * The grid sets "Lowlight Editions · MMXXIV · shelved March 2025". Meedwell has
+ * no label field, because Bandcamp's API does not return one, so it sets what
+ * it genuinely knows: the year and the shelving date. Inventing a label would
+ * be putting words on somebody's record that nobody wrote.
+ */
+private fun Album.plateLine(): String = listOfNotNull(
+    year.takeIf { it > 0 }?.let { Programme.roman(it) },
+    shelfSince()?.let { it.replace("On your shelf since", "shelved").trim() },
+).joinToString(" · ").ifBlank { "on your shelf" }
 
 /** "On your shelf since June 2023", the collector provenance line. */
 private fun Album.shelfSince(): String? {

@@ -4,9 +4,13 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -31,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.Hairline
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.ActionSheet
 import com.kamsiob.meedwell.ui.components.ActionTarget
@@ -67,7 +73,11 @@ import com.kamsiob.meedwell.ui.screens.YourFilesScreen
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.kamsiob.meedwell.BuildConfig
-import com.kamsiob.meedwell.ui.screens.NowPlayingScreen
+import com.kamsiob.meedwell.ui.components.PlayerPage
+import com.kamsiob.meedwell.ui.components.SurroundingsCard
+import com.kamsiob.meedwell.ui.components.surroundingsCardHeight
+import com.kamsiob.meedwell.ui.screens.PlayerSpread
+import com.kamsiob.meedwell.ui.screens.SurroundingsPlayingState
 import com.kamsiob.meedwell.ui.screens.ConnectScreen
 import com.kamsiob.meedwell.ui.screens.ShelfScreen
 import com.kamsiob.meedwell.ui.screens.coverUrl
@@ -84,7 +94,16 @@ import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 enum class Tab(val label: String, val icon: MeedwellIcons) {
     Shelf("Shelf", MeedwellIcons.TabShelf),
     Search("Search", MeedwellIcons.TabSearch),
-    Lists("Lists", MeedwellIcons.TabLists),
+
+    /**
+     * Surroundings is a **first-class destination**, not a row inside More.
+     *
+     * It was buried under More, which made a headline feature something you had
+     * to already know about. The width for it comes from folding Lists into the
+     * Shelf's own view switcher as "Shelves", which is where a list of albums
+     * belongs anyway.
+     */
+    Surroundings("Surroundings", MeedwellIcons.TabSurroundings),
     More("More", MeedwellIcons.TabMore),
 }
 
@@ -137,6 +156,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val notice by viewModel.notice.collectAsState()
     val surroundings by viewModel.surroundings.state.collectAsState()
     val surroundingsDetail by viewModel.surroundings.detail.collectAsState()
+    val surroundingsCard by viewModel.surroundings.card.collectAsState()
     val exportState by viewModel.export.collectAsState()
     val sort by viewModel.sort.collectAsState()
     val scope by viewModel.scope.collectAsState()
@@ -148,6 +168,10 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     var sheetTarget by remember { mutableStateOf<ActionTarget?>(null) }
     var sortSheetOpen by remember { mutableStateOf(false) }
     var queueSheetOpen by remember { mutableStateOf(false) }
+
+    // Which page of the player spread is showing. Held here rather than inside
+    // the player so that reopening it lands on the page you left.
+    var playerPage by remember { mutableStateOf(PlayerPage.Music) }
 
     // The Storage Access Framework picker. A tree grant with persistable
     // permission, so the folder survives a reboot rather than being asked for
@@ -202,7 +226,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
         Destination.History, Destination.Forgotten,
         Destination.Surroundings -> Destination.Main(Tab.More)
         Destination.Export -> Destination.Settings
-        Destination.Loved -> Destination.Main(Tab.Lists)
+        Destination.Loved -> Destination.Main(Tab.Shelf)
         is Destination.ArtistDetail -> Destination.Main()
         is Destination.GenreFilter -> Destination.Main()  // clearGenreFilter runs on leaving, below
     }
@@ -253,10 +277,22 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
             )
 
             is Destination.Main -> Column(Modifier.fillMaxSize().statusBarsPadding()) {
+                // The card floats over the content rather than sitting in the
+                // flow beneath it, which is what its 88 percent tint is for:
+                // whatever is behind ghosts through. So the content keeps its
+                // full height and takes bottom padding equal to the card
+                // instead, recomputed whenever the card appears, expands,
+                // collapses or leaves.
+                val cardRoom = if (current.tab == Tab.Surroundings) 0.dp
+                    else surroundingsCardHeight(surroundingsCard)
+
                 Box(Modifier.weight(1f)) {
                     when (current.tab) {
                         Tab.Shelf -> ShelfScreen(
-                            state = shelf.copy(playerVisible = playback.hasQueue),
+                            state = shelf.copy(
+                                playerVisible = playback.hasQueue,
+                                cardRoom = cardRoom,
+                            ),
                             onViewChange = viewModel::setView,
                             onToggleLayout = viewModel::toggleLayout,
                             onOpenSort = { sortSheetOpen = true },
@@ -284,10 +320,22 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                             // the phone, and only when this is tapped.
                             onSearchBandcamp = { query -> open(bandcampSearchUrl(query)) },
                         )
-                        Tab.Lists -> ListsScreen(
-                            state = lists,
-                            onOpenLoved = { destination = Destination.Loved },
-                            onOpenList = { },
+                        Tab.Surroundings -> SurroundingsScreen(
+                            state = surroundings,
+                            onPlay = viewModel.surroundings::play,
+                            onPause = viewModel.surroundings::pause,
+                            onStop = viewModel.surroundings::stop,
+                            onVolume = viewModel.surroundings::setVolume,
+                            onDownload = viewModel.surroundings::download,
+                            onCancelDownload = viewModel.surroundings::cancelDownload,
+                            onDownloadGroup = viewModel.surroundings::downloadGroup,
+                            onDownloadEverything = viewModel.surroundings::downloadEverything,
+                            onCheckForNew = viewModel.surroundings::checkForNew,
+                            onRemove = viewModel.surroundings::remove,
+                            onOpenDetail = viewModel.surroundings::openDetail,
+                            onToggleGroup = viewModel.surroundings::toggleGroup,
+                            onOpenCredits = { destination = Destination.Credits },
+                            onBack = { destination = Destination.Main() },
                         )
                         Tab.More -> MoreScreen(
                             connected = shelf.connected,
@@ -307,16 +355,34 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                             onConnectBandcamp = { destination = Destination.Connect },
                         )
                     }
+
+                    // Suppressed on the Surroundings tab, where the whole
+                    // library is already on screen, and on the player spread,
+                    // whose Surroundings page carries its own volume control.
+                    // Duplicating either would be clutter rather than help.
+                    if (current.tab != Tab.Surroundings) {
+                        SurroundingsCard(
+                            state = surroundingsCard,
+                            onToggleExpanded = viewModel.surroundings::toggleCard,
+                            onVolume = viewModel.surroundings::setVolume,
+                            onPick = viewModel.surroundings::play,
+                            onStop = viewModel.surroundings::stop,
+                            onOpenAll = { destination = Destination.Main(Tab.Surroundings) },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 8.dp),
+                        )
+                    }
                 }
                 MiniPlayer(
                     state = playback,
                     onPlayPause = viewModel.player::playPause,
                     onOpen = { destination = Destination.NowPlaying },
-                    modifier = Modifier.padding(bottom = 6.dp),
                 )
                 TabBar(
                     selected = current.tab,
                     onSelect = { destination = Destination.Main(it) },
+                    playing = surroundings.isPlaying,
                 )
             }
 
@@ -396,7 +462,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                     tracks = loved,
                     onTrackClick = { viewModel.playTrack(it) },
                     onTrackLongClick = { sheetTarget = it.asTarget() },
-                    onBack = { destination = Destination.Main(Tab.Lists) },
+                    onBack = { destination = Destination.Main(Tab.Shelf) },
                     modifier = Modifier.statusBarsPadding(),
                 )
             }
@@ -539,31 +605,46 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                 modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
             )
 
-            Destination.NowPlaying -> {
-                val wash by rememberWashColor(playback.artworkUri)
-                NowPlayingScreen(
-                    state = playback,
-                    washColor = wash,
-                    onCollapse = { destination = Destination.Main() },
-                    onPlayPause = viewModel.player::playPause,
-                    onNext = { viewModel.player.next() },
-                    onPrevious = viewModel.player::previous,
-                    onSeek = viewModel.player::seekTo,
-                    onOpenArtwork = {
-                        destination = Destination.Artwork(
-                            uri = playback.artworkUri,
-                            title = playback.title,
-                            subtitle = playback.artist,
-                        )
-                    },
-                    onOpenQueue = { queueSheetOpen = true },
-                    onMenu = { viewModel.openSheetForCurrentTrack { sheetTarget = it } },
-                    onShuffle = viewModel.player::setShuffle,
-                    onCycleRepeat = viewModel.player::cycleRepeat,
-                    onLove = { viewModel.loveCurrentTrack() },
-                    modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
-                )
-            }
+            Destination.NowPlaying -> PlayerSpread(
+                page = playerPage,
+                onPageChange = { playerPage = it },
+                state = playback,
+                surroundings = SurroundingsPlayingState(
+                    title = surroundings.playingTitle,
+                    description = "",
+                    credit = surroundings.playingCredit,
+                    isPlaying = surroundings.isPlaying,
+                    volume = surroundings.volume,
+                    hasSound = surroundings.playingId != null,
+                ),
+                onCollapse = { destination = Destination.Main() },
+                onMenu = { viewModel.openSheetForCurrentTrack { sheetTarget = it } },
+                onPlayPause = viewModel.player::playPause,
+                onNext = { viewModel.player.next() },
+                onPrevious = viewModel.player::previous,
+                onSeek = viewModel.player::seekTo,
+                onOpenArtwork = {
+                    destination = Destination.Artwork(
+                        uri = playback.artworkUri,
+                        title = playback.title,
+                        subtitle = playback.artist,
+                    )
+                },
+                onOpenQueue = { queueSheetOpen = true },
+                onLove = { viewModel.loveCurrentTrack() },
+                onSleepTimer = { viewModel.showSleepTimerComing() },
+                onTone = { viewModel.showToneComing() },
+                onSurroundingsPlayPause = {
+                    if (surroundings.isPlaying) viewModel.surroundings.pause()
+                    else surroundings.playingId?.let { viewModel.surroundings.play(it) }
+                },
+                onSurroundingsVolume = viewModel.surroundings::setVolume,
+                onSurroundingsCredit = {
+                    surroundings.playingId?.let { viewModel.surroundings.openDetail(it) }
+                },
+                onBrowseSurroundings = { destination = Destination.Main(Tab.Surroundings) },
+                modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+            )
 
             is Destination.Artwork -> ArtworkViewer(
                 artworkUri = current.uri,
@@ -817,48 +898,65 @@ private fun com.kamsiob.meedwell.core.model.Track.asTarget() = ActionTarget(
 )
 
 @Composable
-private fun TabBar(selected: Tab, onSelect: (Tab) -> Unit) {
+private fun TabBar(selected: Tab, onSelect: (Tab) -> Unit, playing: Boolean) {
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
 
     Column {
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+        // `.tabs { border-top: 1px solid var(--hair) }`. A full-width hairline,
+        // 1dp, not the 0.5dp it used to be.
+        Hairline()
         Row(
             Modifier
                 .fillMaxWidth()
                 .background(colors.background)
                 .navigationBarsPadding()
-                .padding(vertical = 6.dp),
+                // `.tabs { padding: 9px 4px 18px }`.
+                .padding(start = 4.dp, end = 4.dp, top = 9.dp, bottom = 18.dp),
         ) {
             Tab.entries.forEach { tab ->
                 val isSelected = tab == selected
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        // Comfortably past the 48dp touch target floor.
-                        .height(58.dp)
+                        .defaultMinSize(minHeight = 48.dp)
                         .clickable(role = Role.Tab) { onSelect(tab) }
                         .semantics {
-                            contentDescription = if (isSelected) "${tab.label}, showing" else tab.label
+                            contentDescription = when {
+                                isSelected -> "${tab.label}, showing"
+                                tab == Tab.Surroundings && playing -> "${tab.label}, a sound is playing"
+                                else -> tab.label
+                            }
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
                 ) {
-                    MeedwellIcon(
-                        icon = tab.icon,
-                        size = 21.dp,
-                        tint = if (isSelected) colors.primaryText else colors.tertiaryText,
-                    )
+                    Box(contentAlignment = Alignment.TopEnd) {
+                        MeedwellIcon(
+                            icon = tab.icon,
+                            // `.tabs .tb i { height: 17px }`.
+                            size = 17.dp,
+                            tint = if (isSelected) colors.primaryText else colors.tertiaryText,
+                        )
+                        // `.livedot`: a 4px moss dot beside the Surroundings
+                        // icon while something is playing, so the fact is
+                        // readable from anywhere in the app without a banner.
+                        if (tab == Tab.Surroundings && playing) {
+                            Box(
+                                Modifier
+                                    .padding(start = 3.dp)
+                                    .offset(x = 6.dp, y = (-1).dp)
+                                    .size(4.dp)
+                                    .clip(CircleShape)
+                                    .background(colors.moss)
+                            )
+                        }
+                    }
                     Text(
                         text = tab.label,
-                        // Its own token rather than a borrowed eyebrow with the
-                        // one property that defines it stripped out. A tab bar
-                        // in caps reads as shouting.
                         style = type.tabLabel,
-                        // Selection is carried by ink weight rather than by
-                        // color alone, so it survives a color-blind reader.
                         color = if (isSelected) colors.primaryText else colors.tertiaryText,
-                        modifier = Modifier.padding(top = 5.dp),
+                        // `.tabs .tb i { margin: 0 auto 4px }`.
+                        modifier = Modifier.padding(top = 4.dp),
                     )
                 }
             }
@@ -874,12 +972,12 @@ private fun Placeholder(title: String, body: String, onBack: (() -> Unit)? = nul
         Modifier.fillMaxSize().padding(26.dp),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
     ) {
-        Text(title, style = type.sectionHeading, color = colors.primaryText)
+        Text(title, style = type.h2, color = colors.primaryText)
         Text(body, style = type.body, color = colors.secondaryText, modifier = Modifier.padding(top = 10.dp))
         if (onBack != null) {
             Text(
                 "Back",
-                style = type.metadata,
+                style = type.meta,
                 color = colors.secondaryText,
                 modifier = Modifier
                     .padding(top = 20.dp)

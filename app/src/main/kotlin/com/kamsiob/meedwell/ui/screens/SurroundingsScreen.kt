@@ -38,16 +38,12 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kamsiob.meedwell.ui.components.AmbientGlow
-import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.IconButton
 import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
 
 /**
  * Surroundings: a field recording playing under whatever else is on.
@@ -88,7 +84,6 @@ fun SurroundingsScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Teal)
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.padding(horizontal = 22.dp)) {
                 IconButton(
@@ -100,10 +95,10 @@ fun SurroundingsScreen(
                     edge = IconEdge.Start,
                     modifier = Modifier.padding(top = 6.dp),
                 )
-                Text("Surroundings", style = type.largeHeading, color = colors.primaryText)
+                Text("Surroundings", style = type.h1, color = colors.primaryText)
                 Text(
                     state.voiceLine,
-                    style = type.voiceSmall,
+                    style = type.voice,
                     color = colors.secondaryText,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -132,7 +127,7 @@ fun SurroundingsScreen(
                                 item(key = "c-" + sound.id) {
                                     Text(
                                         header.uppercase(),
-                                        style = MeedwellTheme.typography.capsEyebrow,
+                                        style = MeedwellTheme.typography.section,
                                         color = MeedwellTheme.colors.tertiaryText,
                                         modifier = Modifier
                                             .padding(horizontal = 22.dp)
@@ -170,9 +165,9 @@ fun SurroundingsScreen(
                                     .fillMaxWidth()
                                     .padding(top = 16.dp)
                                     .defaultMinSize(minHeight = 48.dp)
-                                    .clip(RoundedCornerShape(Radius.panel))
+                                    .clip(RoundedCornerShape(Radius.cover))
                                     .clickable(role = Role.Button, onClick = onDownloadEverything)
-                                    .background(colors.surfacePanel)
+                                    .background(colors.background)
                                     .padding(horizontal = 14.dp, vertical = 12.dp)
                                     .semantics {
                                         contentDescription = "Get the whole library. ${state.everythingCostLine}"
@@ -199,13 +194,13 @@ fun SurroundingsScreen(
                         ) {
                             Text(
                                 if (state.checking) "Asking the library…" else "Check for new recordings",
-                                style = type.metadata,
+                                style = type.meta,
                                 color = colors.secondaryText,
                             )
                         }
                         Text(
                             state.storageLine,
-                            style = type.metadata,
+                            style = type.meta,
                             color = colors.tertiaryText,
                             modifier = Modifier.padding(top = 14.dp),
                         )
@@ -218,7 +213,7 @@ fun SurroundingsScreen(
                         ) {
                             Text(
                                 "Everyone whose recording is in here ›",
-                                style = type.metadata,
+                                style = type.meta,
                                 color = colors.secondaryText,
                             )
                         }
@@ -245,14 +240,14 @@ private fun ErrorPanel(message: String, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.panel))
-            .background(colors.surfacePanel)
+            .clip(RoundedCornerShape(Radius.cover))
+            .background(colors.background)
             .padding(16.dp),
     ) {
         Text("The library could not be read", style = MeedwellTheme.typography.rowTitle, color = colors.primaryText)
         Text(
             message,
-            style = MeedwellTheme.typography.metadata,
+            style = MeedwellTheme.typography.meta,
             color = colors.secondaryText,
             modifier = Modifier.padding(top = 8.dp),
         )
@@ -280,10 +275,10 @@ private fun GroupHeader(group: SurroundingsGroup, onToggle: () -> Unit, onDownlo
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(group.title, style = type.cardTitle, color = colors.primaryText)
+                Text(group.title, style = type.gridTitle, color = colors.primaryText)
                 Text(
                     group.subtitle,
-                    style = type.metadata,
+                    style = type.meta,
                     color = colors.tertiaryText,
                     modifier = Modifier.padding(top = 2.dp),
                 )
@@ -301,9 +296,9 @@ private fun GroupHeader(group: SurroundingsGroup, onToggle: () -> Unit, onDownlo
                 Modifier
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = 48.dp)
-                    .clip(RoundedCornerShape(Radius.panel))
+                    .clip(RoundedCornerShape(Radius.cover))
                     .clickable(role = Role.Button, onClick = onDownloadAll)
-                    .background(colors.surfacePanel)
+                    .background(colors.background)
                     .padding(horizontal = 14.dp, vertical = 12.dp)
                     .semantics { contentDescription = "Get all of ${group.title}. ${group.costLine}" },
                 verticalAlignment = Alignment.CenterVertically,
@@ -368,7 +363,7 @@ private fun SoundRow(
                     listOf(sound.durationLabel, sound.subtitle)
                         .filter { it.isNotBlank() }
                         .joinToString(" · "),
-                    style = type.metadata,
+                    style = type.meta,
                     color = colors.tertiaryText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -377,7 +372,7 @@ private fun SoundRow(
                 if (sound.failure != null) {
                     Text(
                         sound.failure,
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.primaryText.copy(alpha = 0.85f),
                         modifier = Modifier.padding(top = 4.dp),
                     )
@@ -418,7 +413,7 @@ private fun StateBadge(state: RowState, playing: Boolean, progress: Float) {
                             progressBarRangeInfo = ProgressBarRangeInfo(progress, 0f..1f)
                         }
                         .clip(CircleShape)
-                        .background(colors.surfacePanel),
+                        .background(colors.background),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
@@ -469,9 +464,8 @@ private fun PlayingBar(
         Modifier
             .padding(horizontal = 16.dp, vertical = 10.dp)
             .fillMaxWidth()
-            .meedwellShadow(Elevation.floating, RoundedCornerShape(Radius.floating))
-            .clip(RoundedCornerShape(Radius.floating))
-            .background(colors.surfacePanel)
+            .clip(RoundedCornerShape(Radius.cover))
+            .background(colors.background)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -492,7 +486,7 @@ private fun PlayingBar(
                 )
                 Text(
                     state.playingCredit,
-                    style = type.metadata,
+                    style = type.meta,
                     color = colors.tertiaryText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

@@ -25,10 +25,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
+import com.kamsiob.meedwell.ui.theme.sheetShadow
 
 /**
  * Screen 18 in the visual reference: the action sheet.
@@ -73,7 +72,7 @@ fun ActionSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-                .meedwellShadow(Elevation.sheet, RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
                 // Consumes taps so they do not fall through to the scrim.
@@ -108,7 +107,7 @@ fun ActionSheet(
                     )
                     Text(
                         target.subtitle,
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -152,7 +151,7 @@ private fun ActionRow(action: SheetAction, divider: Boolean, onClick: () -> Unit
             Column(Modifier.weight(1f).padding(start = 14.dp)) {
                 Text(action.label, style = type.rowTitle, color = colors.primaryText)
                 action.note?.let {
-                    Text(it, style = type.metadata, color = colors.tertiaryText, modifier = Modifier.padding(top = 2.dp))
+                    Text(it, style = type.meta, color = colors.tertiaryText, modifier = Modifier.padding(top = 2.dp))
                 }
             }
         }

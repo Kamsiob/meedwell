@@ -37,10 +37,10 @@ import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Artist
 import com.kamsiob.meedwell.core.model.Genre
 import com.kamsiob.meedwell.core.model.Provenance
-import com.kamsiob.meedwell.ui.components.AmbientGlow
 import com.kamsiob.meedwell.ui.components.CoverSquare
 import com.kamsiob.meedwell.ui.components.CoverThumb
-import com.kamsiob.meedwell.ui.components.GlowTone
+import com.kamsiob.meedwell.ui.components.DayLine
+import com.kamsiob.meedwell.ui.components.SectionHead
 import com.kamsiob.meedwell.ui.components.IconButton
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
@@ -51,7 +51,19 @@ import com.kamsiob.meedwell.ui.theme.InstrumentSerif
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
 /** Albums, Artists and Genres are three sibling first-class views of one shelf. */
-enum class ShelfView { Albums, Artists, Genres }
+/**
+ * The three views of the shelf.
+ *
+ * **Composers, not Artists.** The word is the whole positioning in one tab: it
+ * means everything to one listener and nothing to another, and this app is for
+ * the first one. **Shelves** is where Lists went when it left the tab bar, so
+ * the switcher carries all three ways of looking at the same records.
+ */
+enum class ShelfView(val label: String) {
+    Albums("Albums"),
+    Composers("Composers"),
+    Shelves("Shelves"),
+}
 
 /**
  * Screens 06 through 11 in the visual reference: the shelf.
@@ -92,107 +104,49 @@ fun ShelfScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier = modifier.fillMaxSize()) {
-        AmbientGlow(
-            tone = when (state.view) {
-                ShelfView.Albums -> GlowTone.Violet
-                ShelfView.Artists -> GlowTone.Teal
-                ShelfView.Genres -> GlowTone.Rose
-            }
-        )
-
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
 
-            // Heading and the voice line, which says what the shelf actually is
-            // rather than a count with no meaning.
+            // The header, from the grid: title and a labelled search pill on
+            // one line, then the day line, then the switcher, then the voice.
+            //
+            // The search pill is **fixed and never scrolls away**, and it is a
+            // labelled pill rather than a bare magnifier: the word is what
+            // makes it findable by somebody who does not already know the
+            // icon.
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
-                verticalAlignment = Alignment.Top,
+                modifier = Modifier.fillMaxWidth().padding(top = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text("Shelf", style = type.largeHeading, color = colors.primaryText)
-                    Text(
-                        text = state.voiceLine,
-                        style = type.voiceSmall,
-                        color = colors.secondaryText,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(
-                        icon = if (state.grid) MeedwellIcons.ListView else MeedwellIcons.Grid,
-                        contentDescription = if (state.grid) "Show the shelf as a list" else "Show the shelf as a grid",
-                        onClick = onToggleLayout,
-                    )
-                    IconButton(
-                        icon = MeedwellIcons.Search,
-                        contentDescription = "Search your shelf",
-                        onClick = onOpenSearch,
-                    )
-                }
+                Text("Shelf", style = type.h1, color = colors.primaryText)
+                Box(Modifier.weight(1f))
+                SearchPill(onClick = onOpenSearch)
             }
 
-            // The view switcher, with sort pushed to the end.
+            // The day line, with the copper sun at the real time of day.
+            DayLine(Modifier.padding(top = 9.dp))
+
+            // Albums, Composers, Shelves. Icon over label, and the selected one
+            // is carried by ink weight rather than by a filled pill.
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(21.dp),
             ) {
                 ShelfView.entries.forEach { view ->
                     ViewTab(
-                        label = view.name,
+                        view = view,
                         selected = state.view == view,
                         onClick = { onViewChange(view) },
                     )
                 }
-                Box(Modifier.weight(1f))
-                // Two different controls wearing the same slot.
-                //
-                // Sorting is a setting, so it takes a chevron and opens a
-                // sheet. A genre filter is a *state the shelf is in*, and the
-                // question it raises is "how do I get out", so it takes a
-                // dismiss cross, a hairline around it, and gets rid of itself
-                // on tap. Wearing a sort chevron while meaning "clear filter"
-                // was the version that would have shipped by accident.
-                Box(
-                    Modifier
-                        .defaultMinSize(minHeight = 48.dp)
-                        .height(48.dp)
-                        .clickable(role = Role.Button, onClick = onOpenSort)
-                        .semantics {
-                            contentDescription = if (state.filtering) {
-                                "Showing only ${state.sortLabel}. Tap to show everything again."
-                            } else {
-                                "Change how the shelf is sorted and filtered"
-                            }
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = if (state.filtering) {
-                            Modifier
-                                .border(1.dp, colors.hairline, CircleShape)
-                                .padding(start = 12.dp, end = 8.dp, top = 5.dp, bottom = 5.dp)
-                        } else {
-                            Modifier
-                        },
-                    ) {
-                        Text(
-                            state.sortLabel,
-                            style = type.sortLabel,
-                            color = if (state.filtering) colors.primaryText else colors.secondaryText,
-                        )
-                        MeedwellIcon(
-                            icon = if (state.filtering) MeedwellIcons.Close else MeedwellIcons.ChevronDown,
-                            size = 14.dp,
-                            tint = colors.tertiaryText,
-                            modifier = Modifier.padding(start = 5.dp),
-                        )
-                    }
-                }
             }
+
+            // One voice line per screen, and this is the Shelf's.
+            Text(
+                text = state.voiceLine,
+                style = type.voice,
+                color = colors.secondaryText,
+                modifier = Modifier.padding(top = 13.dp),
+            )
 
             when {
                 state.isEmpty -> ShelfEmpty(
@@ -216,7 +170,7 @@ fun ShelfScreen(
                     onAlbumLongClick = onAlbumLongClick,
                 )
 
-                state.view == ShelfView.Artists -> ArtistList(
+                state.view == ShelfView.Composers -> ArtistList(
                     artists = state.artists,
                     bottomInset = state.bottomInset,
                     onArtistClick = onArtistClick,
@@ -260,7 +214,7 @@ private fun ShelfEmpty(
                 "Point Meedwell at a folder with music in it and everything there joins the shelf. " +
                     "Nothing leaves this phone."
             },
-            style = type.metadata,
+            style = type.meta,
             color = colors.secondaryText,
             modifier = Modifier.padding(top = 10.dp, start = 12.dp, end = 12.dp),
         )
@@ -287,15 +241,17 @@ private fun AlbumGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(22.dp),
+        horizontalArrangement = Arrangement.spacedBy(13.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 14.dp, bottom = bottomInset),
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (newest != null) {
-            item(span = { GridItemSpan(maxLineSpan) }, key = "newest") {
-                NewestArrivalCard(newest, onClick = { onAlbumClick(newest) })
-            }
+        // `NEWLY SHELVED` as a section head with its staff. The grid opens the
+        // shelf this way; there is no hero card in it at all, and the one that
+        // was here was a rounded filled panel, which is the exact habit this
+        // correction removes.
+        item(span = { GridItemSpan(maxLineSpan) }, key = "head") {
+            SectionHead("Newly shelved", Modifier.padding(bottom = 12.dp))
         }
         items(albums, key = { it.id }) { album ->
             AlbumCard(album, onClick = { onAlbumClick(album) }, onLongClick = { onAlbumLongClick(album) })
@@ -303,50 +259,15 @@ private fun AlbumGrid(
     }
 }
 
-/**
- * The newest arrival card, at the top of the shelf.
+/*
+ * The newest arrival card is gone.
  *
- * The legibility law shows up here in a specific, checkable way: the complete
- * cover sits **beside** its caption, never underneath it. An earlier design put
- * words over the art, and that is exactly what the law retired.
+ * It was a rounded, filled panel with the cover inside it, which is the single
+ * habit that most made this app look like every other one. The grid puts a
+ * section head and a staff at the top of the shelf instead, and the newest
+ * record is simply the first one in the grid because the grid is sorted that
+ * way.
  */
-@Composable
-private fun NewestArrivalCard(album: Album, onClick: () -> Unit) {
-    val colors = MeedwellTheme.colors
-    val type = MeedwellTheme.typography
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(colors.surfacePanel)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(10.dp)
-            .semantics { contentDescription = "Newest on your shelf: ${album.name} by ${album.artist}" },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // The cover, whole, on the left. Words start past its edge.
-        CoverThumb(url = album.coverUrl, title = album.name, size = 82.dp)
-        Column(Modifier.weight(1f).padding(start = 14.dp)) {
-            Text("Newest on your shelf", style = type.voiceSmall, color = colors.secondaryText)
-            Text(
-                album.name,
-                style = type.rowTitle,
-                color = colors.primaryText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 3.dp),
-            )
-            Text(
-                album.artist,
-                style = type.metadata,
-                color = colors.tertiaryText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
 
 @Composable
 private fun AlbumCard(album: Album, onClick: () -> Unit, onLongClick: () -> Unit) {
@@ -363,13 +284,28 @@ private fun AlbumCard(album: Album, onClick: () -> Unit, onLongClick: () -> Unit
         CoverSquare(url = album.coverUrl, title = album.name, modifier = Modifier.fillMaxWidth())
         Text(
             text = album.name,
-            style = type.cardTitle,
+            style = type.gridTitle,
             color = colors.primaryText,
+            // Two lines, as the grid sets them. A record called "Nocturnes for
+            // a Small Room" is not a record called "Nocturnes for a Sm…".
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 7.dp),
+        )
+        // The plate line, set the way a printed plate line is set: small caps,
+        // letterspaced, tertiary. "Marren · piano" in the grid.
+        Text(
+            // `.plate { text-transform: uppercase }`. Compose has no such
+            // property, so the transform happens here. Doing it in the style
+            // is not possible; forgetting it is how a plate line ends up as
+            // ordinary small text with odd letterspacing.
+            text = album.artist.uppercase(),
+            style = type.plate,
+            color = colors.tertiaryText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 3.dp),
         )
-        ProvenanceLine(album)
     }
 }
 
@@ -389,28 +325,28 @@ private fun ProvenanceLine(album: Album, modifier: Modifier = Modifier) {
         when (val p = album.provenance) {
             Provenance.Yours -> Text(
                 text = "yours",
-                style = type.provenance.copy(fontStyle = FontStyle.Italic),
+                style = type.meta.copy(fontStyle = FontStyle.Italic),
                 color = colors.secondaryText,
             )
             is Provenance.PartlyHere -> Text(
                 // Honest about being partial rather than rounding up.
                 text = "${p.found} of ${p.total} here",
-                style = type.provenance.copy(fontStyle = FontStyle.Italic),
+                style = type.meta.copy(fontStyle = FontStyle.Italic),
                 color = colors.secondaryText,
             )
             Provenance.OnThisPhone -> Text(
                 text = "on this phone",
-                style = type.provenance.copy(fontStyle = FontStyle.Italic),
+                style = type.meta.copy(fontStyle = FontStyle.Italic),
                 color = colors.secondaryText,
             )
             Provenance.Streaming -> Unit
         }
         if (album.provenance != Provenance.Streaming) {
-            Text(" · ", style = type.metadata, color = colors.tertiaryText)
+            Text(" · ", style = type.meta, color = colors.tertiaryText)
         }
         Text(
             text = album.artist,
-            style = type.metadata,
+            style = type.meta,
             color = colors.tertiaryText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -458,7 +394,7 @@ private fun AlbumList(
                     )
                     Text(
                         text = album.rowSubtitle(),
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -516,7 +452,7 @@ private fun ArtistList(
                     Text(artist.name, style = type.rowTitle, color = colors.primaryText, maxLines = 1)
                     Text(
                         text = pluralAlbums(artist.albumCount),
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         modifier = Modifier.padding(top = 2.dp),
                     )
@@ -553,7 +489,7 @@ private fun GenreList(
                     Text(genre.name, style = type.rowTitle, color = colors.primaryText, maxLines = 1)
                     Text(
                         text = pluralAlbums(genre.albumCount),
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.tertiaryText,
                         modifier = Modifier.padding(top = 2.dp),
                     )
@@ -566,25 +502,72 @@ private fun GenreList(
 }
 
 @Composable
-private fun ViewTab(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun ViewTab(view: ShelfView, selected: Boolean, onClick: () -> Unit) {
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
-    Box(
+    val tint = if (selected) colors.primaryText else colors.tertiaryText
+
+    Column(
         modifier = Modifier
             .defaultMinSize(minHeight = 48.dp)
-            .height(48.dp)
             .clickable(role = Role.Tab, onClick = onClick)
-            .padding(end = 18.dp)
-            .semantics { if (selected) contentDescription = "$label, showing" },
-        contentAlignment = Alignment.Center,
+            .semantics {
+                contentDescription = if (selected) "${view.label}, showing" else view.label
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = label,
-            style = type.metadata,
-            // Selection is carried by weight and ink rather than by color
-            // alone, so it survives a color-blind reader and a screenshot.
-            color = if (selected) colors.primaryText else colors.tertiaryText,
+        MeedwellIcon(
+            icon = when (view) {
+                ShelfView.Albums -> MeedwellIcons.AlbumsView
+                ShelfView.Composers -> MeedwellIcons.Composers
+                // The same shelf-with-spines the tab bar uses, because it is
+                // the same idea: a shelf you put records on.
+                ShelfView.Shelves -> MeedwellIcons.TabShelf
+            },
+            size = 18.dp,
+            tint = tint,
         )
+        Text(
+            text = view.label,
+            style = type.tabLabel,
+            // Selection is carried by weight and ink rather than by a filled
+            // pill, because this design has no filled containers at all.
+            color = tint,
+            modifier = Modifier.padding(top = 3.dp),
+        )
+    }
+}
+
+/**
+ * The search control on the Shelf: a labelled pill, fixed at the top.
+ *
+ * ```
+ * .spill{...border:1px solid var(--hair-2);border-radius:999px;padding:6px 12px;}
+ * ```
+ *
+ * An outline rather than a fill, and it carries the word "Search" rather than
+ * only a magnifier. It never scrolls away.
+ */
+@Composable
+private fun SearchPill(onClick: () -> Unit) {
+    val colors = MeedwellTheme.colors
+    Row(
+        Modifier
+            .defaultMinSize(minHeight = 48.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = "Search your shelf" },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            Modifier
+                .border(1.dp, colors.hairline2, CircleShape)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            MeedwellIcon(MeedwellIcons.Search, size = 13.dp, tint = colors.primaryText)
+            Text("Search", style = MeedwellTheme.typography.chip, color = colors.primaryText)
+        }
     }
 }
 
@@ -624,15 +607,23 @@ data class ShelfState(
     val syncing: Boolean = false,
     /** Whether the mini player is on screen, which changes how much room the list needs. */
     val playerVisible: Boolean = false,
+    /**
+     * How much room the floating Surroundings card needs.
+     *
+     * Passed in rather than worked out here, because the card can expand and
+     * collapse while the shelf is untouched, and the last row has to stay
+     * reachable in every one of those states.
+     */
+    val cardRoom: androidx.compose.ui.unit.Dp = 0.dp,
 ) {
     val bottomInset: androidx.compose.ui.unit.Dp
-        get() = if (playerVisible) BottomInsetPlaying else BottomInsetIdle
+        get() = (if (playerVisible) BottomInsetPlaying else BottomInsetIdle) + cardRoom
 
     val isEmpty: Boolean
         get() = when (view) {
             ShelfView.Albums -> albums.isEmpty()
-            ShelfView.Artists -> artists.isEmpty()
-            ShelfView.Genres -> genres.isEmpty()
+            ShelfView.Composers -> artists.isEmpty()
+            ShelfView.Shelves -> genres.isEmpty()
         }
 
     /**
@@ -655,14 +646,14 @@ data class ShelfState(
      */
     val voiceLine: String
         get() = when (view) {
-            ShelfView.Artists -> when (artists.size) {
+            ShelfView.Composers -> when (artists.size) {
                 0 -> "No names yet"
                 1 -> "One name behind everything here"
                 // Both numbers spelled or both numerals. "Two names behind 3
                 // records" mixes registers in one sentence and reads as careless.
                 else -> "${spelled(artists.size)} names behind ${spelled(albumCount).lowercase()} records"
             }
-            ShelfView.Genres -> when (genres.size) {
+            ShelfView.Shelves -> when (genres.size) {
                 0 -> "Nothing here carries a genre tag"
                 1 -> "One tag, so far"
                 else -> "Every tag Bandcamp knows your records by"

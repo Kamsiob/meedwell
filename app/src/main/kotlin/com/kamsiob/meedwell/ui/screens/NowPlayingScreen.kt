@@ -164,10 +164,10 @@ fun NowPlayingScreen(
             Box(Modifier.weight(1f))
 
             Column(Modifier.padding(bottom = 26.dp)) {
-                Text("From the shelf", style = type.voiceSmall, color = Color.White.copy(alpha = 0.74f))
+                Text("From the shelf", style = type.voice, color = Color.White.copy(alpha = 0.74f))
                 Text(
                     text = state.title,
-                    style = type.sectionHeading,
+                    style = type.h2,
                     color = Color.White,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -184,7 +184,7 @@ fun NowPlayingScreen(
                 // MP3 V0, so nothing here may imply more.
                 Text(
                     text = state.qualityLine.uppercase(),
-                    style = type.capsEyebrow,
+                    style = type.section,
                     color = Color.White.copy(alpha = 0.58f),
                     modifier = Modifier.padding(top = 12.dp),
                 )
@@ -210,12 +210,12 @@ fun NowPlayingScreen(
                 ) {
                     Text(
                         formatDuration(state.positionMs / 1000),
-                        style = type.metadata,
+                        style = type.meta,
                         color = Color.White.copy(alpha = 0.58f),
                     )
                     Text(
                         "-" + formatDuration(((state.durationMs - state.positionMs) / 1000).coerceAtLeast(0)),
-                        style = type.metadata,
+                        style = type.meta,
                         color = Color.White.copy(alpha = 0.58f),
                     )
                 }

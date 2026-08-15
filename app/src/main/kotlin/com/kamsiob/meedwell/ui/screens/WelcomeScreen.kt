@@ -15,8 +15,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.R
-import com.kamsiob.meedwell.ui.components.AmbientGlow
-import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.MeedwellMark
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.TextButtonRow
@@ -40,7 +38,6 @@ fun WelcomeScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier = modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Ember)
 
         Column(
             modifier = Modifier
@@ -57,7 +54,7 @@ fun WelcomeScreen(
 
             Text(
                 text = stringResource(R.string.app_name),
-                style = type.largeHeading,
+                style = type.h1,
                 color = colors.primaryText,
             )
             Text(
@@ -90,7 +87,7 @@ fun WelcomeScreen(
 
             Text(
                 text = stringResource(R.string.welcome_footer),
-                style = type.capsEyebrow,
+                style = type.section,
                 color = colors.primaryText.copy(alpha = 0.52f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier

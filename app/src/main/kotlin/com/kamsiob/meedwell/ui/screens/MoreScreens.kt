@@ -24,8 +24,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kamsiob.meedwell.ui.components.AmbientGlow
-import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.MeedwellMark
 import com.kamsiob.meedwell.ui.components.SupportButton
 import com.kamsiob.meedwell.ui.components.IconButton
@@ -55,14 +53,13 @@ fun MoreScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Ember)
         Column(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 22.dp),
         ) {
-            Text("More", style = type.largeHeading, color = colors.primaryText, modifier = Modifier.padding(top = 18.dp))
+            Text("More", style = type.h1, color = colors.primaryText, modifier = Modifier.padding(top = 18.dp))
 
             SettingRow("History", "Everything you have played, on this phone") { onOpen(MoreDestination.History) }
             SettingRow("Forgotten shelf", "Bought, loved, and quietly waiting") { onOpen(MoreDestination.Forgotten) }
@@ -153,7 +150,7 @@ fun WhatsAheadScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val type = MeedwellTheme.typography
 
     ScreenScaffold(title = "What's ahead", voice = null, onBack = onBack, modifier = modifier) {
-        Text("BEING CONSIDERED", style = type.capsEyebrow, color = colors.secondaryText, modifier = Modifier.padding(top = 8.dp))
+        Text("BEING CONSIDERED", style = type.section, color = colors.secondaryText, modifier = Modifier.padding(top = 8.dp))
 
         QuestionAnswer(
             "Searching all of Bandcamp, inside Meedwell",
@@ -195,7 +192,7 @@ fun WhatsAheadScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 "the real reason, rather than a queue this is waiting in.",
         )
 
-        Text("NOT PLANNED", style = type.capsEyebrow, color = colors.secondaryText, modifier = Modifier.padding(top = 22.dp))
+        Text("NOT PLANNED", style = type.section, color = colors.secondaryText, modifier = Modifier.padding(top = 22.dp))
         QuestionAnswer("Accounts, ads, telemetry, subscriptions", "Not gaps. Decisions.")
         QuestionAnswer(
             "A store inside the app",
@@ -208,7 +205,7 @@ fun WhatsAheadScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
         Text(
             "One person builds this. Everything gets read.",
-            style = type.voiceSmall,
+            style = type.voice,
             color = colors.secondaryText,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 30.dp),
@@ -234,14 +231,14 @@ fun AboutScreen(
             MeedwellMark(size = 52.dp, contentDescription = null)
             Text(
                 "Meedwell",
-                style = type.largeHeading,
+                style = type.h1,
                 color = colors.primaryText,
                 modifier = Modifier.padding(start = 14.dp),
             )
         }
         Text(
             "v$versionName · AGPLv3 · by Kamsiob".uppercase(),
-            style = type.capsEyebrow,
+            style = type.section,
             color = colors.secondaryText,
             modifier = Modifier.padding(top = 10.dp),
         )
@@ -260,7 +257,7 @@ fun AboutScreen(
 
         Text(
             "Not affiliated with or endorsed by Bandcamp".uppercase(),
-            style = type.capsEyebrow,
+            style = type.section,
             color = colors.secondaryText,
             modifier = Modifier.padding(top = 14.dp),
         )
@@ -270,7 +267,7 @@ fun AboutScreen(
             "Free no matter what. Nothing held back, nothing unlocked later. Built and carried by one " +
                 "person. If software made this way matters to you, there's a place to stand behind it. " +
                 "Either way, it's yours.",
-            style = type.metadata,
+            style = type.meta,
             color = colors.secondaryText,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().padding(top = 26.dp),
@@ -312,10 +309,10 @@ private fun ScreenScaffold(
             modifier = Modifier.padding(top = 6.dp),
         )
         if (title != null) {
-            Text(title, style = type.largeHeading, color = colors.primaryText)
+            Text(title, style = type.h1, color = colors.primaryText)
         }
         if (voice != null) {
-            Text(voice, style = type.voiceSmall, color = colors.secondaryText, modifier = Modifier.padding(top = 8.dp))
+            Text(voice, style = type.voice, color = colors.secondaryText, modifier = Modifier.padding(top = 8.dp))
         }
         content()
         Box(Modifier.height(30.dp))
@@ -328,7 +325,7 @@ private fun QuestionAnswer(question: String, answer: String) {
     val type = MeedwellTheme.typography
     Column(Modifier.fillMaxWidth().padding(top = 16.dp)) {
         Text(question, style = type.rowTitle, color = colors.primaryText)
-        Text(answer, style = type.metadata, color = colors.secondaryText, modifier = Modifier.padding(top = 4.dp))
+        Text(answer, style = type.meta, color = colors.secondaryText, modifier = Modifier.padding(top = 4.dp))
         Box(Modifier.fillMaxWidth().height(0.5.dp).padding(top = 14.dp).background(colors.hairline))
     }
 }
@@ -357,7 +354,7 @@ fun SettingRow(
             Column(Modifier.weight(1f)) {
                 Text(title, style = type.rowTitle, color = colors.primaryText)
                 if (subtitle != null) {
-                    Text(subtitle, style = type.metadata, color = colors.tertiaryText, modifier = Modifier.padding(top = 3.dp))
+                    Text(subtitle, style = type.meta, color = colors.tertiaryText, modifier = Modifier.padding(top = 3.dp))
                 }
             }
             if (trailing == CHEVRON) {
@@ -369,7 +366,7 @@ fun SettingRow(
                 )
             } else if (trailing != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 14.dp)) {
-                    Text(trailing.removeSuffix(" ›"), style = type.metadata, color = colors.tertiaryText)
+                    Text(trailing.removeSuffix(" ›"), style = type.meta, color = colors.tertiaryText)
                     if (trailing.endsWith(" ›")) {
                         MeedwellIcon(
                             icon = MeedwellIcons.ChevronRight,
@@ -394,6 +391,6 @@ private fun LinkRow(label: String, onClick: () -> Unit) {
             .clickable(role = Role.Button, onClick = onClick)
             .padding(vertical = 16.dp),
     ) {
-        Text(label, style = MeedwellTheme.typography.provenance, color = MeedwellTheme.colors.primaryText)
+        Text(label, style = MeedwellTheme.typography.meta, color = MeedwellTheme.colors.primaryText)
     }
 }

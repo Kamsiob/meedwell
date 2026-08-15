@@ -21,10 +21,16 @@ class SettingsStore(context: Context) {
 
     private val prefs = context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
-    /** Dark is the default, per `DESIGN.md` section 2. */
+    /**
+     * **Daylight is the default.** The grid opens on warm paper.
+     *
+     * The fallback also catches the old stored values, `Dark` and `Light`, which
+     * no longer parse. Anyone upgrading lands on Daylight rather than crashing
+     * or silently getting the alternate.
+     */
     var theme: ThemeChoice
         get() = runCatching { ThemeChoice.valueOf(prefs.getString(KEY_THEME, null) ?: "") }
-            .getOrDefault(ThemeChoice.Dark)
+            .getOrDefault(ThemeChoice.Daylight)
         set(value) = prefs.edit { putString(KEY_THEME, value.name) }
 
     var shelfGrid: Boolean

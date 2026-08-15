@@ -27,10 +27,8 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
 import kotlinx.coroutines.delay
 
 /**
@@ -85,9 +83,8 @@ fun Notice(
                     .padding(bottom = liftedBy)
                     .padding(horizontal = 20.dp, vertical = 18.dp)
                     .fillMaxWidth()
-                    .meedwellShadow(Elevation.floating, RoundedCornerShape(Radius.floating))
-                    .clip(RoundedCornerShape(Radius.floating))
-                    .background(colors.surfacePanel)
+                    .clip(RoundedCornerShape(Radius.cover))
+                    .background(colors.background)
                     .clickable(role = Role.Button, onClick = onDismiss)
                     .defaultMinSize(minHeight = 48.dp)
                     .padding(horizontal = 18.dp, vertical = 14.dp)
@@ -99,7 +96,7 @@ fun Notice(
             ) {
                 Text(
                     text.orEmpty(),
-                    style = MeedwellTheme.typography.metadata,
+                    style = MeedwellTheme.typography.meta,
                     color = colors.primaryText,
                 )
             }

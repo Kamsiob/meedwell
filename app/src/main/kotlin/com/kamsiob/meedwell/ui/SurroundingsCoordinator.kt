@@ -7,6 +7,8 @@ import com.kamsiob.meedwell.core.surroundings.Downloads
 import com.kamsiob.meedwell.core.surroundings.SurroundingsSound
 import com.kamsiob.meedwell.data.SurroundingsDownloader
 import com.kamsiob.meedwell.playback.SurroundingsPlayer
+import com.kamsiob.meedwell.ui.components.SurroundingsCardItem
+import com.kamsiob.meedwell.ui.components.SurroundingsCardState
 import com.kamsiob.meedwell.ui.screens.RowState
 import com.kamsiob.meedwell.ui.screens.SurroundingsGroup
 import com.kamsiob.meedwell.ui.screens.SurroundingsRow
@@ -46,6 +48,65 @@ class SurroundingsCoordinator(
 
     private val _state = MutableStateFlow(SurroundingsUiState())
     val state: StateFlow<SurroundingsUiState> = _state.asStateFlow()
+
+    /**
+     * The floating card's own state.
+     *
+     * Whether it is expanded lives here rather than in the interface, because
+     * the card outlives any one screen: it shows on Shelf, Search and More, and
+     * an expanded card should not collapse because somebody changed tab.
+     */
+    private var cardExpanded = false
+
+    val card: StateFlow<SurroundingsCardState> get() = _card
+    private val _card = MutableStateFlow(SurroundingsCardState())
+
+    fun toggleCard() {
+        cardExpanded = !cardExpanded
+        rebuildCard()
+    }
+
+    /**
+     * The card's contents: four recordings at most, already on the phone, most
+     * recently used first with the playing one at the top.
+     *
+     * Deliberately not a browser. Anything longer belongs on the Surroundings
+     * tab, which is what "All recordings" opens.
+     */
+    private fun rebuildCard() {
+        val playing = _state.value
+        val sound = sounds.firstOrNull { it.id == playing.playingId }
+        if (sound == null) {
+            _card.value = SurroundingsCardState()
+            return
+        }
+        val present = store.presentIds(sounds)
+        val others = (listOf(sound.id) + recentlyUsed.filter { it != sound.id })
+            .distinct()
+            .mapNotNull { id -> sounds.firstOrNull { it.id == id && it.id in present } }
+            .take(4)
+            .map {
+                SurroundingsCardItem(
+                    id = it.id,
+                    title = rowTitle(it),
+                    duration = Downloads.humanDuration(it.durationSeconds),
+                    playing = it.id == sound.id,
+                )
+            }
+        _card.value = SurroundingsCardState(
+            // It exists only while a sound is playing. A paused bed is still a
+            // bed; a stopped one is not.
+            visible = playing.playingId != null,
+            expanded = cardExpanded,
+            soundId = sound.id,
+            title = rowTitle(sound),
+            volume = container.settings.surroundingsVolume,
+            others = others,
+        )
+    }
+
+    /** Most recently played first, so the card's short list is the useful one. */
+    private val recentlyUsed = ArrayDeque<String>()
 
     /** The recording whose credit sheet is open, if any. */
     private val _detail = MutableStateFlow<SurroundingsDetail?>(null)
@@ -130,6 +191,8 @@ class SurroundingsCoordinator(
         } else {
             player.play(sound, store.fileFor(sound))
         }
+        recentlyUsed.remove(sound.id)
+        recentlyUsed.addFirst(sound.id)
         _state.value = _state.value.copy(
             playingId = sound.id,
             playingTitle = sound.displayName,
@@ -140,6 +203,7 @@ class SurroundingsCoordinator(
             isPlaying = true,
             volume = container.settings.surroundingsVolume,
         )
+        rebuildCard()
     }
 
     fun pause() {
@@ -150,11 +214,14 @@ class SurroundingsCoordinator(
     fun stop() {
         player.stop()
         _state.value = _state.value.copy(playingId = null, isPlaying = false, playingTitle = "", playingCredit = "")
+        cardExpanded = false
+        rebuildCard()
     }
 
     fun setVolume(volume: Float) {
         player.setVolume(volume)
         _state.value = _state.value.copy(volume = volume)
+        rebuildCard()
     }
 
     // ---------- Getting ----------

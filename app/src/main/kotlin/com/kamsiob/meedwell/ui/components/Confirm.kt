@@ -22,10 +22,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
+import com.kamsiob.meedwell.ui.theme.sheetShadow
 
 /**
  * A confirmation for something that cannot be undone.
@@ -62,14 +61,14 @@ fun ConfirmSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-                .meedwellShadow(Elevation.sheet, RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
                 .clickable(enabled = false) {}
                 .navigationBarsPadding()
                 .padding(horizontal = 26.dp, vertical = 22.dp),
         ) {
-            Text(title, style = type.sectionHeading, color = colors.primaryText)
+            Text(title, style = type.h2, color = colors.primaryText)
             Text(
                 body,
                 style = type.body,

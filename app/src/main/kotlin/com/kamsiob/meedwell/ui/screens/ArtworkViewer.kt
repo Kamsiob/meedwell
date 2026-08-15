@@ -102,7 +102,7 @@ fun ArtworkViewer(
             if (subtitle.isNotBlank()) {
                 Text(
                     text = subtitle,
-                    style = MeedwellTheme.typography.metadata,
+                    style = MeedwellTheme.typography.meta,
                     color = Color.White.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 3.dp, start = 24.dp, end = 24.dp),
@@ -124,7 +124,7 @@ fun ArtworkViewer(
 
         Text(
             text = "Pinch to zoom · tap to close",
-            style = MeedwellTheme.typography.capsEyebrow,
+            style = MeedwellTheme.typography.section,
             color = Color.White.copy(alpha = 0.4f),
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp),
         )

@@ -9,10 +9,20 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 
-/** Theme choice. **Dark is the default**, per `DESIGN.md` section 2. */
-enum class ThemeChoice { Dark, Light, System }
+/**
+ * Theme choice. **Daylight is the default.**
+ *
+ * The grid is unambiguous: the app opens on warm paper. Dark is the alternate
+ * and it is called Lamplight, because it is a deep pine evening ground rather
+ * than a neutral night mode.
+ *
+ * The names are the ones the design uses. `Dark` and `Light` were generic
+ * words for a generic result, and an enum that says `Daylight` is harder to
+ * quietly default the wrong way round.
+ */
+enum class ThemeChoice { Daylight, Lamplight, System }
 
-val LocalMeedwellColors = staticCompositionLocalOf { DarkColors }
+val LocalMeedwellColors = staticCompositionLocalOf { DaylightColors }
 val LocalMeedwellTypography = staticCompositionLocalOf { MeedwellTypography() }
 
 /**
@@ -39,22 +49,28 @@ object MeedwellTheme {
 /**
  * A fully custom theme over Material 3, rather than Material 3 with a tint.
  *
- * Dynamic color is deliberately not used. The whole design rests on artwork
- * being the only color that matters and on gold meaning exactly one thing;
- * letting the wallpaper repaint the interface would break both.
+ * Dynamic color is deliberately not used, and neither is any Material surface
+ * elevation. The design has exactly one working accent and carries all of its
+ * structure in hairlines and whitespace, so a wallpaper-derived palette or a
+ * tonal elevation overlay would both put color and fills where the design has
+ * none.
+ *
+ * Material's `surface` is therefore set equal to the ground rather than to a
+ * lighter tone, and `surfaceVariant` too: if a Material component is ever
+ * pulled in, it renders flat rather than as a card.
  */
 @Composable
 fun MeedwellTheme(
-    themeChoice: ThemeChoice = ThemeChoice.Dark,
+    themeChoice: ThemeChoice = ThemeChoice.Daylight,
     reducedMotion: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val dark = when (themeChoice) {
-        ThemeChoice.Dark -> true
-        ThemeChoice.Light -> false
+        ThemeChoice.Lamplight -> true
+        ThemeChoice.Daylight -> false
         ThemeChoice.System -> isSystemInDarkTheme()
     }
-    val colors = if (dark) DarkColors else LightColors
+    val colors = if (dark) LamplightColors else DaylightColors
 
     // Material's scheme is filled in from Meedwell's own tokens so that any
     // Material component pulled in later lands inside the design rather than
@@ -67,8 +83,15 @@ fun MeedwellTheme(
             onSurface = colors.primaryText,
             onSurfaceVariant = colors.secondaryText,
             outline = colors.hairline,
-            primary = colors.primaryText,
+            primary = colors.moss,
             onPrimary = colors.background,
+            // Equal to the ground, so nothing Material draws can become a card.
+            surfaceVariant = colors.background,
+            surfaceContainer = colors.background,
+            surfaceContainerHigh = colors.background,
+            surfaceContainerHighest = colors.background,
+            surfaceContainerLow = colors.background,
+            surfaceContainerLowest = colors.background,
         )
     } else {
         lightColorScheme(
@@ -78,8 +101,14 @@ fun MeedwellTheme(
             onSurface = colors.primaryText,
             onSurfaceVariant = colors.secondaryText,
             outline = colors.hairline,
-            primary = colors.primaryText,
+            primary = colors.moss,
             onPrimary = colors.background,
+            surfaceVariant = colors.background,
+            surfaceContainer = colors.background,
+            surfaceContainerHigh = colors.background,
+            surfaceContainerHighest = colors.background,
+            surfaceContainerLow = colors.background,
+            surfaceContainerLowest = colors.background,
         )
     }
 

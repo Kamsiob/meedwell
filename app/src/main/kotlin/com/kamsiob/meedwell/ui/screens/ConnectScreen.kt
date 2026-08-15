@@ -39,8 +39,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.R
-import com.kamsiob.meedwell.ui.components.AmbientGlow
-import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.TextButtonRow
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -73,7 +71,6 @@ fun ConnectScreen(
     var revealPassword by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Violet)
 
         Column(
             modifier = Modifier
@@ -83,19 +80,19 @@ fun ConnectScreen(
         ) {
             Text(
                 text = "Connect your collection",
-                style = type.sectionHeading,
+                style = type.h2,
                 color = colors.primaryText,
                 modifier = Modifier.padding(top = 12.dp),
             )
             Text(
                 text = "Bandcamp gives you three lines. Paste them in.",
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 10.dp),
             )
             Text(
                 text = "Find them under Fan Settings, then Subsonic, on bandcamp.com.",
-                style = type.metadata,
+                style = type.meta,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 14.dp),
             )
@@ -139,7 +136,7 @@ fun ConnectScreen(
 
             Text(
                 text = "Stored only on this phone, encrypted. Meedwell talks to one server, Bandcamp's, and no one else.",
-                style = type.metadata,
+                style = type.meta,
                 color = colors.tertiaryText,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
             )
@@ -195,13 +192,13 @@ private fun ConnectError(error: ConnectError, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(colors.surfacePanel)
+            .background(colors.background)
             .padding(14.dp),
     ) {
         Text(headline, style = type.rowTitle, color = colors.primaryText)
         Text(
             detail,
-            style = type.metadata,
+            style = type.meta,
             color = colors.secondaryText,
             modifier = Modifier.padding(top = 6.dp),
         )
@@ -226,7 +223,7 @@ private fun CredentialField(
     Column(modifier = modifier.fillMaxWidth().padding(top = 14.dp)) {
         Text(
             text = label.uppercase(),
-            style = type.capsEyebrow,
+            style = type.section,
             color = colors.secondaryText,
         )
         Row(
@@ -291,7 +288,7 @@ private fun CredentialField(
                 ) {
                     Text(
                         text = if (revealed) "Hide" else "Show",
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.secondaryText,
                     )
                 }
@@ -309,7 +306,7 @@ private fun CredentialField(
                         .semantics { contentDescription = "Paste into $label" },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("Paste", style = type.metadata, color = colors.primaryText)
+                    Text("Paste", style = type.meta, color = colors.primaryText)
                 }
             }
         }

@@ -15,8 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.kamsiob.meedwell.ui.components.AmbientGlow
-import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.IconButton
 import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
@@ -54,7 +52,6 @@ fun ExportScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Violet)
         Column(
             Modifier
                 .fillMaxSize()
@@ -70,10 +67,10 @@ fun ExportScreen(
                 edge = IconEdge.Start,
                 modifier = Modifier.padding(top = 6.dp),
             )
-            Text("Export and restore", style = type.largeHeading, color = colors.primaryText)
+            Text("Export and restore", style = type.h1, color = colors.primaryText)
             Text(
                 state.lastBackupLine,
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -132,7 +129,7 @@ fun ExportScreen(
 private fun Section(title: String) {
     Text(
         title,
-        style = MeedwellTheme.typography.capsEyebrow,
+        style = MeedwellTheme.typography.section,
         color = MeedwellTheme.colors.secondaryText,
         modifier = Modifier.padding(top = 26.dp, bottom = 6.dp),
     )
@@ -162,8 +159,8 @@ private fun ResultPanel(result: String) {
         Modifier
             .fillMaxWidth()
             .padding(top = 20.dp)
-            .clip(RoundedCornerShape(Radius.panel))
-            .background(colors.surfacePanel)
+            .clip(RoundedCornerShape(Radius.cover))
+            .background(colors.background)
             .padding(16.dp),
     ) {
         Text(result, style = MeedwellTheme.typography.body, color = colors.primaryText)

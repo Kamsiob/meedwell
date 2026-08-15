@@ -36,7 +36,7 @@ import kotlin.math.min
 @Composable
 fun rememberWashColor(artworkUri: String?): State<Color> {
     val context = LocalContext.current
-    val fallback = MeedwellTheme.colors.surfacePanel
+    val fallback = MeedwellTheme.colors.background
     val washState = remember { mutableStateOf(fallback) }
 
     LaunchedEffect(artworkUri) {

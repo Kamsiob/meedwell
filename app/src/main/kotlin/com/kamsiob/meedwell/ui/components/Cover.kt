@@ -30,10 +30,8 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import androidx.compose.ui.platform.LocalContext
 import com.kamsiob.meedwell.ui.theme.InstrumentSerif
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
 
 /**
  * Album art, shown whole and never written on.
@@ -53,7 +51,6 @@ fun Cover(
     title: String,
     modifier: Modifier = Modifier,
     cornerRadius: Dp = Radius.cover,
-    elevation: Dp = Elevation.cover,
     contentDescription: String? = null,
 ) {
     val colors = MeedwellTheme.colors
@@ -65,7 +62,6 @@ fun Cover(
             // Shadow before clip, always. Clipping first casts the shadow away
             // and produces nothing, silently, which is how the app shipped with
             // no shadows at all.
-            .meedwellShadow(elevation, shape)
             .clip(shape)
             .border(0.5.dp, colors.hairline, shape)
             .semantics {
@@ -115,7 +111,7 @@ fun MissingCover(
 ) {
     val colors = MeedwellTheme.colors
     BoxWithConstraints(
-        modifier = modifier.background(colors.surfacePanel),
+        modifier = modifier.background(colors.background),
         contentAlignment = Alignment.Center,
     ) {
         // The letters scale with the tile. A fixed size nearly filled a 48dp
@@ -162,8 +158,7 @@ fun CoverThumb(
     Cover(
         url = url,
         title = title,
-        cornerRadius = Radius.thumb,
-        elevation = Elevation.thumb,
+        cornerRadius = Radius.cover,
         modifier = modifier.size(size),
     )
 }
@@ -179,7 +174,6 @@ fun CoverSquare(
         url = url,
         title = title,
         cornerRadius = Radius.cover,
-        elevation = Elevation.cover,
         modifier = modifier.aspectRatio(1f),
     )
 }

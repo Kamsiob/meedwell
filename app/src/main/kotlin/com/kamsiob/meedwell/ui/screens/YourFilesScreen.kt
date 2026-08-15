@@ -26,9 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Provenance
 import com.kamsiob.meedwell.data.db.WatchedFolderEntity
-import com.kamsiob.meedwell.ui.components.AmbientGlow
 import com.kamsiob.meedwell.ui.components.CoverThumb
-import com.kamsiob.meedwell.ui.components.GlowTone
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.TextButtonRow
 import com.kamsiob.meedwell.ui.components.IconButton
@@ -64,7 +62,6 @@ fun YourFilesScreen(
     val type = MeedwellTheme.typography
 
     Box(modifier.fillMaxSize()) {
-        AmbientGlow(tone = GlowTone.Ember)
         Column(
             Modifier
                 .fillMaxSize()
@@ -81,10 +78,10 @@ fun YourFilesScreen(
                 modifier = Modifier.padding(top = 6.dp),
             )
 
-            Text("Your files", style = type.largeHeading, color = colors.primaryText)
+            Text("Your files", style = type.h1, color = colors.primaryText)
             Text(
                 text = state.voiceLine,
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -96,14 +93,14 @@ fun YourFilesScreen(
                     .fillMaxWidth()
                     .padding(top = 16.dp)
                     .clip(RoundedCornerShape(13.dp))
-                    .background(colors.surfacePanel)
+                    .background(colors.background)
                     .padding(14.dp),
             ) {
                 Text(
                     "Bandcamp's API streams your collection but does not hand over the files. So Meedwell " +
                         "doesn't pretend to: download them from Bandcamp the way you always have, point " +
                         "Meedwell at the folder, and they join the shelf as what they are, files you own.",
-                    style = type.metadata,
+                    style = type.meta,
                     color = colors.secondaryText,
                 )
             }
@@ -118,7 +115,7 @@ fun YourFilesScreen(
 
             Text(
                 "WATCHED FOLDERS",
-                style = type.capsEyebrow,
+                style = type.section,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 24.dp),
             )
@@ -127,7 +124,7 @@ fun YourFilesScreen(
                 Text(
                     "None yet. Point Meedwell at wherever your music lives and everything there joins the " +
                         "shelf. Nothing leaves this phone.",
-                    style = type.metadata,
+                    style = type.meta,
                     color = colors.tertiaryText,
                     modifier = Modifier.padding(top = 10.dp),
                 )
@@ -145,7 +142,7 @@ fun YourFilesScreen(
                                 Text(folder.displayName, style = type.rowTitle, color = colors.primaryText)
                                 Text(
                                     text = folder.subtitle(),
-                                    style = type.metadata,
+                                    style = type.meta,
                                     color = colors.tertiaryText,
                                     modifier = Modifier.padding(top = 3.dp),
                                 )
@@ -159,7 +156,7 @@ fun YourFilesScreen(
                                     .padding(horizontal = 10.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text("Remove", style = type.metadata, color = colors.secondaryText)
+                                Text("Remove", style = type.meta, color = colors.secondaryText)
                             }
                         }
                         Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
@@ -185,7 +182,7 @@ fun YourFilesScreen(
             if (state.matched.isNotEmpty()) {
                 Text(
                     "MATCHED TO YOUR SHELF",
-                    style = type.capsEyebrow,
+                    style = type.section,
                     color = colors.secondaryText,
                     modifier = Modifier.padding(top = 22.dp),
                 )
@@ -211,7 +208,7 @@ fun YourFilesScreen(
                                         Provenance.OnThisPhone -> "On this phone"
                                         Provenance.Streaming -> "Streaming"
                                     },
-                                    style = type.metadata,
+                                    style = type.meta,
                                     color = colors.tertiaryText,
                                     modifier = Modifier.padding(top = 3.dp),
                                 )
@@ -225,7 +222,7 @@ fun YourFilesScreen(
             state.lastResult?.let { result ->
                 Text(
                     text = result,
-                    style = type.metadata,
+                    style = type.meta,
                     color = colors.tertiaryText,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
@@ -235,7 +232,7 @@ fun YourFilesScreen(
             Text(
                 "Same promise either way: plain files, any player can read them, they outlive this app. " +
                     "Only the way they arrive changes.",
-                style = type.metadata,
+                style = type.meta,
                 color = colors.tertiaryText,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 34.dp),

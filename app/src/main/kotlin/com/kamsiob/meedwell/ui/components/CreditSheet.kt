@@ -26,10 +26,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.surroundings.CreditBlock
-import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 import com.kamsiob.meedwell.ui.theme.Radius
-import com.kamsiob.meedwell.ui.theme.meedwellShadow
+import com.kamsiob.meedwell.ui.theme.sheetShadow
 
 /**
  * Who made one recording, under what terms.
@@ -69,7 +68,7 @@ fun CreditSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-                .meedwellShadow(Elevation.sheet, RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
                 .clickable(enabled = false) {}
@@ -93,7 +92,7 @@ fun CreditSheet(
             // set as a heading looks like the app failed to load something.
             Text(
                 title,
-                style = type.sectionHeading,
+                style = type.h2,
                 color = colors.primaryText,
                 modifier = Modifier.padding(top = 18.dp),
             )
@@ -146,7 +145,7 @@ private fun Field(label: String, value: String) {
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
     Column(Modifier.padding(top = 18.dp)) {
-        Text(label, style = type.capsEyebrow, color = colors.tertiaryText)
+        Text(label, style = type.section, color = colors.tertiaryText)
         Text(value, style = type.body, color = colors.primaryText, modifier = Modifier.padding(top = 4.dp))
     }
 }
@@ -160,6 +159,6 @@ private fun Link(label: String, onClick: () -> Unit) {
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = MeedwellTheme.typography.metadata, color = MeedwellTheme.colors.secondaryText)
+        Text(label, style = MeedwellTheme.typography.meta, color = MeedwellTheme.colors.secondaryText)
     }
 }

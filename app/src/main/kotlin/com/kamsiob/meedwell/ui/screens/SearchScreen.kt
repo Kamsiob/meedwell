@@ -93,7 +93,7 @@ fun SearchScreen(
                         .semantics { contentDescription = "Clear the search" }
                         .padding(horizontal = 10.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("Clear", style = type.metadata, color = colors.secondaryText) }
+                ) { Text("Clear", style = type.meta, color = colors.secondaryText) }
             }
         }
         Box(Modifier.fillMaxWidth().height(1.dp).background(colors.hairline))
@@ -101,7 +101,7 @@ fun SearchScreen(
         if (state.query.isBlank()) {
             Text(
                 "Search covers what you own, and never leaves the phone.",
-                style = type.voiceSmall,
+                style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 22.dp),
             )
@@ -153,7 +153,7 @@ fun SearchScreen(
                     Text(
                         "Nothing on your shelf matches that. Bandcamp's own site can look through " +
                             "everything they carry.",
-                        style = type.metadata,
+                        style = type.meta,
                         color = colors.secondaryText,
                         modifier = Modifier.padding(top = 22.dp),
                     )
@@ -173,7 +173,7 @@ fun SearchScreen(
         ) {
             Text(
                 text = "Search all of Bandcamp for \"${state.query}\" ↗",
-                style = type.provenance,
+                style = type.meta,
                 color = colors.primaryText,
                 textAlign = TextAlign.Center,
             )
@@ -185,7 +185,7 @@ fun SearchScreen(
 private fun SectionHead(title: String) {
     Text(
         title.uppercase(),
-        style = MeedwellTheme.typography.capsEyebrow,
+        style = MeedwellTheme.typography.section,
         color = MeedwellTheme.colors.secondaryText,
         modifier = Modifier.padding(top = 18.dp, bottom = 4.dp),
     )
@@ -219,10 +219,10 @@ private fun ResultRow(
             )
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(title, style = type.rowTitle, color = colors.primaryText, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, style = type.metadata, color = colors.tertiaryText, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, style = type.meta, color = colors.tertiaryText, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             if (trailing != null) {
-                Text(trailing, style = type.metadata, color = colors.tertiaryText)
+                Text(trailing, style = type.meta, color = colors.tertiaryText)
             }
         }
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
