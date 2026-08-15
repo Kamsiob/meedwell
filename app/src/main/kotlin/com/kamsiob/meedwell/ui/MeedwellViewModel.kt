@@ -15,6 +15,12 @@ import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Track
 import com.kamsiob.meedwell.playback.PlaybackState
 import com.kamsiob.meedwell.playback.PlayerController
+import com.kamsiob.meedwell.data.LocalScanner
+import com.kamsiob.meedwell.data.db.WatchedFolderEntity
+import com.kamsiob.meedwell.ui.screens.SettingsState
+import com.kamsiob.meedwell.ui.screens.YourFilesState
+import com.kamsiob.meedwell.ui.theme.ThemeChoice
+import android.net.Uri
 import com.kamsiob.meedwell.ui.screens.ConnectError
 import com.kamsiob.meedwell.ui.screens.ConnectState
 import com.kamsiob.meedwell.ui.screens.CoverUrls
@@ -64,6 +70,14 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     private val _albumDetail = MutableStateFlow<AlbumDetail?>(null)
     val albumDetail: StateFlow<AlbumDetail?> = _albumDetail.asStateFlow()
+
+    private val scanner = LocalScanner(container.appContext, container.database)
+
+    private val _settings = MutableStateFlow(SettingsState())
+    val settingsState: StateFlow<SettingsState> = _settings.asStateFlow()
+
+    private val _yourFiles = MutableStateFlow(YourFilesState())
+    val yourFiles: StateFlow<YourFilesState> = _yourFiles.asStateFlow()
 
     init {
         installCoverResolver()
@@ -135,6 +149,109 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
         container.library.observePresentCount()
             .onEach { count -> _shelf.value = _shelf.value.copy(presentCount = count) }
             .launchIn(viewModelScope)
+
+        container.database.watchedFolders().observeAll()
+            .onEach { folders ->
+                _yourFiles.value = _yourFiles.value.copy(
+                    folders = folders,
+                    connected = container.credentials.isConnected,
+                )
+                _settings.value = _settings.value.copy(watchedFolderCount = folders.size)
+            }
+            .launchIn(viewModelScope)
+
+        // Records that actually have files here, which is what "Your files"
+        // exists to show.
+        container.library.observeAlbums(ShelfSort.Artist, ShelfScope.OnThisPhone)
+            .onEach { albums -> _yourFiles.value = _yourFiles.value.copy(matched = albums) }
+            .launchIn(viewModelScope)
+
+        refreshSettings()
+    }
+
+    // ---------- Settings ----------
+
+    fun refreshSettings() {
+        viewModelScope.launch {
+            _settings.value = _settings.value.copy(
+                theme = settings.theme,
+                shelfGrid = settings.shelfGrid,
+                gapless = settings.gapless,
+                rememberLongTrackPosition = settings.rememberLongTrackPosition,
+                connected = container.credentials.isConnected,
+                historyEventCount = container.database.playEvents().count(),
+            )
+        }
+    }
+
+    fun setTheme(choice: ThemeChoice) {
+        settings.theme = choice
+        refreshSettings()
+    }
+
+    fun toggleGapless() {
+        settings.gapless = !settings.gapless
+        refreshSettings()
+    }
+
+    fun toggleLongResume() {
+        settings.rememberLongTrackPosition = !settings.rememberLongTrackPosition
+        refreshSettings()
+    }
+
+    fun eraseHistory() {
+        viewModelScope.launch {
+            container.database.playEvents().eraseAll()
+            refreshSettings()
+        }
+    }
+
+    /**
+     * Disconnecting removes the credentials and nothing else.
+     *
+     * The shelf, the history and the lists stay, because losing them is not
+     * what "disconnect" means to anybody. Deleting one's own data is a
+     * separate, explicit act.
+     */
+    fun disconnect() {
+        container.credentials.clear()
+        CoverUrls.clear()
+        _shelf.value = _shelf.value.copy(connected = false)
+        refreshSettings()
+    }
+
+    // ---------- Your files ----------
+
+    fun addWatchedFolder(uri: Uri) {
+        viewModelScope.launch {
+            if (scanner.addFolder(uri)) rescanFolders()
+        }
+    }
+
+    fun removeWatchedFolder(folder: WatchedFolderEntity) {
+        viewModelScope.launch {
+            scanner.removeFolder(folder.uri)
+            container.library.refreshLocalCounts()
+        }
+    }
+
+    fun rescanFolders() {
+        if (_yourFiles.value.scanning) return
+        _yourFiles.value = _yourFiles.value.copy(scanning = true, lastResult = null)
+        viewModelScope.launch {
+            val result = scanner.scan()
+            _yourFiles.value = _yourFiles.value.copy(
+                scanning = false,
+                // Says exactly what happened, including the part nobody likes.
+                lastResult = buildString {
+                    append("Looked at ${result.filesFound} ${if (result.filesFound == 1) "file" else "files"}. ")
+                    append("${result.matched} matched your collection")
+                    if (result.localOnly > 0) append(", ${result.localOnly} became local albums")
+                    if (result.wentMissing > 0) append(", ${result.wentMissing} went missing since last time")
+                    append(".")
+                },
+            )
+        }
     }
 
     // ---------- Shelf ----------

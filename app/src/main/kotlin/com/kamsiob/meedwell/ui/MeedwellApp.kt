@@ -31,7 +31,17 @@ import androidx.core.net.toUri
 import com.kamsiob.meedwell.ui.components.MiniPlayer
 import com.kamsiob.meedwell.ui.components.rememberWashColor
 import com.kamsiob.meedwell.ui.screens.AlbumScreen
+import com.kamsiob.meedwell.ui.screens.AboutScreen
 import com.kamsiob.meedwell.ui.screens.ArtworkViewer
+import com.kamsiob.meedwell.ui.screens.MoreDestination
+import com.kamsiob.meedwell.ui.screens.MoreScreen
+import com.kamsiob.meedwell.ui.screens.PrivacyScreen
+import com.kamsiob.meedwell.ui.screens.SettingsScreen
+import com.kamsiob.meedwell.ui.screens.WhatsAheadScreen
+import com.kamsiob.meedwell.ui.screens.YourFilesScreen
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.kamsiob.meedwell.BuildConfig
 import com.kamsiob.meedwell.ui.screens.NowPlayingScreen
 import com.kamsiob.meedwell.ui.screens.ConnectScreen
 import com.kamsiob.meedwell.ui.screens.ShelfScreen
@@ -56,6 +66,11 @@ sealed interface Destination {
     data class AlbumDetail(val albumId: String) : Destination
     data object NowPlaying : Destination
     data class Artwork(val uri: String?, val title: String, val subtitle: String) : Destination
+    data object Settings : Destination
+    data object Privacy : Destination
+    data object WhatsAhead : Destination
+    data object About : Destination
+    data object YourFiles : Destination
 }
 
 @Composable
@@ -65,6 +80,15 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val connect by viewModel.connect.collectAsState()
     val playback by viewModel.playback.collectAsState()
     val albumDetail by viewModel.albumDetail.collectAsState()
+    val settingsState by viewModel.settingsState.collectAsState()
+    val yourFiles by viewModel.yourFiles.collectAsState()
+
+    // The Storage Access Framework picker. A tree grant with persistable
+    // permission, so the folder survives a reboot rather than being asked for
+    // again every launch.
+    val folderPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri -> if (uri != null) viewModel.addWatchedFolder(uri) }
 
     var destination by remember {
         mutableStateOf<Destination>(
@@ -127,7 +151,22 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                         )
                         Tab.Search -> Placeholder("Search", "Your shelf, and Bandcamp's site one tap away.")
                         Tab.Lists -> Placeholder("Lists", "Lists live on this phone.")
-                        Tab.More -> Placeholder("More", "Privacy, What's ahead, Settings and About.")
+                        Tab.More -> MoreScreen(
+                            connected = shelf.connected,
+                            onOpen = { where ->
+                                destination = when (where) {
+                                    MoreDestination.Settings -> Destination.Settings
+                                    MoreDestination.Privacy -> Destination.Privacy
+                                    MoreDestination.WhatsAhead -> Destination.WhatsAhead
+                                    MoreDestination.About -> Destination.About
+                                    MoreDestination.YourFiles -> Destination.YourFiles
+                                    // History and the forgotten shelf arrive in
+                                    // Phase 3; both read the same play log.
+                                    else -> Destination.Main(Tab.More)
+                                }
+                            },
+                            onConnectBandcamp = { destination = Destination.Connect },
+                        )
                     }
                 }
                 MiniPlayer(
@@ -141,6 +180,51 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                     onSelect = { destination = Destination.Main(it) },
                 )
             }
+
+            Destination.Settings -> SettingsScreen(
+                state = settingsState,
+                onThemeChange = viewModel::setTheme,
+                onToggleGapless = viewModel::toggleGapless,
+                onToggleLongResume = viewModel::toggleLongResume,
+                onOpenLocalFolders = { destination = Destination.YourFiles },
+                onOpenExport = { /* Phase 6: export and restore */ },
+                onEraseHistory = viewModel::eraseHistory,
+                onDisconnect = viewModel::disconnect,
+                onSupport = { open(SUPPORT_URL) },
+                onBack = { destination = Destination.Main(Tab.More) },
+                modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+            )
+
+            Destination.Privacy -> PrivacyScreen(
+                onOpenSource = { open(SOURCE_URL) },
+                onBack = { destination = Destination.Main(Tab.More) },
+                modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+            )
+
+            Destination.WhatsAhead -> WhatsAheadScreen(
+                onBack = { destination = Destination.Main(Tab.More) },
+                modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+            )
+
+            Destination.About -> AboutScreen(
+                versionName = BuildConfig.VERSION_NAME,
+                onOpenSource = { open(SOURCE_URL) },
+                onOpenSite = { open("https://kamsiob.com") },
+                onSupport = { open(SUPPORT_URL) },
+                onBack = { destination = Destination.Main(Tab.More) },
+                modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+            )
+
+            Destination.YourFiles -> YourFilesScreen(
+                state = yourFiles,
+                onAddFolder = { folderPicker.launch(null) },
+                onRemoveFolder = viewModel::removeWatchedFolder,
+                onRescan = viewModel::rescanFolders,
+                onGetFromBandcamp = { open("https://bandcamp.com/collection") },
+                onAlbumClick = { destination = Destination.AlbumDetail(it.id) },
+                onBack = { destination = Destination.Main(Tab.More) },
+                modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+            )
 
             Destination.NowPlaying -> {
                 val wash by rememberWashColor(playback.artworkUri)
@@ -280,3 +364,7 @@ private fun Placeholder(title: String, body: String, onBack: (() -> Unit)? = nul
         }
     }
 }
+
+/** The support link. One label, one place, never a coffee cliche. */
+private const val SUPPORT_URL = "https://buymeacoffee.com/kamsiob"
+private const val SOURCE_URL = "https://github.com/Kamsiob/meedwell"
