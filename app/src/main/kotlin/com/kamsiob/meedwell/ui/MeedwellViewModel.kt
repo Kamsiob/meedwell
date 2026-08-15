@@ -23,9 +23,15 @@ import com.kamsiob.meedwell.ui.theme.ThemeChoice
 import android.net.Uri
 import com.kamsiob.meedwell.ui.screens.ConnectError
 import com.kamsiob.meedwell.ui.screens.ConnectState
+import com.kamsiob.meedwell.ui.components.ActionTarget
 import com.kamsiob.meedwell.ui.screens.CoverUrls
 import com.kamsiob.meedwell.ui.screens.ShelfState
 import com.kamsiob.meedwell.core.surroundings.LicenseGroup
+import com.kamsiob.meedwell.ui.screens.ArtistState
+import com.kamsiob.meedwell.ui.screens.ForgottenAlbum
+import com.kamsiob.meedwell.ui.screens.HistoryDay
+import com.kamsiob.meedwell.ui.screens.HistoryEntry
+import com.kamsiob.meedwell.ui.screens.ListsState
 import com.kamsiob.meedwell.ui.screens.SearchState
 import com.kamsiob.meedwell.ui.screens.ShelfView
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,7 +66,23 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     val connect: StateFlow<ConnectState> = _connect.asStateFlow()
 
     private val _sort = MutableStateFlow(ShelfSort.Artist)
+    val sort: StateFlow<ShelfSort> = _sort.asStateFlow()
+
     private val _scope = MutableStateFlow(ShelfScope.Everything)
+    val scope: StateFlow<ShelfScope> = _scope.asStateFlow()
+
+    /**
+     * The genre currently narrowing the shelf, or null for the whole shelf.
+     *
+     * This is a flow rather than a plain field on purpose. It used to be a
+     * field, with `filterByGenre` launching its own collector, and nothing
+     * cancelled that collector on the way out: leaving a genre view left the
+     * old collector alive, still writing its filtered list into the shelf, so
+     * the shelf stayed narrowed with no label saying why. Folding the filter
+     * into the same `flatMapLatest` below means switching it off cancels the
+     * previous query by construction rather than by remembering to.
+     */
+    private val _genreFilter = MutableStateFlow<String?>(null)
 
     /**
      * Playback, bound to the service so that the app, the notification and the
@@ -80,6 +102,21 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     private val _settings = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settings.asStateFlow()
+
+    private val _history = MutableStateFlow<List<HistoryDay>>(emptyList())
+    val history: StateFlow<List<HistoryDay>> = _history.asStateFlow()
+
+    private val _forgotten = MutableStateFlow<List<ForgottenAlbum>>(emptyList())
+    val forgotten: StateFlow<List<ForgottenAlbum>> = _forgotten.asStateFlow()
+
+    private val _lists = MutableStateFlow(ListsState())
+    val lists: StateFlow<ListsState> = _lists.asStateFlow()
+
+    private val _loved = MutableStateFlow<List<Track>>(emptyList())
+    val loved: StateFlow<List<Track>> = _loved.asStateFlow()
+
+    private val _artist = MutableStateFlow(ArtistState())
+    val artist: StateFlow<ArtistState> = _artist.asStateFlow()
 
     private val _credits = MutableStateFlow(CreditsState())
     val credits: StateFlow<CreditsState> = _credits.asStateFlow()
@@ -153,8 +190,11 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private fun observeLibrary() {
-        combine(_sort, _scope) { sort, scope -> sort to scope }
-            .flatMapLatest { (sort, scope) -> container.library.observeAlbums(sort, scope) }
+        combine(_sort, _scope, _genreFilter) { sort, scope, genre -> Triple(sort, scope, genre) }
+            .flatMapLatest { (sort, scope, genre) ->
+                if (genre != null) container.library.observeAlbumsByGenre(genre)
+                else container.library.observeAlbums(sort, scope)
+            }
             .onEach { albums -> _shelf.value = _shelf.value.copy(albums = albums) }
             .launchIn(viewModelScope)
 
@@ -194,8 +234,102 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
             .onEach { albums -> _yourFiles.value = _yourFiles.value.copy(matched = albums) }
             .launchIn(viewModelScope)
 
+        container.library.observeHistory()
+            .onEach { rows -> _history.value = groupByDay(rows) }
+            .launchIn(viewModelScope)
+
+        container.library.observeForgotten()
+            .onEach { albums -> _forgotten.value = albums.map { ForgottenAlbum(it, forgottenReason(it)) } }
+            .launchIn(viewModelScope)
+
+        container.library.observeStarredTracks()
+            .onEach { tracks ->
+                _loved.value = tracks
+                _lists.value = _lists.value.copy(lovedCount = tracks.size)
+            }
+            .launchIn(viewModelScope)
+
         refreshSettings()
         loadCredits()
+    }
+
+    /**
+     * Groups the play log by day, with the two nearest days named rather than
+     * dated. "Today" and "Yesterday" are what a person actually calls them.
+     */
+    private fun groupByDay(rows: List<com.kamsiob.meedwell.data.db.HistoryRow>): List<HistoryDay> {
+        if (rows.isEmpty()) return emptyList()
+        val client = container.client()
+        val nowDay = (System.currentTimeMillis() / 1000) / 86_400
+        return rows
+            .groupBy { it.playedAt / 86_400 }
+            .toSortedMap(compareByDescending { it })
+            .map { (day, entries) ->
+                HistoryDay(
+                    label = when (nowDay - day) {
+                        0L -> "Today"
+                        1L -> "Yesterday"
+                        else -> dayLabel(day)
+                    },
+                    entries = entries.map { row ->
+                        HistoryEntry(
+                            key = row.eventId.toString(),
+                            trackId = row.trackId,
+                            albumId = row.albumId,
+                            title = row.title,
+                            subtitle = row.artist,
+                            time = clockLabel(row.playedAt),
+                            coverUrl = row.coverArtId.takeIf { it.isNotBlank() }
+                                ?.let { id -> client?.coverArtUrl(id) },
+                        )
+                    },
+                )
+            }
+    }
+
+    /**
+     * Why a record is on the Forgotten Shelf.
+     *
+     * The reason is the whole point of the screen. "Here is a record" is a
+     * shelf; "here is why you might have forgotten it" is the feature.
+     */
+    private fun forgottenReason(album: com.kamsiob.meedwell.core.model.Album): String = "quietly waiting"
+
+    /**
+     * Narrows the whole shelf to one tag.
+     *
+     * Genres were a first-class view whose every row did nothing, which made
+     * one of the three sibling views decorative. Tapping one now filters the
+     * albums list, which is what "one tap narrows the whole shelf to a tag" in
+     * the reference means.
+     */
+    fun filterByGenre(genre: String) {
+        if (_genreFilter.value == genre) return
+        _genreFilter.value = genre
+        _shelf.value = _shelf.value.copy(view = ShelfView.Albums, sortLabel = genre, filtering = true)
+    }
+
+    /** Drops the genre filter and puts the whole shelf back. */
+    fun clearGenreFilter() {
+        if (_genreFilter.value == null) return
+        _genreFilter.value = null
+        _shelf.value = _shelf.value.copy(sortLabel = sortLabel(_sort.value, _scope.value), filtering = false)
+    }
+
+    fun openArtist(artistId: String) {
+        viewModelScope.launch {
+            combine(
+                container.library.observeArtist(artistId),
+                container.library.observeAlbumsByArtist(artistId),
+            ) { artist, albums ->
+                ArtistState(
+                    id = artistId,
+                    name = artist?.name.orEmpty(),
+                    albums = albums,
+                    ownedCount = albums.count { it.isFullyPresent },
+                )
+            }.collect { _artist.value = it }
+        }
     }
 
     // ---------- Credits ----------
@@ -262,6 +396,7 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
                 rememberLongTrackPosition = settings.rememberLongTrackPosition,
                 connected = container.credentials.isConnected,
                 historyEventCount = container.database.playEvents().count(),
+                lastSyncAt = settings.lastSyncAt,
             )
         }
     }
@@ -346,12 +481,20 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
         val grid = !_shelf.value.grid
         settings.shelfGrid = grid
         _shelf.value = _shelf.value.copy(grid = grid)
+        // Settings shows the same value. Without this the row and the shelf
+        // disagree until something else happens to refresh it.
+        _settings.value = _settings.value.copy(shelfGrid = grid)
     }
 
     fun setSort(sort: ShelfSort, scope: ShelfScope) {
         _sort.value = sort
         _scope.value = scope
-        _shelf.value = _shelf.value.copy(sortLabel = sortLabel(sort, scope))
+        // Inside a genre view the label belongs to the tag, and saying
+        // "Artist A to Z" there would lose the only thing on screen that
+        // explains why most of the shelf is missing.
+        if (_genreFilter.value == null) {
+            _shelf.value = _shelf.value.copy(sortLabel = sortLabel(sort, scope))
+        }
     }
 
     private fun sortLabel(sort: ShelfSort, scope: ShelfScope): String {
@@ -443,13 +586,18 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     private val _syncFailure = MutableStateFlow<SyncFailure?>(null)
     val syncFailure: StateFlow<SyncFailure?> = _syncFailure.asStateFlow()
 
-    fun syncNow() {
+    fun syncNow(manual: Boolean = false) {
         val client = container.client() ?: return
         if (_shelf.value.syncing) return
         _shelf.value = _shelf.value.copy(syncing = true)
+        _settings.value = _settings.value.copy(syncing = true)
         viewModelScope.launch {
+            var found = 0
             when (val result = container.library.sync(client)) {
                 is SyncResult.Completed -> {
+                    // How many arrived, so that a manual check can answer the
+                    // question that prompted it rather than just stopping.
+                    found = (result.albumCount - _shelf.value.albumCount).coerceAtLeast(0)
                     settings.lastSyncAt = result.at
                     _syncFailure.value = null
                     container.library.refreshLocalCounts()
@@ -457,12 +605,102 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
                 is SyncResult.Failed -> _syncFailure.value = result.reason
             }
             _shelf.value = _shelf.value.copy(syncing = false)
+            _settings.value = _settings.value.copy(syncing = false)
+            refreshSettings()
+            if (_syncFailure.value == null && manual) {
+                _notice.value = when (found) {
+                    0 -> "Nothing new. Your shelf is up to date."
+                    1 -> "One new record on your shelf."
+                    else -> "$found new records on your shelf."
+                }
+            }
         }
     }
 
     /** Dismissing the trouble sheet clears the failure but changes nothing else. */
     fun dismissSyncFailure() {
         _syncFailure.value = null
+    }
+
+    // ---------- The action sheet ----------
+
+    /**
+     * A short line confirming something happened, shown once and then gone.
+     *
+     * Every verb in the action sheet acts on something off screen: a queue you
+     * are not looking at, an account somewhere else. Without a word back, the
+     * sheet closing is the only feedback, which is indistinguishable from the
+     * sheet closing because nothing worked.
+     */
+    private val _notice = MutableStateFlow<String?>(null)
+    val notice: StateFlow<String?> = _notice.asStateFlow()
+
+    fun dismissNotice() {
+        _notice.value = null
+    }
+
+    /**
+     * The tracks a sheet target stands for: one for a track, the whole record
+     * in running order for an album.
+     */
+    private suspend fun tracksFor(target: ActionTarget): List<Track> =
+        if (target.kind == ActionTarget.Kind.Album) {
+            container.library.tracksForAlbum(target.id)
+        } else {
+            container.library.tracks(listOf(target.id))
+        }
+
+    /**
+     * Repeats the one-way limit on hearts at the moment somebody tries it.
+     *
+     * `unstar` errors whatever is sent, so this is the truthful answer rather
+     * than a control that fails silently.
+     */
+    fun showLoveLimit() {
+        _notice.value = "Bandcamp cannot take a heart off yet. Their website can."
+    }
+
+    fun playNext(target: ActionTarget) {
+        viewModelScope.launch {
+            val tracks = tracksFor(target)
+            if (tracks.isEmpty()) return@launch
+            player.playNext(tracks)
+            _notice.value = "${target.title} plays next"
+        }
+    }
+
+    fun addToQueue(target: ActionTarget) {
+        viewModelScope.launch {
+            val tracks = tracksFor(target)
+            if (tracks.isEmpty()) return@launch
+            player.addToQueue(tracks)
+            _notice.value = if (tracks.size > 1) {
+                "${tracks.size} tracks added to the queue"
+            } else {
+                "${target.title} added to the queue"
+            }
+        }
+    }
+
+    /**
+     * Sends a heart to the Bandcamp account, and says plainly if it did not go.
+     *
+     * The failure line names the account rather than blaming the user, because
+     * the usual cause is a regenerated password on Bandcamp's side.
+     */
+    fun love(target: ActionTarget) {
+        viewModelScope.launch {
+            val landed = container.library.love(
+                client = container.client(),
+                id = target.id,
+                isAlbum = target.kind == ActionTarget.Kind.Album,
+            )
+            _notice.value = if (landed) {
+                "Loved. It is on your Bandcamp account too."
+            } else {
+                "Bandcamp did not take the heart. Nothing changed."
+            }
+        }
     }
 
     val lastSyncAt: Long get() = settings.lastSyncAt
@@ -485,7 +723,7 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     /** Pull to refresh, and the manual override for "check now". */
-    fun refresh() = syncNow()
+    fun refresh() = syncNow(manual = true)
 
     val isConnected: Boolean get() = container.credentials.isConnected
 
@@ -518,3 +756,31 @@ data class CreditsState(
     /** Set when the credits could not be read at all. Shown, never swallowed. */
     val loadError: String? = null,
 )
+
+/** "14 March", for history days older than yesterday. */
+private fun dayLabel(daysSinceEpoch: Long): String {
+    var year = 1970
+    var remaining = daysSinceEpoch
+    while (true) {
+        val length = if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) 366 else 365
+        if (remaining < length) break
+        remaining -= length
+        year++
+    }
+    val leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+    val lengths = intArrayOf(31, if (leap) 29 else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    val names = listOf("January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December")
+    var month = 0
+    while (month < 12 && remaining >= lengths[month]) {
+        remaining -= lengths[month]
+        month++
+    }
+    return "${remaining + 1} ${names[month.coerceIn(0, 11)]}"
+}
+
+/** "22:14", tabular so a column of them does not jitter. */
+private fun clockLabel(epochSeconds: Long): String {
+    val secondsIntoDay = ((epochSeconds % 86_400) + 86_400) % 86_400
+    return "%02d:%02d".format(secondsIntoDay / 3600, (secondsIntoDay % 3600) / 60)
+}

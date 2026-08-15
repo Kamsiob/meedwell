@@ -128,9 +128,83 @@ class PlayerController(
         c.play()
     }
 
+    /**
+     * Puts tracks straight after whatever is playing.
+     *
+     * With nothing playing there is no "after", so this starts them instead.
+     * Doing nothing would be the literal reading and the useless one.
+     */
+    fun playNext(tracks: List<Track>) {
+        val c = controller ?: return
+        if (tracks.isEmpty()) return
+        if (c.mediaItemCount == 0) return playTracks(tracks)
+        val client = container.client()
+        c.addMediaItems(c.currentMediaItemIndex + 1, tracks.map { it.toMediaItem(client) })
+    }
+
+    /** Puts tracks at the end of the queue. Same fallback when nothing is playing. */
+    fun addToQueue(tracks: List<Track>) {
+        val c = controller ?: return
+        if (tracks.isEmpty()) return
+        if (c.mediaItemCount == 0) return playTracks(tracks)
+        val client = container.client()
+        c.addMediaItems(tracks.map { it.toMediaItem(client) })
+    }
+
+    /** Jumps to a position in the queue, for the queue sheet. */
+    fun playQueueItem(index: Int) {
+        val c = controller ?: return
+        if (index !in 0 until c.mediaItemCount) return
+        c.seekTo(index, 0L)
+        c.play()
+    }
+
+    /** Drops one item out of the queue. */
+    fun removeQueueItem(index: Int) {
+        val c = controller ?: return
+        if (index !in 0 until c.mediaItemCount) return
+        c.removeMediaItem(index)
+    }
+
+    /**
+     * The queue as it stands, read straight off the player.
+     *
+     * Read on demand rather than mirrored into state: a second copy of the
+     * queue is a second thing that can disagree with the player, and the
+     * player is the one making the sound.
+     */
+    fun queueSnapshot(): List<QueueItem> {
+        val c = controller ?: return emptyList()
+        return (0 until c.mediaItemCount).map { i ->
+            val item = c.getMediaItemAt(i)
+            QueueItem(
+                index = i,
+                trackId = item.mediaId,
+                title = item.mediaMetadata.title?.toString().orEmpty(),
+                artist = item.mediaMetadata.artist?.toString().orEmpty(),
+                artworkUri = item.mediaMetadata.artworkUri?.toString(),
+                isCurrent = i == c.currentMediaItemIndex,
+            )
+        }
+    }
+
     fun playPause() {
         val c = controller ?: return
         if (c.isPlaying) c.pause() else c.play()
+    }
+
+    fun setShuffle(on: Boolean) {
+        controller?.shuffleModeEnabled = on
+    }
+
+    /** Off, then repeat all, then repeat one, which is the order everybody expects. */
+    fun cycleRepeat() {
+        val c = controller ?: return
+        c.repeatMode = when (c.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
     }
 
     fun next() = controller?.seekToNextMediaItem()
@@ -165,6 +239,13 @@ class PlayerController(
             isLocalFile = player.currentMediaItem
                 ?.localConfiguration?.uri?.scheme
                 ?.let { it != "http" && it != "https" } ?: false,
+            shuffle = player.shuffleModeEnabled,
+            repeat = when (player.repeatMode) {
+                Player.REPEAT_MODE_ONE -> RepeatMode.One
+                Player.REPEAT_MODE_ALL -> RepeatMode.All
+                else -> RepeatMode.Off
+            },
+            queueSize = player.mediaItemCount,
         )
     }
 
@@ -188,10 +269,25 @@ data class PlaybackState(
      * MP3 for a stream, because MP3 is what Bandcamp's API serves.
      */
     val isLocalFile: Boolean = false,
+    val shuffle: Boolean = false,
+    val repeat: RepeatMode = RepeatMode.Off,
+    val queueSize: Int = 0,
 ) {
     val progress: Float
         get() = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
 }
+
+enum class RepeatMode { Off, All, One }
+
+/** One row of the queue sheet. */
+data class QueueItem(
+    val index: Int,
+    val trackId: String,
+    val title: String,
+    val artist: String,
+    val artworkUri: String?,
+    val isCurrent: Boolean,
+)
 
 /**
  * Turns a track into something the player can read.

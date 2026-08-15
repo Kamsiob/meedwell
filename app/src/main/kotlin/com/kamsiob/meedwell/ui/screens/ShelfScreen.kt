@@ -1,6 +1,7 @@
 package com.kamsiob.meedwell.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -146,18 +147,45 @@ fun ShelfScreen(
                     )
                 }
                 Box(Modifier.weight(1f))
+                // Two different controls wearing the same slot.
+                //
+                // Sorting is a setting, so it takes a chevron and opens a
+                // sheet. A genre filter is a *state the shelf is in*, and the
+                // question it raises is "how do I get out", so it takes a
+                // dismiss cross, a hairline around it, and gets rid of itself
+                // on tap. Wearing a sort chevron while meaning "clear filter"
+                // was the version that would have shipped by accident.
                 Box(
                     Modifier
                         .defaultMinSize(minHeight = 48.dp)
                         .height(48.dp)
                         .clickable(role = Role.Button, onClick = onOpenSort)
-                        .semantics { contentDescription = "Change how the shelf is sorted and filtered" },
+                        .semantics {
+                            contentDescription = if (state.filtering) {
+                                "Showing only ${state.sortLabel}. Tap to show everything again."
+                            } else {
+                                "Change how the shelf is sorted and filtered"
+                            }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(state.sortLabel, style = type.sortLabel, color = colors.secondaryText)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = if (state.filtering) {
+                            Modifier
+                                .border(1.dp, colors.hairline, CircleShape)
+                                .padding(start = 12.dp, end = 8.dp, top = 5.dp, bottom = 5.dp)
+                        } else {
+                            Modifier
+                        },
+                    ) {
+                        Text(
+                            state.sortLabel,
+                            style = type.sortLabel,
+                            color = if (state.filtering) colors.primaryText else colors.secondaryText,
+                        )
                         MeedwellIcon(
-                            icon = MeedwellIcons.ChevronDown,
+                            icon = if (state.filtering) MeedwellIcons.Close else MeedwellIcons.ChevronDown,
                             size = 14.dp,
                             tint = colors.tertiaryText,
                             modifier = Modifier.padding(start = 5.dp),
@@ -587,6 +615,12 @@ data class ShelfState(
     val presentCount: Int = 0,
     val connected: Boolean = false,
     val sortLabel: String = "Artist A to Z",
+    /**
+     * Whether `sortLabel` is naming a genre the shelf is narrowed to, rather
+     * than naming an order. Changes what the label slot is: a filter you can
+     * take off rather than a setting you can change.
+     */
+    val filtering: Boolean = false,
     val syncing: Boolean = false,
     /** Whether the mini player is on screen, which changes how much room the list needs. */
     val playerVisible: Boolean = false,

@@ -25,7 +25,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
+import com.kamsiob.meedwell.ui.theme.Radius
+import com.kamsiob.meedwell.ui.theme.meedwellShadow
 
 /**
  * Screen 18 in the visual reference: the action sheet.
@@ -44,8 +47,9 @@ import com.kamsiob.meedwell.ui.theme.MeedwellTheme
  *  - **Love states its limit.** `star` works and reaches the account; `unstar`
  *    is broken server side. The row says so at the moment it matters rather
  *    than failing silently when tapped.
- *  - **Add to a list** says the list is on this phone, because Bandcamp's API
- *    offers no way to create or change a playlist.
+ *  - **Add to a list is gone.** Making lists is not built, and Bandcamp's API
+ *    offers no way to create or change a playlist even once it is. The Lists
+ *    screen says where that stands; a row here could only apologize.
  */
 @Composable
 fun ActionSheet(
@@ -69,7 +73,8 @@ fun ActionSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+                .meedwellShadow(Elevation.sheet, RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
+                .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
                 // Consumes taps so they do not fall through to the scrim.
                 .clickable(enabled = false) {}
@@ -112,8 +117,16 @@ fun ActionSheet(
             }
             Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
 
-            target.actions().forEach { action ->
-                ActionRow(action = action, onClick = { onAction(action); onDismiss() })
+            val actions = target.actions()
+            actions.forEachIndexed { index, action ->
+                ActionRow(
+                    action = action,
+                    // A hairline separates rows. Under the last one it is
+                    // separating the list from nothing, and it read as the
+                    // sheet being cut off rather than finished.
+                    divider = index < actions.lastIndex,
+                    onClick = { onAction(action); onDismiss() },
+                )
             }
 
             Box(Modifier.height(18.dp))
@@ -122,7 +135,7 @@ fun ActionSheet(
 }
 
 @Composable
-private fun ActionRow(action: SheetAction, onClick: () -> Unit) {
+private fun ActionRow(action: SheetAction, divider: Boolean, onClick: () -> Unit) {
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
     Column {
@@ -143,7 +156,9 @@ private fun ActionRow(action: SheetAction, onClick: () -> Unit) {
                 }
             }
         }
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+        if (divider) {
+            Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+        }
     }
 }
 
@@ -179,7 +194,6 @@ data class ActionTarget(
     fun actions(): List<SheetAction> = buildList {
         add(SheetAction.PlayNext)
         add(SheetAction.AddToQueue)
-        add(SheetAction.AddToList)
         // The heart, with its real limit attached rather than hidden.
         add(if (isStarred) SheetAction.AlreadyLoved else SheetAction.Love)
         add(SheetAction.ViewArtwork)
@@ -195,12 +209,6 @@ sealed class SheetAction(
 ) {
     data object PlayNext : SheetAction("Play next", null, MeedwellIcons.PlayNext)
     data object AddToQueue : SheetAction("Add to queue", null, MeedwellIcons.Queue)
-
-    /**
-     * Lists live on this phone, because Bandcamp's API implements no way to
-     * create or change a playlist. The row says so rather than implying travel.
-     */
-    data object AddToList : SheetAction("Add to a list", "Lists live on this phone", MeedwellIcons.Lists)
 
     /** `star` works and reaches the account. */
     data object Love : SheetAction("Love", "Goes to your Bandcamp account", MeedwellIcons.Heart)

@@ -49,6 +49,8 @@ fun SettingsScreen(
     onToggleLongResume: () -> Unit,
     onOpenLocalFolders: () -> Unit,
     onOpenExport: () -> Unit,
+    onToggleShelfView: () -> Unit,
+    onSyncNow: () -> Unit,
     onEraseHistory: () -> Unit,
     onDisconnect: () -> Unit,
     onSupport: () -> Unit,
@@ -83,7 +85,15 @@ fun SettingsScreen(
             trailing = state.theme.label(),
             onClick = { onThemeChange(state.theme.next()) },
         )
-        SettingRow("Shelf view", null, trailing = if (state.shelfGrid) "Grid" else "List", onClick = {})
+        SettingRow(
+            "Shelf view",
+            null,
+            trailing = if (state.shelfGrid) "Grid" else "List",
+            // Was a dead row showing the current value. It is the same setting
+            // the icon at the top of the shelf changes, so it toggles here too
+            // rather than being a read-only label wearing a tappable row.
+            onClick = onToggleShelfView,
+        )
 
         Section("Playback")
         ToggleRow(
@@ -113,6 +123,18 @@ fun SettingsScreen(
 
         if (state.connected) {
             Section("Bandcamp")
+            // The one control this app most needed and did not have.
+            //
+            // Sync ran on opening the app and then not again for half an hour.
+            // For an app built around Bandcamp Friday, "I just bought this and
+            // it is not here" with no way to ask again is the product failing
+            // at the exact moment it matters most.
+            SettingRow(
+                if (state.syncing) "Checking now" else "Check for new music",
+                state.lastSyncLabel,
+                trailing = if (state.syncing) "" else CHEVRON,
+                onClick = { if (!state.syncing) onSyncNow() },
+            )
             SettingRow(
                 "Disconnect",
                 "Removes the credentials from this phone. Your shelf, lists and history stay.",
@@ -222,7 +244,31 @@ data class SettingsState(
     val historyEventCount: Int = 0,
     val connected: Boolean = false,
     val lastBackupLabel: String? = "Not backed up yet",
+    val syncing: Boolean = false,
+    /** Seconds since the epoch, or zero for never. */
+    val lastSyncAt: Long = 0,
 ) {
+    /**
+     * When the collection was last checked, in words.
+     *
+     * Rounded rather than exact, because "23 minutes ago" invites arithmetic
+     * and the only question being asked is whether it is worth checking again.
+     */
+    val lastSyncLabel: String
+        get() {
+            if (syncing) return "Asking Bandcamp for your collection"
+            if (lastSyncAt <= 0) return "Not checked yet"
+            val ago = (System.currentTimeMillis() / 1000) - lastSyncAt
+            return "Last checked " + when {
+                ago < 90 -> "a moment ago"
+                ago < 3600 -> "${ago / 60} minutes ago"
+                ago < 7200 -> "an hour ago"
+                ago < 86_400 -> "${ago / 3600} hours ago"
+                ago < 172_800 -> "yesterday"
+                else -> "${ago / 86_400} days ago"
+            }
+        }
+
     val foldersSubtitle: String
         get() = when (watchedFolderCount) {
             0 -> "None yet. This is how owned files reach your shelf."

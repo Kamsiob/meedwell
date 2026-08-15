@@ -271,7 +271,6 @@ fun ListsScreen(
     state: ListsState,
     onOpenLoved: () -> Unit,
     onOpenList: (String) -> Unit,
-    onCreateList: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MeedwellTheme.colors
@@ -295,12 +294,12 @@ fun ListsScreen(
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
-                IconButton(
-                    icon = MeedwellIcons.Queue,
-                    contentDescription = "Make a new list",
-                    onClick = onCreateList,
-                    tint = colors.primaryText,
-                )
+                // No "make a list" button, on purpose.
+                //
+                // Making lists is not built. The button was here, it did
+                // nothing, and a plus sign that does nothing is the app
+                // telling somebody they did something wrong. The screen says
+                // where lists are instead, which is a real answer.
             }
 
             LazyColumn(contentPadding = PaddingValues(top = 14.dp, bottom = 120.dp)) {
@@ -325,12 +324,26 @@ fun ListsScreen(
                 }
                 if (state.lists.isEmpty()) {
                     item(key = "empty") {
-                        Text(
-                            "No lists yet. Make one from the queue, or from the long press on any track.",
-                            style = type.metadata,
-                            color = colors.tertiaryText,
-                            modifier = Modifier.padding(top = 18.dp),
-                        )
+                        Column(Modifier.padding(top = 22.dp)) {
+                            Text(
+                                "Making your own lists is not built yet.",
+                                style = type.body,
+                                color = colors.secondaryText,
+                            )
+                            Text(
+                                // Says why rather than just no. Bandcamp's API
+                                // has no way to create or change a playlist, so
+                                // whatever gets built lives on this phone only,
+                                // and that is worth knowing before you invest
+                                // an evening in a list.
+                                "Bandcamp's API has no way to make or change a playlist, so lists will " +
+                                    "live on this phone when they arrive. Loved above is real, and it " +
+                                    "does reach your account.",
+                                style = type.metadata,
+                                color = colors.tertiaryText,
+                                modifier = Modifier.padding(top = 10.dp),
+                            )
+                        }
                     }
                 }
             }

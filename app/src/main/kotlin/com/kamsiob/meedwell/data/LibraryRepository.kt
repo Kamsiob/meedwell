@@ -1,6 +1,7 @@
 package com.kamsiob.meedwell.data
 
 import com.kamsiob.meedwell.core.library.SortKeys
+import com.kamsiob.meedwell.core.library.resolveAlbumArtistId
 import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Artist
 import com.kamsiob.meedwell.core.model.Genre
@@ -69,6 +70,26 @@ class LibraryRepository(
 
     fun observeAlbumCount(): Flow<Int> = db.albums().observeCount()
 
+    fun observeHistory() = db.playEvents().observeHistory()
+
+    /**
+     * The Forgotten Shelf.
+     *
+     * Never played, played at most twice, or quiet for fourteen months. All
+     * three thresholds are the specification's, and the whole thing is one
+     * query against the local play log: no algorithm, no feed, nothing sent
+     * anywhere, which is the point rather than a caveat.
+     */
+    fun observeForgotten(now: Long = clock()): Flow<List<Album>> =
+        db.playEvents()
+            .observeForgotten(playThreshold = 2, quietBefore = now - QUIET_SECONDS)
+            .map { rows -> rows.map { it.toDomain() } }
+
+    fun observeStarredTracks(): Flow<List<Track>> =
+        db.tracks().observeStarred().map { rows -> rows.map { it.toDomain() } }
+
+    fun observeArtist(id: String) = db.artists().observeById(id).map { it?.toDomain() }
+
     fun observePresentCount(): Flow<Int> = db.albums().observePresentCount()
 
     suspend fun tracksForAlbum(albumId: String): List<Track> =
@@ -90,6 +111,27 @@ class LibraryRepository(
         val byId = db.tracks().byIds(ids).associateBy { it.id }
         // Preserve the caller's order, which matters for a queue.
         return ids.mapNotNull { byId[it]?.toDomain() }
+    }
+
+    /**
+     * Puts a heart on a track or an album, on the account and on this phone.
+     *
+     * **The local mirror only follows a real success.** An optimistic heart
+     * that quietly reverts on the next sync is the app telling somebody
+     * something reached their account when it did not, and this app's whole
+     * argument is that it does not do that. Returns whether it landed, so the
+     * caller can say so.
+     *
+     * There is deliberately no `unlove` here. `unstar` is broken on Bandcamp's
+     * side and errors whatever is sent, so the action sheet states the limit
+     * instead of offering a control that cannot work. See DECISIONS.md.
+     */
+    suspend fun love(client: SubsonicClient?, id: String, isAlbum: Boolean): Boolean {
+        if (client == null) return false
+        val outcome = if (isAlbum) client.star(albumId = id) else client.star(songId = id)
+        if (outcome !is SubsonicOutcome.Success) return false
+        if (isAlbum) db.albums().setStarred(id, true) else db.tracks().setStarred(id, true)
+        return true
     }
 
     // ---------- Syncing ----------
@@ -193,6 +235,8 @@ class LibraryRepository(
             else -> Unit
         }
 
+        repairAlbumArtistIds()
+
         // Anything the collection no longer holds. Local-only albums are
         // excluded by the query: they were never in the collection, so a
         // collection sync has no business deleting them.
@@ -201,6 +245,34 @@ class LibraryRepository(
         db.artists().deleteStale(startedAt)
 
         return SyncResult.Completed(albumCount = albums.size, trackCount = trackCount, at = clock())
+    }
+
+    /**
+     * Gives every album an artist ID, worked out from its own tracks.
+     *
+     * Bandcamp's `getAlbumList2` returns an album's artist name but no
+     * `artistId`, so albums arrived with an empty one and `observeByArtistId`
+     * matched nothing: every artist page showed an artist with no records, and
+     * "Go to artist" never appeared in the action sheet. Nothing looked broken,
+     * because the shelf sorts and groups on the name.
+     *
+     * Two things make this a repair pass over the database rather than a line
+     * inside the track fetch:
+     *
+     *  - **It converges.** A `getAlbum` call that fails is skipped and the sync
+     *    carries on, which is the right trade but leaves that album unfixed
+     *    forever if the fix rides along with the fetch. Reading from the
+     *    database means any album whose tracks arrived on any earlier run gets
+     *    fixed on this one.
+     *  - **It votes.** The album artist is the one most of its tracks name, not
+     *    whoever happens to be first. On a compilation, track one's artist is
+     *    the wrong answer, and a tie is left alone rather than guessed at.
+     */
+    suspend fun repairAlbumArtistIds() {
+        db.albums().withoutArtistId().forEach { album ->
+            val ids = db.tracks().forAlbum(album.id).map { it.artistId }
+            resolveAlbumArtistId(ids)?.let { db.albums().fillArtistId(album.id, it) }
+        }
     }
 
     /**
@@ -237,6 +309,9 @@ class LibraryRepository(
 
         /** A guard against a paging bug on the server becoming an infinite loop. */
         const val MAX_ALBUMS = 100_000
+
+        /** Fourteen months, per the specification. */
+        const val QUIET_SECONDS = 425L * 24 * 60 * 60
     }
 }
 

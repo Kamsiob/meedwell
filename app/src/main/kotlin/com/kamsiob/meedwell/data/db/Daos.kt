@@ -99,6 +99,24 @@ interface AlbumDao {
     suspend fun setStarred(id: String, starred: Boolean)
 
     /**
+     * Fills in an album's artist ID after the fact.
+     *
+     * Bandcamp's `getAlbumList2` returns an album's artist *name* but no
+     * `artistId`, so every album arrived with an empty one. Nothing looked
+     * broken, because the shelf sorts and groups on the name: the damage was
+     * that `observeByArtistId` matched nothing, so every artist page showed an
+     * artist with no records. `getAlbum` does carry the ID on each song, which
+     * is where the sync gets it from.
+     *
+     * Guarded on being empty so a real ID is never overwritten by a stray one.
+     */
+    @Query("UPDATE album SET artistId = :artistId WHERE id = :id AND artistId = ''")
+    suspend fun fillArtistId(id: String, artistId: String)
+
+    @Query("SELECT * FROM album WHERE artistId = ''")
+    suspend fun withoutArtistId(): List<AlbumEntity>
+
+    /**
      * Removes anything the last full sync did not see.
      *
      * Local-only albums are excluded: they were never in the collection, so a
@@ -207,6 +225,32 @@ interface PlayEventDao {
     @Query("SELECT * FROM play_event ORDER BY playedAt DESC LIMIT :limit")
     fun observeRecent(limit: Int = 500): Flow<List<PlayEventEntity>>
 
+    /**
+     * History, joined to the track and album it refers to.
+     *
+     * Done as one query rather than a play log plus N lookups, because a
+     * listening history is exactly the table that grows without bound and a
+     * per-row lookup would make the screen slower the longer somebody uses it.
+     */
+    @Query(
+        """
+        SELECT play_event.playedAt AS playedAt,
+               play_event.id AS eventId,
+               track.id AS trackId,
+               track.title AS title,
+               track.artist AS artist,
+               album.id AS albumId,
+               album.name AS albumName,
+               album.coverArtId AS coverArtId
+        FROM play_event
+        JOIN track ON track.id = play_event.trackId
+        JOIN album ON album.id = play_event.albumId
+        ORDER BY play_event.playedAt DESC
+        LIMIT :limit
+        """
+    )
+    fun observeHistory(limit: Int = 400): Flow<List<HistoryRow>>
+
     @Query("SELECT COUNT(*) FROM play_event WHERE albumId = :albumId")
     suspend fun countForAlbum(albumId: String): Int
 
@@ -240,6 +284,18 @@ interface PlayEventDao {
     @Query("SELECT COUNT(*) FROM play_event")
     suspend fun count(): Int
 }
+
+/** One row of the history screen, already joined. */
+data class HistoryRow(
+    val eventId: Long,
+    val playedAt: Long,
+    val trackId: String,
+    val title: String,
+    val artist: String,
+    val albumId: String,
+    val albumName: String,
+    val coverArtId: String,
+)
 
 @Dao
 interface PlaylistDao {
