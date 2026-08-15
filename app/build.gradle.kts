@@ -148,8 +148,14 @@ val forbiddenPermissions = setOf(
 val auditManifest = tasks.register("auditMergedManifest") {
     group = "verification"
     description = "Fails if the merged manifest declares a permission this app has not justified."
+    // Only the manifest that actually ships. The androidTest manifest is
+    // excluded because the instrumentation runner adds REORDER_TASKS to the
+    // test APK, which never reaches a user's phone. Auditing it would mean
+    // either failing every test build or allowlisting a permission the app
+    // does not have, and the second would quietly weaken the real check.
     val manifests = fileTree(layout.buildDirectory.dir("intermediates/merged_manifest")) {
         include("**/AndroidManifest.xml")
+        exclude("**/*AndroidTest*/**")
     }
     inputs.files(manifests)
     // Captured as plain values here rather than referenced from inside doLast.
