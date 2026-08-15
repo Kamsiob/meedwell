@@ -58,6 +58,7 @@ class SurroundingsCoordinator(
     private var progressId: String? = null
     private var progress: Float = 0f
     private var worker: Job? = null
+    private var checking = false
 
     /**
      * Reads the library and works out what is already here.
@@ -164,6 +165,45 @@ class SurroundingsCoordinator(
         queue.addLast(id)
         rebuild()
         startWorker()
+    }
+
+    /**
+     * The whole library, everything not already here.
+     *
+     * The same queue as any other download, so it can be stopped one recording
+     * at a time and picks up where it left off.
+     */
+    fun downloadEverything() {
+        val missing = sounds.filter { !store.isPresent(it) }
+        if (missing.isEmpty()) return
+        downloader.networkObjection()?.let {
+            onNotice(it.message)
+            return
+        }
+        missing.forEach { if (it.id !in queue && progressId != it.id) queue.addLast(it.id) }
+        onNotice("Queued ${missing.size} recordings. You can stop any of them.")
+        rebuild()
+        startWorker()
+    }
+
+    /**
+     * Asks the library whether there is anything new.
+     *
+     * Only ever from a tap. Nothing checks on a timer, on launch, or in the
+     * background: a library that adds things to somebody's app unasked has
+     * started making decisions on their behalf.
+     */
+    fun checkForNew() {
+        if (checking) return
+        checking = true
+        rebuild()
+        scope.launch {
+            val message = container.surroundings.refreshManifest(container.httpClient)
+            sounds = Downloads.offerable(container.surroundings.manifest())
+            checking = false
+            rebuild()
+            onNotice(message)
+        }
     }
 
     /** Everything in a group that is not already here, queued in order. */
@@ -319,6 +359,9 @@ class SurroundingsCoordinator(
             hereCount = present.size,
             totalCount = sounds.size,
             storageLine = storageLine(present.size),
+            everythingCostLine = Downloads.costLine(sounds, present),
+            missingCount = sounds.size - present.size,
+            checking = checking,
             volume = container.settings.surroundingsVolume,
         )
     }

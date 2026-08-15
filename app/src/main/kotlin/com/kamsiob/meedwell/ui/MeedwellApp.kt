@@ -466,6 +466,8 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                     onDownload = viewModel.surroundings::download,
                     onCancelDownload = viewModel.surroundings::cancelDownload,
                     onDownloadGroup = viewModel.surroundings::downloadGroup,
+                    onDownloadEverything = viewModel.surroundings::downloadEverything,
+                    onCheckForNew = viewModel.surroundings::checkForNew,
                     onRemove = viewModel.surroundings::remove,
                     onOpenDetail = viewModel.surroundings::openDetail,
                     onToggleGroup = viewModel.surroundings::toggleGroup,
@@ -659,7 +661,17 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
             )
         }
 
-        Notice(text = notice, onDismiss = viewModel::dismissNotice)
+        // How much sits at the bottom of the current screen, so a notice lands
+        // above it rather than across a track title. Measured in the same
+        // numbers the layouts use rather than guessed at.
+        val noticeLift = run {
+            var lift = 0.dp
+            if (playback.hasQueue) lift += 64.dp
+            if (destination is Destination.Main) lift += 58.dp
+            if (destination == Destination.Surroundings && surroundings.playingId != null) lift += 126.dp
+            lift
+        }
+        Notice(text = notice, liftedBy = noticeLift, onDismiss = viewModel::dismissNotice)
 
         pendingConfirm?.let { pending ->
             when (pending) {

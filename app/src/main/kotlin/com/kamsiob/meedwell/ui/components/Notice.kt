@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.ui.theme.Elevation
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -49,7 +50,19 @@ import kotlinx.coroutines.delay
  *    small, avoidable indignity.
  */
 @Composable
-fun Notice(text: String?, onDismiss: () -> Unit) {
+fun Notice(
+    text: String?,
+    /**
+     * How much furniture sits at the bottom of this screen already.
+     *
+     * A notice pinned to the bottom of the window landed on top of the mini
+     * player and the surroundings bar, with two lines of text crossing a track
+     * title. It has to be told what is below it, because it is drawn over the
+     * whole app and cannot see the screen it is floating above.
+     */
+    liftedBy: Dp = 0.dp,
+    onDismiss: () -> Unit,
+) {
     // Keyed on the text, so a second notice arriving restarts the clock rather
     // than inheriting the tail of the first one's.
     LaunchedEffect(text) {
@@ -69,6 +82,7 @@ fun Notice(text: String?, onDismiss: () -> Unit) {
             Box(
                 Modifier
                     .navigationBarsPadding()
+                    .padding(bottom = liftedBy)
                     .padding(horizontal = 20.dp, vertical = 18.dp)
                     .fillMaxWidth()
                     .meedwellShadow(Elevation.floating, RoundedCornerShape(Radius.floating))

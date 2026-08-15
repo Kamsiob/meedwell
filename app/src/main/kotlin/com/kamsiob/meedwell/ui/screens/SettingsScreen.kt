@@ -123,7 +123,7 @@ fun SettingsScreen(
             title = "Download over Wi-Fi only",
             // The number is the point. "Use Wi-Fi only" as a bare switch does
             // not tell anybody what turning it off could cost them.
-            subtitle = "The whole library is about a gigabyte",
+            subtitle = "The whole library is about 530 MB",
             checked = state.wifiOnlyDownloads,
             onToggle = onToggleWifiOnly,
         )

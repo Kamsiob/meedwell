@@ -75,6 +75,8 @@ fun SurroundingsScreen(
     onDownload: (String) -> Unit,
     onCancelDownload: (String) -> Unit,
     onDownloadGroup: (String) -> Unit,
+    onDownloadEverything: () -> Unit,
+    onCheckForNew: () -> Unit,
     onRemove: (String) -> Unit,
     onOpenDetail: (String) -> Unit,
     onToggleGroup: (String) -> Unit,
@@ -157,6 +159,50 @@ fun SurroundingsScreen(
                 item(key = "foot") {
                     Column(Modifier.padding(horizontal = 22.dp).padding(top = 26.dp)) {
                         Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+
+                        // The third granularity: the whole thing at once.
+                        // Deliberately at the bottom rather than the top, and
+                        // deliberately stating a number in gigabytes. It is a
+                        // real option, not the one being nudged toward.
+                        if (state.missingCount > 0) {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp)
+                                    .defaultMinSize(minHeight = 48.dp)
+                                    .clip(RoundedCornerShape(Radius.panel))
+                                    .clickable(role = Role.Button, onClick = onDownloadEverything)
+                                    .background(colors.surfacePanel)
+                                    .padding(horizontal = 14.dp, vertical = 12.dp)
+                                    .semantics {
+                                        contentDescription = "Get the whole library. ${state.everythingCostLine}"
+                                    },
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text("Get the whole library", style = type.rowTitle, color = colors.primaryText)
+                                    Text(state.everythingCostLine, style = type.numeric, color = colors.tertiaryText)
+                                }
+                                MeedwellIcon(MeedwellIcons.Download, size = 18.dp, tint = colors.secondaryText)
+                            }
+                        }
+
+                        // Updates are never automatic. Nothing checks on a
+                        // timer, on launch, or in the background; a person taps
+                        // a control that says what it will do.
+                        Box(
+                            Modifier
+                                .defaultMinSize(minHeight = 48.dp)
+                                .clickable(enabled = !state.checking, role = Role.Button, onClick = onCheckForNew)
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            Text(
+                                if (state.checking) "Asking the library…" else "Check for new recordings",
+                                style = type.metadata,
+                                color = colors.secondaryText,
+                            )
+                        }
                         Text(
                             state.storageLine,
                             style = type.metadata,
@@ -589,6 +635,9 @@ data class SurroundingsUiState(
     val hereCount: Int = 0,
     val totalCount: Int = 0,
     val storageLine: String = "",
+    val everythingCostLine: String = "",
+    val missingCount: Int = 0,
+    val checking: Boolean = false,
     val loadError: String? = null,
 ) {
     val voiceLine: String

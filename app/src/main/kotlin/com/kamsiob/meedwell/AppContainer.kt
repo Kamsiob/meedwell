@@ -36,11 +36,25 @@ class AppContainer(context: Context) {
 
     val surroundings: SurroundingsRepository by lazy { SurroundingsRepository(appContext) }
 
+    /**
+     * One HTTP client for the whole app.
+     *
+     * Shared so connections and thread pools are pooled rather than duplicated
+     * per feature, and so there is exactly one place to look when asking what
+     * this app can talk to.
+     */
+    val httpClient: okhttp3.OkHttpClient by lazy {
+        okhttp3.OkHttpClient.Builder()
+            .connectTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(90, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+    }
+
     /** Where Surroundings recordings live, and the only thing that puts one there. */
     val surroundingsStore: SurroundingsStore by lazy { SurroundingsStore(appContext) }
 
     val surroundingsDownloader: SurroundingsDownloader by lazy {
-        SurroundingsDownloader(appContext, surroundingsStore, settings)
+        SurroundingsDownloader(appContext, surroundingsStore, settings, httpClient)
     }
 
     private val engine by lazy { OkHttpSubsonicEngine() }
