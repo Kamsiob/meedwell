@@ -108,4 +108,12 @@ fun ConfirmSheet(
 sealed interface PendingConfirm {
     data object EraseHistory : PendingConfirm
     data object Disconnect : PendingConfirm
+
+    /**
+     * Confirmed before the file picker rather than after it.
+     *
+     * Choosing a file should not be the moment somebody learns that opening it
+     * will replace their listening history.
+     */
+    data object Restore : PendingConfirm
 }

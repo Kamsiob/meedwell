@@ -49,27 +49,56 @@ object Elevation {
     val sheet: Dp = 20.dp
 }
 
-private val ShadowAmbient = Color(0xFF05050A)
-private val ShadowSpot = Color(0xFF000006)
+/**
+ * Shadow colors, which are not the same in both themes.
+ *
+ * On near-black, a shadow has to be darker than a background that is already
+ * almost black, so it is very nearly pure and cast strongly enough to be seen
+ * at all.
+ *
+ * On the light theme those same values are a disaster: a near-black shadow at
+ * full elevation under an off-white card renders as a grey smear with a visible
+ * edge, which reads as a rendering fault rather than as depth. The light
+ * shadow is therefore a low-alpha warm grey, cast shorter, so a card looks
+ * lifted rather than stained.
+ */
+private val DarkShadowAmbient = Color(0xFF05050A)
+private val DarkShadowSpot = Color(0xFF000006)
+private val LightShadowAmbient = Color(0x1C3A342B)
+private val LightShadowSpot = Color(0x2B2A251E)
 
 /**
- * A shadow that reads as depth on near-black.
+ * The light theme's shadows are shorter as well as fainter.
+ *
+ * Elevation in Material's model is a physical height, and a tall card on a
+ * white ground throws a long shadow that swamps a quiet layout. The proportion
+ * here was chosen by looking at the mini player, which is the most elevated
+ * thing that sits over content.
+ */
+private const val LIGHT_ELEVATION_SCALE = 0.55f
+
+/**
+ * A shadow that reads as depth in either theme.
  *
  * Always applied **before** the background and clip in a modifier chain, so the
  * shadow is cast by the shape rather than clipped away by it. Getting that order
  * wrong silently produces no shadow at all, which is how the app ended up with
  * none.
  */
+@Composable
 fun Modifier.meedwellShadow(
     elevation: Dp,
     shape: Shape = RoundedCornerShape(0.dp),
-): Modifier = this.shadow(
-    elevation = elevation,
-    shape = shape,
-    clip = false,
-    ambientColor = ShadowAmbient,
-    spotColor = ShadowSpot,
-)
+): Modifier {
+    val dark = MeedwellTheme.colors.isDark
+    return this.shadow(
+        elevation = if (dark) elevation else elevation * LIGHT_ELEVATION_SCALE,
+        shape = shape,
+        clip = false,
+        ambientColor = if (dark) DarkShadowAmbient else LightShadowAmbient,
+        spotColor = if (dark) DarkShadowSpot else LightShadowSpot,
+    )
+}
 
 /**
  * The spacing scale.

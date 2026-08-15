@@ -5,6 +5,7 @@ import com.kamsiob.meedwell.core.subsonic.SubsonicClient
 import com.kamsiob.meedwell.data.CredentialStore
 import com.kamsiob.meedwell.data.LibraryRepository
 import com.kamsiob.meedwell.data.OkHttpSubsonicEngine
+import com.kamsiob.meedwell.data.BackupRepository
 import com.kamsiob.meedwell.data.SurroundingsDownloader
 import com.kamsiob.meedwell.data.SurroundingsRepository
 import com.kamsiob.meedwell.data.SurroundingsStore
@@ -48,6 +49,11 @@ class AppContainer(context: Context) {
             .connectTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(90, java.util.concurrent.TimeUnit.SECONDS)
             .build()
+    }
+
+    /** Export and restore, which is the one path the user's own data leaves by. */
+    val backup: BackupRepository by lazy {
+        BackupRepository(appContext, database, settings, com.kamsiob.meedwell.BuildConfig.VERSION_NAME)
     }
 
     /** Where Surroundings recordings live, and the only thing that puts one there. */

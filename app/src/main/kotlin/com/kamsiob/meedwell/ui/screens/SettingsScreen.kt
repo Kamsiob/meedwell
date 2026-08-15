@@ -129,7 +129,7 @@ fun SettingsScreen(
         )
 
         Section("Your data")
-        SettingRow("Export and restore", state.lastBackupLabel, onClick = onOpenExport)
+        SettingRow("Export and restore", state.backupSubtitle, onClick = onOpenExport)
         SettingRow("Erase listening history", state.historySubtitle, onClick = onEraseHistory)
 
         if (state.connected) {
@@ -254,7 +254,7 @@ data class SettingsState(
     val watchedFolderCount: Int = 0,
     val historyEventCount: Int = 0,
     val connected: Boolean = false,
-    val lastBackupLabel: String? = "Not backed up yet",
+    val lastBackupAt: Long = 0,
     val syncing: Boolean = false,
     val wifiOnlyDownloads: Boolean = true,
     /** Seconds since the epoch, or zero for never. */
@@ -286,6 +286,25 @@ data class SettingsState(
             0 -> "None yet. This is how owned files reach your shelf."
             1 -> "One folder Meedwell watches"
             else -> "$watchedFolderCount folders Meedwell watches"
+        }
+
+    /**
+     * When the last export was written.
+     *
+     * Quiet and permanent, and it never nags. A row that turns orange after a
+     * fortnight to remind somebody to back up is the app deciding how anxious
+     * they should be about their own data.
+     */
+    val backupSubtitle: String
+        get() = if (lastBackupAt <= 0) {
+            "Never exported"
+        } else {
+            val ago = (System.currentTimeMillis() / 1000) - lastBackupAt
+            "Last exported " + when {
+                ago < 86_400 -> "today"
+                ago < 172_800 -> "yesterday"
+                else -> "${ago / 86_400} days ago"
+            }
         }
 
     val historySubtitle: String

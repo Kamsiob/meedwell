@@ -5,6 +5,8 @@ import android.provider.Settings
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -50,8 +52,23 @@ class MainActivity : ComponentActivity() {
                 factory = MeedwellViewModel.Factory(container)
             )
             viewModelRef = viewModel
+
+            /*
+             * The theme, watched rather than read.
+             *
+             * This was `container.settings.theme` read once inside setContent,
+             * which is not Compose state, so nothing recomposed when it
+             * changed. Settings showed the new value and the app stayed the old
+             * color until it was killed and reopened, which reads as the
+             * control being broken rather than delayed. It is also the setting
+             * somebody is most likely to try first.
+             */
+            val theme by produceState(container.settings.theme) {
+                container.settings.observeChanges().collect { value = container.settings.theme }
+            }
+
             MeedwellTheme(
-                themeChoice = container.settings.theme,
+                themeChoice = theme,
                 reducedMotion = rememberReducedMotion(),
             ) {
                 MeedwellApp(viewModel)

@@ -51,6 +51,7 @@ import com.kamsiob.meedwell.ui.screens.MoreScreen
 import com.kamsiob.meedwell.ui.screens.ArtistScreen
 import com.kamsiob.meedwell.ui.screens.CreditsScreen
 import com.kamsiob.meedwell.ui.components.CreditSheet
+import com.kamsiob.meedwell.ui.screens.ExportScreen
 import com.kamsiob.meedwell.ui.screens.ForgottenShelfScreen
 import com.kamsiob.meedwell.ui.screens.SurroundingsScreen
 import com.kamsiob.meedwell.ui.screens.HistoryScreen
@@ -110,6 +111,7 @@ sealed interface Destination {
     data object History : Destination
     data object Forgotten : Destination
     data object Surroundings : Destination
+    data object Export : Destination
     data object Loved : Destination
     data class ArtistDetail(val artistId: String) : Destination
     data class GenreFilter(val genre: String) : Destination
@@ -135,6 +137,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val notice by viewModel.notice.collectAsState()
     val surroundings by viewModel.surroundings.state.collectAsState()
     val surroundingsDetail by viewModel.surroundings.detail.collectAsState()
+    val exportState by viewModel.export.collectAsState()
     val sort by viewModel.sort.collectAsState()
     val scope by viewModel.scope.collectAsState()
     var pendingConfirm by remember { mutableStateOf<PendingConfirm?>(null) }
@@ -152,6 +155,17 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
     val folderPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri -> if (uri != null) viewModel.addWatchedFolder(uri) }
+
+    // Export writes to a document the user names, and restore reads one they
+    // pick. Both go through the system picker rather than a path this app
+    // chooses, so the file lands somewhere they can actually find it again.
+    val exportPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri -> if (uri != null) viewModel.exportTo(uri) }
+
+    val restorePicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri -> if (uri != null) viewModel.restoreFrom(uri) }
 
     var destination by remember {
         mutableStateOf<Destination>(
@@ -187,6 +201,7 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
         Destination.About, Destination.YourFiles, Destination.Credits,
         Destination.History, Destination.Forgotten,
         Destination.Surroundings -> Destination.Main(Tab.More)
+        Destination.Export -> Destination.Settings
         Destination.Loved -> Destination.Main(Tab.Lists)
         is Destination.ArtistDetail -> Destination.Main()
         is Destination.GenreFilter -> Destination.Main()  // clearGenreFilter runs on leaving, below
@@ -311,7 +326,10 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                 onToggleGapless = viewModel::toggleGapless,
                 onToggleLongResume = viewModel::toggleLongResume,
                 onOpenLocalFolders = { destination = Destination.YourFiles },
-                onOpenExport = { /* Phase 6: export and restore */ },
+                onOpenExport = {
+                    viewModel.refreshExportState()
+                    destination = Destination.Export
+                },
                 onToggleShelfView = viewModel::toggleLayout,
                 onSyncNow = viewModel::refresh,
                 onToggleWifiOnly = viewModel::toggleWifiOnly,
@@ -450,6 +468,23 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                         )
                     }
                 }
+            }
+
+            Destination.Export -> WithMiniPlayer(
+                playback = playback,
+                onPlayPause = viewModel.player::playPause,
+                onOpen = { destination = Destination.NowPlaying },
+            ) {
+                ExportScreen(
+                    state = exportState,
+                    onExport = { exportPicker.launch(viewModel.suggestedBackupName()) },
+                    // Restore replaces rather than merges, so it is confirmed
+                    // before the picker rather than after: choosing a file
+                    // should not be the moment somebody learns what it does.
+                    onRestore = { pendingConfirm = PendingConfirm.Restore },
+                    onBack = { destination = Destination.Settings },
+                    modifier = Modifier.statusBarsPadding(),
+                )
             }
 
             Destination.Surroundings -> WithMiniPlayer(
@@ -682,6 +717,16 @@ fun MeedwellApp(viewModel: MeedwellViewModel) {
                         "shelf are untouched. This one cannot be undone.",
                     confirmLabel = "Erase it",
                     onConfirm = viewModel::eraseHistory,
+                    onDismiss = { pendingConfirm = null },
+                )
+                PendingConfirm.Restore -> ConfirmSheet(
+                    title = "Replace everything on this phone?",
+                    body = "Restoring puts the file's listening history, hearts, lists and settings " +
+                        "in place of the ones here. It does not merge them: two histories that have " +
+                        "drifted apart cannot be joined into one true answer. Your music and your " +
+                        "shelf are untouched. This one cannot be undone.",
+                    confirmLabel = "Choose a file",
+                    onConfirm = { restorePicker.launch(arrayOf("application/json", "text/plain", "*/*")) },
                     onDismiss = { pendingConfirm = null },
                 )
                 PendingConfirm.Disconnect -> ConfirmSheet(

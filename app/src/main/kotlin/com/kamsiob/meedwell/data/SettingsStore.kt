@@ -65,12 +65,17 @@ class SettingsStore(context: Context) {
         get() = prefs.getBoolean(KEY_CHOSEN_PATH, false)
         set(value) = prefs.edit { putBoolean(KEY_CHOSEN_PATH, value) }
 
+    /** When the last export was written, or zero for never. */
+    var lastBackupAt: Long
+        get() = prefs.getLong(KEY_LAST_BACKUP, 0L)
+        set(value) = prefs.edit { putLong(KEY_LAST_BACKUP, value) }
+
     /**
      * Whether Surroundings recordings may be fetched over mobile data.
      *
-     * **On by default, and the default is the careful one.** The whole library
-     * is over a gigabyte and the largest single recording is twenty-five
-     * megabytes. Somebody who taps a pack without noticing they are off Wi-Fi
+     * **On by default, and the default is the careful one.** The largest single
+     * recording is twenty-five megabytes and the whole library is over five
+     * hundred. Somebody who taps a pack without noticing they are off Wi-Fi
      * should not discover the difference on their bill.
      */
     var wifiOnlyDownloads: Boolean
@@ -107,6 +112,7 @@ class SettingsStore(context: Context) {
         const val KEY_QUEUE_POSITION = "queue_position"
         const val KEY_CHOSEN_PATH = "chosen_path"
         const val KEY_WIFI_ONLY = "wifi_only_downloads"
+        const val KEY_LAST_BACKUP = "last_backup_at"
         const val KEY_SURROUNDINGS_SOUND = "surroundings_sound"
         const val KEY_SURROUNDINGS_VOLUME = "surroundings_volume"
     }

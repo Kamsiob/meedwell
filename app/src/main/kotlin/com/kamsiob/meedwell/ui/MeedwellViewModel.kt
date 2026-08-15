@@ -28,6 +28,7 @@ import com.kamsiob.meedwell.ui.screens.CoverUrls
 import com.kamsiob.meedwell.ui.screens.ShelfState
 import com.kamsiob.meedwell.core.surroundings.LicenseGroup
 import com.kamsiob.meedwell.ui.screens.ArtistState
+import com.kamsiob.meedwell.ui.screens.ExportState
 import com.kamsiob.meedwell.ui.screens.ForgottenAlbum
 import com.kamsiob.meedwell.ui.screens.HistoryDay
 import com.kamsiob.meedwell.ui.screens.HistoryEntry
@@ -120,6 +121,9 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     private val _credits = MutableStateFlow(CreditsState())
     val credits: StateFlow<CreditsState> = _credits.asStateFlow()
+
+    private val _export = MutableStateFlow(ExportState())
+    val export: StateFlow<ExportState> = _export.asStateFlow()
 
     private val _yourFiles = MutableStateFlow(YourFilesState())
     val yourFiles: StateFlow<YourFilesState> = _yourFiles.asStateFlow()
@@ -412,9 +416,67 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
                 historyEventCount = container.database.playEvents().count(),
                 lastSyncAt = settings.lastSyncAt,
                 wifiOnlyDownloads = settings.wifiOnlyDownloads,
+                lastBackupAt = settings.lastBackupAt,
             )
         }
     }
+
+    // ---------- Export and restore ----------
+
+    fun refreshExportState() {
+        _export.value = _export.value.copy(lastBackupAt = settings.lastBackupAt)
+    }
+
+    fun suggestedBackupName(): String = container.backup.suggestedFileName()
+
+    fun exportTo(uri: Uri) {
+        _export.value = _export.value.copy(working = true, result = null)
+        viewModelScope.launch {
+            val problem = container.backup.writeTo(uri)
+            _export.value = _export.value.copy(
+                working = false,
+                lastBackupAt = settings.lastBackupAt,
+                result = problem ?: "Exported. Keep the file somewhere you will find it again.",
+            )
+            refreshSettings()
+        }
+    }
+
+    fun restoreFrom(uri: Uri) {
+        _export.value = _export.value.copy(working = true, result = null)
+        viewModelScope.launch {
+            val outcome = container.backup.restoreFrom(uri)
+            _export.value = _export.value.copy(working = false, result = describe(outcome))
+            refreshSettings()
+        }
+    }
+
+    /**
+     * What a restore did, in a sentence.
+     *
+     * It says what came back **and** what did not, because a restore that
+     * reports only its successes is how somebody finds out months later that a
+     * section of the file was skipped.
+     */
+    private fun describe(outcome: com.kamsiob.meedwell.data.BackupRepository.RestoreResult): String =
+        when (outcome) {
+            is com.kamsiob.meedwell.data.BackupRepository.RestoreResult.Refused -> outcome.message
+            is com.kamsiob.meedwell.data.BackupRepository.RestoreResult.Restored -> buildString {
+                append("Restored ${outcome.plays} plays")
+                if (outcome.loved > 0) append(", ${outcome.loved} hearts")
+                if (outcome.lists > 0) append(", ${outcome.lists} lists")
+                append(".")
+                if (outcome.relinked > 0) {
+                    append(" ${outcome.relinked} of your music files were found where the export said ")
+                    append("they would be and are linked up again.")
+                }
+                if (outcome.notUnderstood.isNotEmpty()) {
+                    append(" This version did not understand ")
+                    append(outcome.notUnderstood.joinToString(", "))
+                    append(", so that part was left alone rather than guessed at.")
+                }
+            }
+        }
 
     fun toggleWifiOnly() {
         settings.wifiOnlyDownloads = !settings.wifiOnlyDownloads

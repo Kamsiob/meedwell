@@ -113,6 +113,14 @@ interface AlbumDao {
     @Query("UPDATE album SET artistId = :artistId WHERE id = :id AND artistId = ''")
     suspend fun fillArtistId(id: String, artistId: String)
 
+    /** Restore replaces rather than merges, so the old state is cleared first. */
+    @Query("UPDATE album SET isStarred = 0")
+    suspend fun clearAllStarred()
+
+    /** Every starred album id, for an export. */
+    @Query("SELECT id FROM album WHERE isStarred = 1")
+    suspend fun starredIds(): List<String>
+
     @Query("SELECT * FROM album WHERE artistId = ''")
     suspend fun withoutArtistId(): List<AlbumEntity>
 
@@ -159,6 +167,25 @@ interface TrackDao {
 
     @Query("UPDATE track SET isStarred = :starred WHERE id = :id")
     suspend fun setStarred(id: String, starred: Boolean)
+
+    /** Restore replaces rather than merges, so the old state is cleared first. */
+    @Query("UPDATE track SET isStarred = 0")
+    suspend fun clearAllStarred()
+
+    @Query("UPDATE track SET resumePositionSeconds = NULL")
+    suspend fun clearAllResumePositions()
+
+    /** Every starred track id, for an export. */
+    @Query("SELECT id FROM track WHERE isStarred = 1")
+    suspend fun starredIds(): List<String>
+
+    /** Every track that has a resume point, for an export. */
+    @Query("SELECT id, resumePositionSeconds FROM track WHERE resumePositionSeconds IS NOT NULL")
+    suspend fun resumePoints(): List<ResumeRow>
+
+    /** Every track whose file is on this phone, for an export. */
+    @Query("SELECT id, localPath FROM track WHERE localPath IS NOT NULL")
+    suspend fun localPaths(): List<LocalPathRow>
 
     @Query("UPDATE track SET resumePositionSeconds = :seconds WHERE id = :id")
     suspend fun setResumePosition(id: String, seconds: Long?)
@@ -225,6 +252,13 @@ interface PlayEventDao {
     @Query("SELECT * FROM play_event ORDER BY playedAt DESC LIMIT :limit")
     fun observeRecent(limit: Int = 500): Flow<List<PlayEventEntity>>
 
+    /** Every play, oldest first, for an export. */
+    @Query("SELECT * FROM play_event ORDER BY playedAt")
+    suspend fun all(): List<PlayEventEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(events: List<PlayEventEntity>)
+
     /**
      * History, joined to the track and album it refers to.
      *
@@ -286,6 +320,18 @@ interface PlayEventDao {
 }
 
 /** One row of the history screen, already joined. */
+/** One track's resume point, for an export. */
+data class ResumeRow(
+    val id: String,
+    val resumePositionSeconds: Long?,
+)
+
+/** Where one track's file was found, for an export. */
+data class LocalPathRow(
+    val id: String,
+    val localPath: String?,
+)
+
 data class HistoryRow(
     val eventId: Long,
     val playedAt: Long,
@@ -310,6 +356,26 @@ interface PlaylistDao {
 
     @Query("DELETE FROM playlist WHERE id = :id AND fromBandcamp = 0")
     suspend fun deleteLocal(id: String)
+
+    /**
+     * Clears every list this phone made, for a restore.
+     *
+     * Lists that came from Bandcamp are left alone: they are not this phone's
+     * to replace, and the next sync would put them back anyway.
+     */
+    @Query("DELETE FROM playlist WHERE fromBandcamp = 0")
+    suspend fun deleteAllLocal()
+
+    @Query("SELECT * FROM playlist WHERE fromBandcamp = 0 ORDER BY name")
+    suspend fun allLocal(): List<PlaylistEntity>
+
+    @Query("SELECT trackId FROM playlist_track WHERE playlistId = :playlistId ORDER BY position")
+    suspend fun trackIdsFor(playlistId: String): List<String>
+
+    /** Each list with its tracks in order, for an export. */
+    @Transaction
+    suspend fun allWithTracks(): List<Pair<PlaylistEntity, List<String>>> =
+        allLocal().map { it to trackIdsFor(it.id) }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTracks(items: List<PlaylistTrackEntity>)
@@ -368,4 +434,7 @@ interface WatchedFolderDao {
 
     @Query("DELETE FROM watched_folder WHERE uri = :uri")
     suspend fun remove(uri: String)
+
+    @Upsert
+    suspend fun upsertAll(folders: List<WatchedFolderEntity>)
 }
