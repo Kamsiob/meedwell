@@ -65,9 +65,22 @@ fun Notice(
 ) {
     // Keyed on the text, so a second notice arriving restarts the clock rather
     // than inheriting the tail of the first one's.
+    //
+    // **The clock is set by how much there is to read.** Four seconds is right
+    // for "Added to Evening", and it is nowhere near enough for the thirty word
+    // message that says a database was set aside and names the file it now
+    // lives in. That one was written carefully, shown for four seconds, and
+    // therefore never actually read by anybody. A fixed duration is really a
+    // guess that every message is the same length.
+    //
+    // So: four seconds as the floor, plus reading time at roughly two hundred
+    // words a minute, which is deliberately slower than average because this
+    // appears over something else the person was already doing. Capped, because
+    // a notice that will not leave is its own problem.
     LaunchedEffect(text) {
         if (text != null) {
-            delay(NOTICE_MS)
+            val reading = text.length * MS_PER_CHARACTER
+            delay((NOTICE_MS + reading).coerceAtMost(NOTICE_MAX_MS))
             onDismiss()
         }
     }
@@ -114,3 +127,9 @@ fun Notice(
  * for a message of this length rather than a number picked by eye.
  */
 private const val NOTICE_MS = 4_000L
+
+/** About two hundred words a minute, at five characters to the word. */
+private const val MS_PER_CHARACTER = 60L
+
+/** Long enough for any message this app writes, short enough to still leave. */
+private const val NOTICE_MAX_MS = 16_000L

@@ -46,6 +46,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
 /**
@@ -222,10 +224,29 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
      * rather than deleted, and this says where it is.
      */
     private fun announceSetAsideDatabase() {
-        val name = com.kamsiob.meedwell.data.db.MeedwellDatabase.setAsideFileName ?: return
-        _notice.value = "Meedwell could not read the data it had, so it started fresh. " +
-            "Your old data was not deleted: it is still on this phone as $name. " +
-            "Your music and your Bandcamp account are untouched."
+        viewModelScope.launch {
+            // **The database has to be opened before this can be asked.**
+            //
+            // `setAsideFileName` is written while the database is being opened,
+            // and the container opens it lazily, on first use. Reading the flag
+            // straight from `init` therefore raced the open and lost every
+            // time: it saw null, said nothing, and somebody whose history had
+            // just been set aside was shown an empty shelf with no explanation.
+            // That is the half of issue #49 that survived the crash fix, and it
+            // is worse than the crash in one way, because a crash at least
+            // tells you something happened.
+            //
+            // Touching the database here is what makes the question answerable.
+            // It is idempotent, and it happens on the IO dispatcher because
+            // opening a database is file work and this runs during startup.
+            withContext(Dispatchers.IO) { container.database }
+
+            val name = com.kamsiob.meedwell.data.db.MeedwellDatabase.setAsideFileName
+                ?: return@launch
+            _notice.value = "Meedwell could not read the data it had, so it started fresh. " +
+                "Your old data was not deleted: it is still on this phone as $name. " +
+                "Your music and your Bandcamp account are untouched."
+        }
     }
 
     override fun onCleared() {
