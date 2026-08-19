@@ -30,14 +30,33 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.kamsiob.meedwell"
-        // minSdk 29 is set by the marquee feature rather than by taste.
-        // Downloads are written as real files through MediaStore using
-        // RELATIVE_PATH and IS_PENDING, and neither exists before API 29.
+        // **The application id is not the namespace, and here they differ.**
+        //
+        // The Play Console entry was created as `io.github.kamsiob.meedwell`,
+        // the reverse domain of the repository that publishes this app, which
+        // is also the form F-Droid expects. A package name is permanent once
+        // published, so the build follows the console rather than the console
+        // being rebuilt around the build.
+        //
+        // `namespace` stays `com.kamsiob.meedwell` on purpose: it is only the
+        // Kotlin package the generated R and BuildConfig classes land in, it is
+        // never seen by Play or by a user, and renaming it would touch every
+        // source file in both modules for no gain.
+        applicationId = "io.github.kamsiob.meedwell"
+        // minSdk 29 was set by the MediaStore download path, which used
+        // RELATIVE_PATH and IS_PENDING and neither exists before API 29. That
+        // path was never built and cannot be, since Bandcamp offers no download
+        // endpoint, so the original reason is gone.
+        //
+        // It stays at 29 anyway, now as a deliberate floor rather than a
+        // consequence: Android 10 is where scoped storage becomes the only
+        // storage model, which is the model `LocalScanner` is written against,
+        // and dropping lower would mean shipping a storage path nobody here can
+        // test on a real device. Revisit only with hardware to check it on.
         minSdk = 29
         targetSdk = 36
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -128,7 +147,9 @@ android {
  */
 // Some permissions are namespaced to the application id, so the allowlist is
 // written against a placeholder and resolved before comparing.
-val namespacePlaceholder = "com.kamsiob.meedwell"
+// This is the **application id**, not the namespace, because the permission
+// below is generated against the application id. They differ in this project.
+val namespacePlaceholder = "io.github.kamsiob.meedwell"
 
 val allowedPermissions = setOf(
     "android.permission.POST_NOTIFICATIONS",
@@ -138,6 +159,10 @@ val allowedPermissions = setOf(
     // Added by the Media3 session library for the playback foreground service.
     "android.permission.FOREGROUND_SERVICE",
     "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+    // Declared by this app, for the Surroundings download service. It is what
+    // keeps a download running when somebody leaves, and it grants nothing
+    // beyond letting that service hold a visible notification while it works.
+    "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
     // Added by Media3's ExoPlayer so audio keeps playing with the screen off.
     // A music player that stops when the phone locks is broken, and this grants
     // nothing beyond keeping the CPU awake while something is actually playing.
@@ -172,6 +197,13 @@ val auditManifest = tasks.register("auditMergedManifest") {
         exclude("**/*AndroidTest*/**")
     }
     inputs.files(manifests)
+    // Gradle 9 fails the build outright when a task reads another task's output
+    // without saying so, and this reads a directory both manifest tasks write
+    // into. It only surfaced when a debug task and a release task were in the
+    // same graph, which is what running the unit tests alongside `assembleRelease`
+    // does, so the audit passed on its own and failed in the one command that
+    // actually ships a build.
+    dependsOn("processDebugMainManifest", "processReleaseMainManifest")
     // Captured as plain values here rather than referenced from inside doLast.
     // The configuration cache cannot serialize a reference back into the build
     // script, and a task that breaks the configuration cache slows every build
@@ -216,6 +248,9 @@ dependencies {
     implementation(project(":core"))
 
     implementation(libs.androidx.core.ktx)
+    // The system's real audio routes, so the output picker lists what is
+    // actually connected rather than guessing.
+    implementation(libs.androidx.mediarouter)
     implementation(libs.androidx.splashscreen)
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.activity.compose)

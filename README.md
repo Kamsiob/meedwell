@@ -3,12 +3,42 @@
 **For people who buy their music.**
 
 An Android player for the music you actually own. Your Bandcamp collection and
-your local files on one shelf, streamed here and yours to keep as real files on
-your phone.
+the audio files already on your phone, on one shelf: streamed when you are out,
+played from your own files when you have them.
+
+Anyone can be at home here. Meedwell was designed from the ground up for one
+kind of listener, though: the one who puts on a chamber piece, a film score,
+solo piano, Celtic strings or an hour of ambience and actually sits with it.
+The whole app is drawn like a printed score, down to the Roman numerals on an
+album's movements.
 
 Free, forever, with nothing held back and nothing unlocked later. It collects
 nothing about you. Not analytics, not telemetry, not an identifier, not a crash
 report you did not send.
+
+---
+
+## Getting it
+
+Coming to Google Play as **Meedwell: Bandcamp Player**. The package name is
+`io.github.kamsiob.meedwell`.
+
+You need a Bandcamp account only if you want your Bandcamp collection on the
+shelf: the listening credentials come from your fan settings, under Subsonic.
+Local files and the whole Surroundings library work with no account at all.
+
+---
+
+## What it looks like
+
+Real captures from the running app, both themes. Nothing here is a mockup.
+
+| | | |
+|---|---|---|
+| <img src="store/listing/en-US/graphics/phone/1-player.png" width="230" alt="The player: cover, title, movement number, the loudness contour on a staff, and the transport."> | <img src="store/listing/en-US/graphics/phone/2-shelf.png" width="230" alt="The shelf as a grid of covers, with the view switcher above it."> | <img src="store/listing/en-US/graphics/phone/3-album.png" width="230" alt="An album set as a programme, movements numbered in Roman numerals with their durations."> |
+| **The player.** The scrubber is the piece's own loudness curve, drawn on a five line staff. | **The shelf.** Albums, Composers, Shelves and Lists, as a cover grid or a compact list. | **An album.** Set as a programme rather than a track list. |
+| <img src="store/listing/en-US/graphics/phone/4-surroundings.png" width="230" alt="The Surroundings card open over the shelf, listing recordings with their lengths."> | <img src="store/listing/en-US/graphics/phone/5-tone.png" width="230" alt="The Tone screen: a curve on a staff and five voicings named for instruments and rooms."> | <img src="store/listing/en-US/graphics/phone/8-privacy.png" width="230" alt="The Privacy screen, which opens by saying that Meedwell collects nothing."> |
+| **Surroundings.** Ambient sound under your music, or on its own. | **Tone.** Five gentle voicings, named for instruments and rooms rather than genres. | **Privacy.** The whole sheet, in the app, in plain words. |
 
 ---
 
@@ -53,9 +83,11 @@ rather than assumed from documentation.
   account. Removing one is broken on Bandcamp's side and returns an error
   whatever is sent. The app says so where it matters rather than failing
   silently.
-- **You cannot make your own lists yet.** Bandcamp's API has no way to create or
-  change a playlist, so any list Meedwell makes will live on your phone only.
-  That is coming; it is not here.
+- **Your lists live on this phone.** You can make them, name them, reorder them
+  and delete them, and any playlist your Bandcamp account already has appears
+  alongside them. What cannot happen is syncing: Bandcamp's API has no way for
+  an app to create or change a playlist, so a list made here stays here, and the
+  app says so rather than implying it reached your account.
 - **Streams are MP3.** That is what the API serves. Your own files play at
   whatever quality they are, and the app never implies otherwise.
 - **Bandcamp's Subsonic support is a young beta.** Eleven endpoints a normal

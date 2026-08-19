@@ -168,6 +168,237 @@ Consequences, all of them already designed for, per `MASTER_SPEC.md` section 6:
 
 **Account state changed during verification, and it could not be reverted.** Verifying `star` required starring something. One track, "Wolf Blood" from The Celtic Collection II, and one album, The Celtic Collection II, were starred. `unstar` is broken server side, so neither could be undone through the API. They can be unstarred on the Bandcamp website. Recorded here rather than quietly left, because it is a change made to the owner's real account.
 
+### 19 August 2026: the application id is io.github.kamsiob.meedwell
+
+The Play Console entry was created under `io.github.kamsiob.meedwell`, the
+reverse domain of the repository that publishes this app and the form F-Droid
+expects, while the build had shipped `com.kamsiob.meedwell` since Phase 0.
+
+**The build moved, not the console.** A package name is permanent from the
+first published release, and the console entry already held the listing. An
+upload whose id does not match the entry is rejected outright, so this was a
+release blocker rather than a preference.
+
+`namespace` deliberately stays `com.kamsiob.meedwell`. It is only the Kotlin
+package that the generated `R` and `BuildConfig` land in, no user or store ever
+sees it, and changing it would rewrite the package line of every source file in
+both modules to change nothing observable. The two being different is normal
+Android and is now commented at both sites.
+
+Two consequences worth knowing. The `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
+that androidx.core adds is namespaced to the **application id**, so the manifest
+audit's allowlist had to move with it or every build would fail the audit.
+And a phone carrying the old build treats this as a different app: it installs
+alongside rather than over, so the old one should be uninstalled by hand.
+
+### 19 August 2026: the store title is "Meedwell: Bandcamp Player"
+
+**Owner's instruction, overriding MASTER_SPEC section 2**, which says store
+listings carry "Meedwell by Kamsiob". That name tells a stranger scrolling Play
+nothing about what the app does, and the store title is the one line of copy
+that has to earn a tap from somebody who has never heard of either word. 25 of
+the 30 characters, so it is not truncated on any surface.
+
+**The trademark exposure is real and is being taken deliberately.** Play's
+metadata policy forbids using another company's brand in a way that misleads
+about affiliation, and a title beginning with a product name and ending in
+"Bandcamp Player" is a stronger claim than the nominative use that section 1
+permits everywhere else in the app. Mitigations already in place: the full
+description carries "Not affiliated with or endorsed by Bandcamp", the app
+never uses Bandcamp's logo or wordmark art, and nothing in the interface
+implies a partnership. If the listing is rejected or a trademark complaint
+arrives, the fallback is "Meedwell: Player for Bandcamp" and then "Meedwell:
+Music You Own", in that order, rather than relitigating the whole name.
+
+### 16 August 2026, second entry: the card shrinks, the pages turn
+
+**The Surroundings card is one row with its level on its bottom edge.** The
+owner's verdict on the three-storey collapsed card was that it took up way too
+much space, and the clever way out was the one the mini player had already
+found: re-home the control instead of dropping it. The volume is now a thin
+rule along the card's bottom edge, the contour's own dot riding it, tiny
+speakers at the ends, an invisible 40dp reach overlapping the row padding. So
+the two cards are mirrored twins, the music's rule on the mini player's top
+edge and the room's rule on the bed card's bottom edge. The grab handle went
+with the height; drag, tap and chevron all still work, and the full level line
+returns when the card is open. Collapsed height fell from about 104dp to about
+66dp.
+
+**Numeral columns are sized from the highest numeral.** XVIII wrapped in a
+fixed 30dp column. `numeralColumnWidth` picks one width per programme from the
+largest track number, so every row shares one margin and no numeral ever
+breaks.
+
+**On the Shelf, a swipe crosses the switcher, not the tab bar.** The owner's
+call: the row a person on that screen is choosing between is Albums,
+Composers, Shelves, Lists. ShelfScreen owns the horizontal swipe now and the
+tab-body swipe is suppressed there; the other tabs keep it.
+
+**The visual round, one grammar.** Crossing bottom tabs and crossing shelf
+views are both small page turns now, arriving 42px from the side you traveled
+toward on the Settle curve, same as the player spread. Section-head staves
+rule themselves on left to right, each line a breath behind the one above, the
+contour's own gesture made ambient. The day sun warms the paper around it, a
+copper halo breathing over ten seconds, the one glow in the app because it is
+the one literal light; still and dimmer at night, still under reduced motion.
+The alphabet rail grew a loupe: the letter under a finger swells half again in
+moss with its neighbors leaning in. And both floating cards give 1.5 percent
+under a press on the standard spring, because a surface that answers a finger
+reads as a thing and one that does not reads as a picture of a thing. Every
+one of these snaps or stills under reduced motion.
+
+### 16 August 2026: the completion round
+
+Everything remaining from the three panel reports and the motion review was
+implemented in one sitting, at the owner's instruction to finish it all.
+
+The signatures: the contour now writes itself onto the staff once per piece,
+carries wet ink at the nib as it plays, and answers a finger by swelling its dot
+and lifting the remainder. The cover skips on a drag, with the rubber-band as
+its own affordance, closing a version-one requirement of MASTER_SPEC. The queue
+became the printed bill of grid 11: Roman numerals when the queue is one whole
+record, tempo marks read from titles, a duration column, pieces-and-minutes
+remaining in the head, drag to reorder, swipe to remove, and the engraved sprig
+closing the sheet. The day line's moon is now the real moon, computed from the
+lunation with no location asked, and the sun advances with the clock instead of
+freezing at composition. The page edge crosses and widens as the leaf turns.
+
+The truths: the Forgotten Shelf finally says why ("Last heard in March", "Never
+played. Shelved July 2026") from facts its own query had always computed and
+thrown away. The grid's section head names the order it is actually in. The
+Composers view carries time held, never play counts, per the grid's caption.
+Search results and the Loved screen show their artwork. Empty states became
+invitations with the serif and the plate. The About screen's serif thesis was
+restored over the wordmark. Albums and playlists gained aligned duration
+columns and ghost-pill shuffles; the artwork viewer gained double-tap zoom and
+lost its borrowed ✕ glyph.
+
+### 16 August 2026: the design panel's rulings, and the owner's overrides
+
+A three-seat internal panel reviewed the whole app: a listener's advocate, an
+art director, and a contrarian arguing for subtraction. Most of their consensus
+was implemented the same day. Three of their hills were overruled by the owner,
+and those overrides are recorded here so they are not "fixed" back later.
+
+**The mini player is a card, against the grid.** The grid draws `.mini` as a
+full-bleed bar with a top hairline and 34px art. The owner ordered a separated,
+rounded card with larger art, type and play mark, twice and explicitly. The
+divergence is deliberate. What was kept from the art director's ruling is the
+recipe: every card in the app now shares 20dp corners, a hairline edge at 16
+percent ink, and ranked shadows, with the mini player forward at 10dp and the
+floating Surroundings card behind it at 6dp, so depth says which is the record
+and which is the room.
+
+**The category rail on the player's Surroundings page stays.** The contrarian
+argued a flat list was enough. The owner asked for categories by name. The
+rail's real defects were fixed instead: its underline animates rather than
+teleporting, and a right-swipe on the first category turns the page back to the
+music instead of dying silently.
+
+**The staggered arrival stays.** It replays on every page turn, which the
+contrarian correctly counted as a cost. The owner asked twice for parts arriving
+in order, in so many words. The beats are 38ms apart and the whole build is over
+inside 380ms.
+
+The rest of the panel's consensus shipped: the Loved screen got a door, a third
+way through onboarding for somebody with no account and no files, the sleep
+timer returns to the player and reaches three hours, automatic sync failures
+stopped raising a modal sheet over the app, the Connect button says why it is
+refusing, history rows play the piece rather than track one of its album, ten
+invisible panels became real recesses, seventeen bare section labels became the
+one ruled section head, and around two hundred lines of dead code from earlier
+iterations were removed.
+
+### 15 August 2026: grid pixels multiply by 1.25 to reach sp, lengths stay 1:1
+
+Two binding documents disagreed and `DECISIONS.md` recorded neither, so this
+settles it. `DESIGN.md` section 9 says the 330px mock multiplies by about 1.25 to
+reach sp and that nothing is smaller than 12sp. `Type.kt` had reversed that to
+one to one, calling the multiplier a quiet reinterpretation.
+
+The reversal was wrong, and measurably so. The mock's 286px content column maps
+to a 411dp device's 367dp column, a factor of about 1.28, so setting type at 1:1
+rendered the entire app at roughly 80 percent of the specified scale. Four
+tokens, `.plate`, `.tabLabel`, `.section` and `.meta`, sat under the 12sp floor
+`DESIGN.md` sets.
+
+That is the mechanical reason the app read as flat everywhere rather than only on
+one screen. A 13.5sp heading over 13.5sp body has no hierarchy available to it,
+and no amount of spacing or rhythm buys it back.
+
+The owner arbitrated in favor of `DESIGN.md`, which `CLAUDE.md` already says wins
+on anything visual. Type is now scaled by 1.25 and `.plate` is rounded up to the
+12sp floor rather than left at 11.9 by a rounding error.
+
+**Lengths are not scaled.** The gutter is 22dp because that figure was given
+directly rather than derived from the mock. Only type moves.
+
+The caution that came with the ruling: presence should come from the serif
+dynamics line and the staff rather than from bigger bold sans. Growing the type
+is the correction, not the design.
+
+### 15 August 2026: stopping a Surroundings bed is a named row, not a swipe
+
+The spec said "swipe the card down to stop the sound and dismiss the card", and
+the card reference said the same. Both are now amended: a drag folds the card,
+and stopping is a named row at the foot of the opened card.
+
+The owner reported losing beds to stray thumbs, repeatedly. The cause was not
+taste, it was arithmetic. `detectVerticalDragGestures` reports the distance since
+the last pointer event, not the distance travelled, and the test was 26 pixels,
+which is roughly one touch slop. So the first move of any downward flick cleared
+it. The gesture also fired mid-drag rather than on release, so the sound was gone
+while the finger was still down with no way to abort, and the card never followed
+the finger, so nothing on screen said a gesture was underway. The card sits in the
+thumb arc above the mini player.
+
+Worst of all, the rows for changing the bed are children of that same gesture, so
+reaching in to swap the recording was the motion most likely to kill it.
+
+A confirmation dialog was considered and rejected. This design has no filled
+containers and the voice does not nag. The rule taken instead is that a
+destructive action gets a name and a place, and gestures are reserved for things
+that can be undone by doing them again. Folding a card qualifies. Ending the
+sound does not.
+
+The opt out argument in the old spec still holds, it just moved: there is still no
+setting to hide the card, because stopping the sound is still the whole opt out.
+It is now one named row rather than a gesture nobody could aim.
+
+### 15 August 2026, building Tone and auditing Settings
+
+**`READ_MEDIA_AUDIO` is no longer declared.** This reverses `MASTER_SPEC.md` section 4 and its "two permissions" statement in section 15, both of which are now corrected there.
+
+It was declared from the start and used exactly nowhere. Local music reaches the shelf entirely through the Storage Access Framework: `LocalScanner` takes a persistable grant on the folder the user picks and reads it with `DocumentFile`, which needs no runtime permission. The permission's original purpose was the `MediaStore` download path in section 4, and that path was never built and cannot be, because verification found Bandcamp exposes no download endpoint.
+
+It was found by building the Permissions section of Settings and noticing the row read "Not allowed. Local folders cannot be read" on a phone whose local folders read perfectly well. An app arguing for restraint cannot ask for a media permission it never exercises, and it removes a Play data-safety declaration that had nothing behind it. Removing an ungranted permission cannot regress the SAF path, which never consulted it.
+
+**The notification permission is now actually requested.** It was declared and never asked for, so on Android 13 and up there was no playback notification at all: no lock screen controls, no shade player, no way to pause without reopening the app. It is asked for at the first note rather than at launch, once per install, and never again if refused. Verified on the Pixel 8: the dialog appears on first play and the transport notification follows.
+
+**Settings said downloads go to `Music/Meedwell`. They do not.** The grid's screen 19 says so and it would have been a plainly false sentence on the screen whose whole purpose is being checkable. `SurroundingsStore` puts recordings in `filesDir` on purpose, documented there, so they stay out of other apps' media scanners and leave when the app does. The row now says that instead. Counted as a grid divergence, resolved in favor of the code because the code's reason is the better one.
+
+**Two settings were missing from the export format.** `voicing`, added earlier the same day with Tone, and `resume_queue_on_opening`. `SettingsStore` carries a standing note that every setting must reach the export, and both had slipped it. Added, with a round-trip test and a test that an export written before either key existed still reads, defaulting `voicing` to `AsRecorded` rather than inventing a curve.
+
+**Onboarding was one screen where the grid specifies three, and the one screen made a promise the app cannot keep.** Grid 01 the declaration, 02 two ways in, and 03 the tone disclosure are now all built, in that order.
+
+The screen that stood there was a generic welcome: a tagline, a body line, and two doors. Its body copy said the collection was "yours to keep as real files on your phone", which is false. Verification found Bandcamp offers no download endpoint at all, so the very first sentence anybody read was a promise the app could not honor.
+
+What the grid has instead is a declaration made once, plainly, with a second button that **refuses nobody**: somebody who listens to something else is told what this was built for and waved straight through. That is a position rather than a gate, and it is the thing the old screen had no way of saying.
+
+Three consequences worth recording:
+
+- **`hasChosenPath` is now set at the end of onboarding, not the start.** Marking it on the first tap meant somebody who backed out halfway reopened onto a shelf they had never agreed to set up.
+- **The engraved plate exists.** `SeedHeadPlate` draws the grid's own paths, so it takes its color from the theme instead of shipping as an asset. It is the first of the plates the design puts at rest points.
+- **The mark is drawn bare inside the app.** The dark rounded square is the launcher icon's frame, and it had been carried onto the Welcome and About screens, where it read as the one card in a design that has none.
+
+**The default voicing is `Orchestral`, not `AsRecorded`.** This follows grid 03, which exists precisely because a default that alters playback has to be declared rather than discovered. The disclosure and the opt-out sit on the same screen, so nobody meets it without being told. Recorded because the safer looking default, applying nothing, is the one being deliberately not taken.
+
+**Pull to refresh existed only as a comment.** `MeedwellViewModel.refresh` has been documented as "pull to refresh, and the manual override" since the sync work, and the gesture was never built: the only manual sync was a row inside Settings. It is on the shelf now, disabled when local-only, because a spinner that resolves to no change is the app pretending to work.
+
+Its indicator is the mark rather than a spinner: pulling lifts the coin out of its cradle, and while the sync runs the coin rolls side to side along the **real cradle parabola**, computed from the same constants `Mark.kt` draws with. A first attempt drew the cradle unconditionally, so a finished sync left a bare copper arc under the title with no coin in it, looking like a rendering fault. One alpha now covers the whole mark.
+
+**The tone curve is drawn with zero on the middle staff line, and the top half is left permanently empty.** The grid's own sketch on screen 17 runs the curve above centre, which contradicts the caption directly beneath it about cuts rather than boosts. `Voicing` cannot produce a boost, so drawing one would be the single dishonest mark on the screen. The scale puts the deepest permitted cut, 3 dB, exactly on the bottom line: the curve can never leave the staff, and the empty upper half is the drawing making the same point the copy makes.
+
 ---
 
 ## BLOCKED
@@ -188,4 +419,4 @@ These cannot be automated and are not failures. Collect them in `LAUNCH.md` as p
 2. Upload the very first bundle through the Play Console web interface, since the API cannot manage releases until one bundle exists.
 3. Complete the IARC content rating questionnaire, which has no API.
 4. Complete the ads declaration and app access instructions, both likely manual.
-5. Approve the one-time ADB authorisation prompt on the phone.
+5. Approve the one-time ADB authorization prompt on the phone.

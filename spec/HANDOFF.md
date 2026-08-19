@@ -8,7 +8,48 @@ The resume document. Kept current at all times so a session with no memory of an
 
 ## State of play
 
-**Last updated: 15 August 2026, second entry.**
+**Last updated: 19 August 2026, after the store listing went up.**
+
+**The application id is now `io.github.kamsiob.meedwell`** and the Play listing
+is live in the console: title, both descriptions, icon, feature graphic and
+eight screenshots, all pushed through the Publisher API. The listing lives in
+`store/listing/en-US/` as plain files and `store/push-listing.py` sends it, so
+a store update is a text edit and one command. `store/check-chain.py` verifies
+the service account chain. `LAUNCH.md` holds the owner's remaining console
+work, which is the content declarations, the privacy policy URL and the release
+rollout. The bundle is `Meedwell-1.0.0.aab` in the project root.
+
+**Last updated: 16 August 2026, third entry, after the visual round.**
+
+Since the completion round: the collapsed Surroundings card is one row with
+its volume as a rule on its bottom edge (about 66dp, down from 104), numeral
+columns size themselves from the highest numeral so XVIII never wraps, a
+horizontal swipe on the Shelf steps the upper view switcher instead of the
+bottom tabs, and a visual round put one motion grammar across the app: page
+turns between tabs and shelf views, staves that rule themselves on, a
+breathing copper halo on the day sun, a loupe on the alphabet rail, and press
+give on both floating cards. All in DECISIONS.md, 16 August second entry.
+Device verification note: HealthTrail's dev loop on the tester steals focus
+every few seconds; the workaround is short device-side scripts via the
+launcher intent (monkey), never `am start`, which stacks a fresh activity and
+resets navigation.
+
+**The completion round is done and shipped.** Everything remaining from the
+three design-panel reports and the motion review was implemented, verified on
+the tester device, and delivered to the owner as `Meedwell-1.0.0.apk` in the
+project root (the matching AAB sits beside it, both signed and verified,
+neither ever committed). The full list of what changed and why lives in
+`DECISIONS.md` under "16 August 2026: the completion round". The last three
+fixes, made after device screenshots: the Surroundings card fill is now fully
+opaque (0.98 still let bright album art ghost through on the shelf grid), the
+grid tile no longer prints the artist twice (`ProvenanceLine` carries only the
+collector's mark now; the plate line above it owns the artist), and the grid
+gained its plate marks plus press-ink feedback on every row through
+`combinedClickableCompat`.
+
+What remains before Play submission is release logistics, not product work:
+store art and screenshots, the launch documents, a full functional pass on the
+owner's main phone, and multi-screen-size verification.
 
 Phase 0 is complete, Phase 1 is complete, and Phase 2 is largely complete. The repository is live at https://github.com/Kamsiob/meedwell, public, with 48 issues open and a first signed commit. The app builds, installs on the Pixel 8, and launches to the Welcome screen with the real design tokens and both bundled fonts.
 

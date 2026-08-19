@@ -13,7 +13,7 @@
 #
 set -euo pipefail
 
-PACKAGE="com.kamsiob.meedwell"
+PACKAGE="io.github.kamsiob.meedwell"
 OUT="${1:?usage: capture-screen.sh <output-path.png>}"
 
 command -v adb >/dev/null || { echo "adb is not on PATH"; exit 1; }

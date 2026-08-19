@@ -1,0 +1,39 @@
+Meedwell plays your Bandcamp collection and the audio files already on your phone, in an app drawn like a printed score: quiet, warm, and made for sitting down with a record rather than skipping through one.
+
+Anyone is welcome here. But Meedwell was designed from the ground up for the instrumental listener: chamber works, solo piano, film and game scores, Celtic strings, ambience. If that is your shelf, this player was made for you, down to the Roman numerals on an album's movements.
+
+YOUR COLLECTION
+
+- Paste in the listening credentials from your Bandcamp fan settings and your albums arrive on a shelf, ready to play.
+- Four ways to look at it: Albums, Composers, Shelves and Lists, as a cover grid or a compact list, with an alphabet rail for long collections.
+- Composers are ranked by hours held, never by play count.
+- The forgotten shelf gently surfaces records you have stopped reaching for, and tells you why it thinks so.
+
+YOUR OWN FILES
+
+- Point Meedwell at the folders where your downloads live and it matches them onto the shelf, marked "yours" in a quiet serif.
+- Those files stay plain, readable by any other app, and untouched if you uninstall. Nothing is locked inside a private cache.
+- No account is needed for this. Local files on their own are a perfectly good way to use Meedwell.
+
+SURROUNDINGS
+
+- A library of ambient recordings of real places: rain on a roof, distant thunder, a fire, birds at dawn.
+- Play one underneath your music at whatever level suits the room, or play one on its own with no music at all.
+- Keep the ones you like on the phone for offline listening. Every recording credits the person who stood there and recorded it.
+
+THE PLAYER
+
+- The scrubber is the piece's own loudness curve, drawn on a five line staff.
+- Tone offers five gentle voicings named for instruments and rooms: Orchestral and Scores, Strings and Traditional, Piano and Keys, Ambient and Nature, and As Recorded.
+- Gapless playback, a queue you can reorder, shuffle and repeat, a sleep timer that eases down instead of cutting off, listening history, and loved tracks.
+- Daylight and Lamplight themes. It reopens exactly where you left it, paused, and never starts playing on its own.
+
+NO ACCOUNT, NO ADS, NO SUBSCRIPTION
+
+Meedwell collects nothing. No analytics, no telemetry, no identifiers, no advertising, and nothing inside it to buy. It talks to two servers, and only when you ask: Bandcamp's, to stream and sync the music you own, and GitHub's, to fetch Surroundings recordings. Your location is never requested or used, including by the little sun on the day line, which runs on the clock alone.
+
+HONEST LIMITS
+
+Meedwell shows the collection you already own. There is no store browsing or catalog search inside the app; searching all of Bandcamp opens their own site in your browser. Bandcamp's listening API streams MP3 and does not release purchased files to any app, so you download those from Bandcamp the way you always have, and Meedwell then recognizes them as yours. A heart set in Meedwell cannot yet be removed from inside the app, because the service does not allow it, and the app says so at the moment it matters. Version one is in English.
+
+Free and open source under AGPL-3.0. Not affiliated with or endorsed by Bandcamp.
