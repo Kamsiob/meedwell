@@ -22,11 +22,41 @@ If you connect a Bandcamp account, the username and password Bandcamp generates 
 
 ## Network traffic
 
-Exactly one server: Bandcamp's, to stream and sync the music you own. That traffic is governed by Bandcamp's own privacy policy, not by this one.
+Two servers, both only when you ask.
 
-Meedwell also fetches one small public file listing Bandcamp Friday dates, from a public GitHub release. That request carries nothing about you beyond what any web request necessarily reveals to the server serving the file.
+**Bandcamp's**, to stream and sync the music you own. That traffic is governed by Bandcamp's own privacy policy, not by this one.
+
+**GitHub's**, for two things. The Surroundings ambience library, whose list of recordings and audio files are published as public release assets, and one small public file listing Bandcamp Friday dates. Those requests carry nothing about you beyond what any web request necessarily reveals to the server serving the file. Nothing is fetched from GitHub until you ask for a recording.
 
 Nothing else. No other server is contacted for any reason.
+
+## Where you are
+
+Meedwell never asks for your location and has no way to find it. The app does not request the location permission, so Android would refuse it even if the code tried.
+
+The day line on the shelf, and the sun and moon on it, run on your phone's own clock and time zone plus two times you can set yourself in Settings. They are not sunrise and sunset calculated from where you are standing, because working those out would need a latitude, and asking for one to draw a line is not a trade worth making.
+
+## Notifications
+
+Downloading Surroundings recordings runs as a foreground service, which Android requires to show a notification while it works. That notification names the recording being fetched and how far along it is, and it exists so that work happening in the background is visible and stoppable rather than hidden. Playback posts the usual media notification with the track and its controls.
+
+Both are drawn on your phone by Android. Nothing about them is sent anywhere.
+
+Android asks you to allow notifications before either can appear. Refusing costs you the shade controls and the download progress, and nothing else: the music still plays and the downloads still finish.
+
+## What Meedwell asks Android for
+
+The whole list, which you can check against the manifest in the source:
+
+- Internet access, for the two servers above.
+- Network state, to tell Wi-Fi from mobile data, so that the Wi-Fi-only download setting can be honored.
+- Foreground service, for playback and for downloads.
+- Notifications, for the two notifications above.
+- Wake lock, so playback and downloads are not cut off when the screen goes off.
+
+There is no location permission, no microphone, no camera, no contacts, no calendar, and no permission to read the media on your phone.
+
+You will also find one permission in the manifest that Meedwell did not write: Android's own media library adds a private one so that its playback components can talk to each other inside the app. It grants access to nothing outside Meedwell, and it is named here so that reading the manifest holds no surprises.
 
 ## Sharing and links out
 
