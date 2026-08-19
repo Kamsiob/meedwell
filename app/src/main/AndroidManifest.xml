@@ -19,11 +19,20 @@
          else, and there are no engagement notifications by design. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- So Meedwell can see music already on the phone, and the files a user
-         downloaded from Bandcamp themselves. Verification found no download
-         endpoint, which makes this the path by which owned files reach the
-         shelf at all. -->
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <!-- READ_MEDIA_AUDIO was declared here and never once used.
+
+         Local music reaches the shelf entirely through the Storage Access
+         Framework: `LocalScanner` takes a persistable grant on the folder the
+         user picked and reads it with `DocumentFile`. That path needs no
+         runtime permission, so the declaration bought nothing and cost the one
+         thing this app is arguing for. An app that asks for a media permission
+         it never exercises has already lost the argument its Privacy screen is
+         trying to make.
+
+         The MediaStore download path in MASTER_SPEC section 4 was the original
+         reason for it. It was never built, and it cannot be: verification found
+         Bandcamp exposes no download endpoint. -->
+
 
     <!-- Streaming and syncing the collection. The only network peer is
          Bandcamp's own API server. -->
@@ -43,6 +52,11 @@
          notice one that should. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- The Surroundings download service. `dataSync` is the honest type for
+         fetching files somebody asked for, and it is what lets a download
+         survive leaving the app. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name=".MeedwellApplication"
@@ -84,9 +98,50 @@
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaLibraryService" />
+                <!--
+                  Media3 also matches on the session service action, and some
+                  controllers look for that one rather than the library one.
+                -->
+                <action android:name="androidx.media3.session.MediaSessionService" />
                 <action android:name="android.media.browse.MediaBrowserService" />
+                <!--
+                  **Media buttons, which is how anything outside this app asks
+                  for pause or next.**
+
+                  Media3's own service declaration calls for this action and it
+                  was missing. System media keys still worked, because the
+                  platform routes those straight to the active session, and so
+                  did the shade, because those buttons are our own pending
+                  intents. What could not work was a third party controller, a
+                  launcher's media widget or a car head unit, which resolve this
+                  service by the media button action before sending anything.
+                -->
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </service>
+
+        <!-- Surroundings downloads.
+
+             Not exported, and no intent filter: nothing outside the app has any
+             business starting a download, and it is only ever reached by an
+             explicit intent from this process.
+
+             A foreground service because a download that stops the moment you
+             leave the app is not a download. `dataSync` is the honest type for
+             it: it is fetching files the user asked for, not playing media. -->
+        <service
+            android:name=".data.SurroundingsDownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!--
+          Holds a Surroundings bed up and gives it a notification. Media
+          playback rather than dataSync: it is sound coming out of the phone.
+        -->
+        <service
+            android:name=".playback.SurroundingsService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
     </application>
 

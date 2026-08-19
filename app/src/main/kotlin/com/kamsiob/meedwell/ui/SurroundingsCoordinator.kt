@@ -5,7 +5,11 @@ import com.kamsiob.meedwell.AppContainer
 import com.kamsiob.meedwell.core.surroundings.Credits
 import com.kamsiob.meedwell.core.surroundings.Downloads
 import com.kamsiob.meedwell.core.surroundings.SurroundingsSound
+import com.kamsiob.meedwell.data.SurroundingsDownloadService
+import com.kamsiob.meedwell.data.SurroundingsDownloads
 import com.kamsiob.meedwell.data.SurroundingsDownloader
+import com.kamsiob.meedwell.playback.SurroundingsBed
+import com.kamsiob.meedwell.playback.SurroundingsService
 import com.kamsiob.meedwell.playback.SurroundingsPlayer
 import com.kamsiob.meedwell.ui.components.SurroundingsCardItem
 import com.kamsiob.meedwell.ui.components.SurroundingsCardState
@@ -18,6 +22,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 
 /**
@@ -44,7 +50,8 @@ class SurroundingsCoordinator(
     private val store = container.surroundingsStore
     private val downloader = container.surroundingsDownloader
 
-    val player = SurroundingsPlayer(container.appContext, container.settings)
+    // Borrowed from the application, not built here. See `AppContainer`.
+    val player = container.surroundingsPlayer
 
     private val _state = MutableStateFlow(SurroundingsUiState())
     val state: StateFlow<SurroundingsUiState> = _state.asStateFlow()
@@ -57,6 +64,17 @@ class SurroundingsCoordinator(
      * an expanded card should not collapse because somebody changed tab.
      */
     private var cardExpanded = false
+
+    /**
+     * What is on this phone, by category, for the player's picker.
+     *
+     * Kept beside the card rather than inside it. The card is a short list on
+     * purpose; this is the opposite, the whole of what somebody owns arranged so
+     * it can be browsed without leaving the page.
+     */
+    val slices: StateFlow<List<com.kamsiob.meedwell.ui.screens.SurroundingsSlice>> get() = _slices
+    private val _slices =
+        MutableStateFlow<List<com.kamsiob.meedwell.ui.screens.SurroundingsSlice>>(emptyList())
 
     val card: StateFlow<SurroundingsCardState> get() = _card
     private val _card = MutableStateFlow(SurroundingsCardState())
@@ -76,23 +94,45 @@ class SurroundingsCoordinator(
     private fun rebuildCard() {
         val playing = _state.value
         val sound = sounds.firstOrNull { it.id == playing.playingId }
+        val present = store.presentIds(sounds)
+
+        /** What is on the phone, as rows, playing one first. */
+        val plays = container.settings.surroundingsPlays
+        fun rows(first: String?): List<SurroundingsCardItem> =
+            (listOfNotNull(first) + recentlyUsed +
+                present.sortedByDescending { plays[it] ?: 0 })
+                .distinct()
+                .mapNotNull { id -> sounds.firstOrNull { it.id == id && it.id in present } }
+                .take(4)
+                .map {
+                    SurroundingsCardItem(
+                        id = it.id,
+                        title = rowTitle(it),
+                        duration = Downloads.humanDuration(it.durationSeconds),
+                        playing = it.id == first,
+                    )
+                }
+
         if (sound == null) {
-            _card.value = SurroundingsCardState()
+            // **The list is built even with nothing playing.**
+            //
+            // The floating card stays hidden, because it exists only while a bed
+            // is going. But the player spread's facing page shows the same rows,
+            // and it used to short circuit to a blurb and a link whenever no bed
+            // was playing: a whole page of nothing, on the surface whose entire
+            // job is choosing a bed. With the rows present, starting one from
+            // inside the player is a single tap.
+            _card.value = SurroundingsCardState(visible = false, others = rows(null))
             return
         }
-        val present = store.presentIds(sounds)
-        val others = (listOf(sound.id) + recentlyUsed.filter { it != sound.id })
-            .distinct()
-            .mapNotNull { id -> sounds.firstOrNull { it.id == id && it.id in present } }
-            .take(4)
-            .map {
-                SurroundingsCardItem(
-                    id = it.id,
-                    title = rowTitle(it),
-                    duration = Downloads.humanDuration(it.durationSeconds),
-                    playing = it.id == sound.id,
-                )
-            }
+        // Seeded with what is already on the phone, not only with what has been
+        // played this session.
+        //
+        // `recentlyUsed` starts empty, so on a fresh launch the opened card
+        // listed exactly one recording: the one already playing, whose row is a
+        // no-op. The one surface built for swapping the bed in two taps was
+        // useless until you had already swapped it the six tap way.
+        val others = rows(sound.id)
         _card.value = SurroundingsCardState(
             // It exists only while a sound is playing. A paused bed is still a
             // bed; a stopped one is not.
@@ -100,6 +140,7 @@ class SurroundingsCoordinator(
             expanded = cardExpanded,
             soundId = sound.id,
             title = rowTitle(sound),
+            isPlaying = playing.isPlaying,
             volume = container.settings.surroundingsVolume,
             others = others,
         )
@@ -114,12 +155,70 @@ class SurroundingsCoordinator(
 
     private var sounds: List<SurroundingsSound> = emptyList()
     private var expanded: Set<String> = emptySet()
-    private val queue = ArrayDeque<String>()
-    private val failures = mutableMapOf<String, String>()
-    private var progressId: String? = null
-    private var progress: Float = 0f
-    private var worker: Job? = null
     private var checking = false
+
+    /** What somebody has typed into the library's search field. */
+    private var query: String = ""
+
+    /** The ids that shipped inside the app and therefore cannot be removed. */
+    private var bundledIds: Set<String> = emptySet()
+
+    fun setSearch(text: String) {
+        query = text
+        rebuild()
+    }
+
+    /**
+     * Set when a download is waiting on the mobile data question.
+     *
+     * The coordinator cannot show a sheet, so it holds the intent and raises a
+     * flag; the interface asks and calls back. Holding the action rather than
+     * asking somebody to tap download again is the difference between being
+     * asked a question and being sent away.
+     */
+    private var deferredDownload: (() -> Unit)? = null
+
+    private val _askCellular = MutableStateFlow(false)
+    val askCellular: StateFlow<Boolean> = _askCellular.asStateFlow()
+
+    /** True until the question has been put once. */
+    private fun needsCellularAnswer(): Boolean = !container.settings.hasAskedCellular
+
+    private fun askThen(action: () -> Unit) {
+        deferredDownload = action
+        _askCellular.value = true
+    }
+
+    /**
+     * The answer, and then the download that was waiting on it.
+     *
+     * Either answer counts as answered: saying "Wi-Fi only" is a real choice and
+     * must not mean being asked again tomorrow.
+     */
+    fun answerCellular(allowCellular: Boolean) {
+        container.settings.wifiOnlyDownloads = !allowCellular
+        container.settings.hasAskedCellular = true
+        _askCellular.value = false
+        val waiting = deferredDownload
+        deferredDownload = null
+        waiting?.invoke()
+    }
+
+    fun dismissCellularQuestion() {
+        // Dismissing without choosing leaves the default in place and does not
+        // count as answered, so the question comes back next time rather than
+        // silently deciding for somebody.
+        _askCellular.value = false
+        deferredDownload = null
+    }
+
+    // The queue lives in the download service now, so that leaving the app does
+    // not take it with it. These read through to whatever that service is doing,
+    // and are the only view of it this class has.
+    private val queue: List<String> get() = SurroundingsDownloads.state.value.queued
+    private val failures: Map<String, String> get() = SurroundingsDownloads.state.value.failures
+    private val progressId: String? get() = SurroundingsDownloads.state.value.workingOn
+    private val progress: Float get() = SurroundingsDownloads.state.value.progress
 
     /**
      * Reads the library and works out what is already here.
@@ -130,6 +229,38 @@ class SurroundingsCoordinator(
      * atomic placement as a downloaded one.
      */
     fun load() {
+        // The service is the only thing that knows how a download is going, and
+        // it is in another component entirely. Without this the rows would read
+        // their progress once and then sit still: everything below reads through
+        // to that state, so something has to notice when it moves.
+        // The shade can pause or stop the bed while no screen is looking, so the
+        // interface follows the bed rather than assuming it is the only thing
+        // that ever changes it. Without this, pausing from the notification left
+        // the card and the player still claiming it was playing.
+        SurroundingsBed.state
+            .onEach { bed ->
+                val here = _state.value
+                if (!bed.present && here.playingId != null) {
+                    _state.value = here.copy(
+                        playingId = null,
+                        isPlaying = false,
+                        playingTitle = "",
+                        playingDescription = "",
+                        playingCredit = "",
+                    )
+                    cardExpanded = false
+                    rebuildCard()
+                } else if (bed.present && bed.playing != here.isPlaying) {
+                    _state.value = here.copy(isPlaying = bed.playing)
+                    rebuildCard()
+                }
+            }
+            .launchIn(scope)
+
+        SurroundingsDownloads.state
+            .onEach { rebuild() }
+            .launchIn(scope)
+
         scope.launch {
             val manifest = container.surroundings.manifest()
             // The hard rule is applied once, here, and everything downstream
@@ -144,8 +275,9 @@ class SurroundingsCoordinator(
 
             store.sweepOrphans(sounds)
 
-            val bundledIds = manifest.bundled.map { it.id }.toSet()
-            sounds.filter { it.id in bundledIds && !store.isPresent(it) }.forEach { sound ->
+            val bundled = manifest.bundled.map { it.id }.toSet()
+            bundledIds = bundled
+            sounds.filter { it.id in bundled && !store.isPresent(it) }.forEach { sound ->
                 store.installBundled(sound)?.let { problem ->
                     // Worth saying out loud: a bundled recording failing means
                     // the install itself is damaged, not the network.
@@ -161,9 +293,16 @@ class SurroundingsCoordinator(
                     _state.value = _state.value.copy(
                         playingId = sound.id,
                         playingTitle = sound.displayName,
+                        playingDescription = sound.description,
+                        playingGroup = sound.group,
                         playingCredit = Credits.oneLine(sound),
                         isPlaying = false,
                     )
+                    // Without this the remembered bed had no control anywhere
+                    // outside the Surroundings tab: the state was restored but
+                    // the card was never built, so it stayed at its invisible
+                    // default until something else happened to rebuild it.
+                    rebuildCard()
                 }
             }
         }
@@ -193,9 +332,12 @@ class SurroundingsCoordinator(
         }
         recentlyUsed.remove(sound.id)
         recentlyUsed.addFirst(sound.id)
+        container.settings.noteSurroundingsPlay(sound.id)
         _state.value = _state.value.copy(
             playingId = sound.id,
             playingTitle = sound.displayName,
+            playingDescription = sound.description,
+            playingGroup = sound.group,
             // Generated from the manifest, never typed. The credit on the bar
             // and the credit on the credits screen cannot drift apart because
             // they come out of the same function.
@@ -203,17 +345,32 @@ class SurroundingsCoordinator(
             isPlaying = true,
             volume = container.settings.surroundingsVolume,
         )
+        // The bed is now a fact the whole app can see, and the service that
+        // holds it up and draws its notification follows from that.
+        SurroundingsBed.set(sound.id, sound.displayName, playing = true)
+        SurroundingsService.start(container.appContext)
         rebuildCard()
     }
 
     fun pause() {
         player.pause()
         _state.value = _state.value.copy(isPlaying = false)
+        SurroundingsBed.setPlaying(false)
     }
 
     fun stop() {
         player.stop()
-        _state.value = _state.value.copy(playingId = null, isPlaying = false, playingTitle = "", playingCredit = "")
+        _state.value = _state.value.copy(
+            playingId = null,
+            isPlaying = false,
+            playingTitle = "",
+            playingDescription = "",
+            playingGroup = "",
+            playingCredit = "",
+        )
+        // Clearing this is what stops the service and takes the notification
+        // with it. Nothing else needs telling.
+        SurroundingsBed.clear()
         cardExpanded = false
         rebuildCard()
     }
@@ -228,10 +385,8 @@ class SurroundingsCoordinator(
 
     fun download(id: String) {
         if (id in queue || progressId == id) return
-        failures.remove(id)
-        queue.addLast(id)
-        rebuild()
-        startWorker()
+        if (needsCellularAnswer()) return askThen { download(id) }
+        SurroundingsDownloadService.enqueue(container.appContext, listOf(id))
     }
 
     /**
@@ -243,14 +398,13 @@ class SurroundingsCoordinator(
     fun downloadEverything() {
         val missing = sounds.filter { !store.isPresent(it) }
         if (missing.isEmpty()) return
+        if (needsCellularAnswer()) return askThen { downloadEverything() }
         downloader.networkObjection()?.let {
             onNotice(it.message)
             return
         }
-        missing.forEach { if (it.id !in queue && progressId != it.id) queue.addLast(it.id) }
-        onNotice("Queued ${missing.size} recordings. You can stop any of them.")
-        rebuild()
-        startWorker()
+        SurroundingsDownloadService.enqueue(container.appContext, missing.map { it.id })
+        onNotice("Queued ${missing.size} recordings. You can stop any of them, and they keep going if you leave.")
     }
 
     /**
@@ -277,17 +431,14 @@ class SurroundingsCoordinator(
     fun downloadGroup(groupId: String) {
         val missing = sounds.filter { it.group == groupId && !store.isPresent(it) }
         if (missing.isEmpty()) return
+        if (needsCellularAnswer()) return askThen { downloadGroup(groupId) }
 
         downloader.networkObjection()?.let {
             onNotice(it.message)
             return
         }
 
-        missing.forEach { sound ->
-            if (sound.id !in queue && progressId != sound.id) queue.addLast(sound.id)
-        }
-        rebuild()
-        startWorker()
+        SurroundingsDownloadService.enqueue(container.appContext, missing.map { it.id })
     }
 
     /**
@@ -297,58 +448,15 @@ class SurroundingsCoordinator(
      * restarts. That is the whole point of the partial file surviving.
      */
     fun cancelDownload(id: String) {
-        queue.remove(id)
-        if (progressId == id) {
-            worker?.cancel()
-            worker = null
-            progressId = null
-            progress = 0f
-        }
-        rebuild()
-        startWorker()
+        SurroundingsDownloadService.cancel(container.appContext, id)
     }
 
     fun remove(id: String) {
         val sound = sounds.firstOrNull { it.id == id } ?: return
         if (_state.value.playingId == id) stop()
         store.remove(sound)
+        SurroundingsDownloads.forget(id)
         rebuild()
-    }
-
-    private fun startWorker() {
-        if (worker?.isActive == true) return
-        val next = queue.removeFirstOrNull() ?: return
-        val sound = sounds.firstOrNull { it.id == next } ?: return startWorker()
-
-        progressId = next
-        progress = 0f
-        rebuild()
-
-        worker = scope.launch {
-            val outcome = downloader.fetch(sound) { got, total ->
-                progress = if (total > 0) got.toFloat() / total else 0f
-                rebuild()
-            }
-            progressId = null
-            progress = 0f
-            when (outcome) {
-                is SurroundingsDownloader.Outcome.Done -> Unit
-                is SurroundingsDownloader.Outcome.Cancelled -> Unit
-                is SurroundingsDownloader.Outcome.Failed -> {
-                    failures[sound.id] = outcome.message
-                    if (!outcome.canRetry) {
-                        // A permanent failure would otherwise take the rest of
-                        // a queued pack down with it, one identical error at a
-                        // time. Say it once and stop.
-                        queue.clear()
-                        onNotice(outcome.message)
-                    }
-                }
-            }
-            worker = null
-            rebuild()
-            startWorker()
-        }
     }
 
     // ---------- The credit sheet ----------
@@ -367,6 +475,7 @@ class SurroundingsCoordinator(
             licenseUrl = sound.attribution.licenseUrl,
             recordistUrl = sound.attribution.recordistProfileUrl,
             isHere = store.isPresent(sound),
+            isBundled = sound.id in bundledIds,
         )
     }
 
@@ -375,10 +484,39 @@ class SurroundingsCoordinator(
     }
 
     fun release() {
-        player.release()
+        // **Deliberately does not release the player.**
+        //
+        // It belongs to the application now, and a bed is often the thing still
+        // playing when a screen goes away. Releasing it here was what made
+        // ambient audio die on a whim.
     }
 
     // ---------- Assembling what the screen shows ----------
+
+    /**
+     * One recording as a row.
+     *
+     * **The subtitle is `Credits.oneLine`, on every surface without exception.**
+     * That line is the recordist and the license, generated from the manifest
+     * and never typed, and it is how the CC BY conditions are met wherever a
+     * recording is shown. Any new list that shows recordings uses this, so
+     * attribution cannot be lost by adding a screen.
+     */
+    private fun rowFor(sound: SurroundingsSound, present: Set<String>): SurroundingsRow =
+        SurroundingsRow(
+            id = sound.id,
+            title = rowTitle(sound),
+            subtitle = Credits.oneLine(sound),
+            state = when {
+                sound.id in present -> RowState.Here
+                sound.id == progressId || sound.id in queue -> RowState.Downloading
+                else -> RowState.Away
+            },
+            durationLabel = Downloads.humanDuration(sound.durationSeconds),
+            progress = if (sound.id == progressId) progress else 0f,
+            sizeLabel = Downloads.humanSize(sound.fileSizeBytes),
+            failure = failures[sound.id],
+        )
 
     private fun rebuild() {
         val present = store.presentIds(sounds)
@@ -421,8 +559,37 @@ class SurroundingsCoordinator(
             )
         }
 
+        // What can be played right now, most recently used first. This is the
+        // answer to "what do I have", and it belongs above nine closed doors.
+        val plays = container.settings.surroundingsPlays
+        val onPhone = sounds
+            .filter { it.id in present }
+            .sortedWith(
+                compareByDescending<SurroundingsSound> { plays[it.id] ?: 0 }
+                    .thenBy { recentlyUsed.indexOf(it.id).let { i -> if (i < 0) Int.MAX_VALUE else i } }
+                    .thenBy { rowTitle(it) }
+            )
+            .map { rowFor(it, present) }
+
+        // Search runs over everything a listener could reasonably remember: what
+        // it is, where it was taken, its category, and who recorded it.
+        val needle = query.trim().lowercase()
+        val results = if (needle.isBlank()) emptyList() else sounds.filter { sound ->
+            rowTitle(sound).lowercase().contains(needle) ||
+                sound.description.lowercase().contains(needle) ||
+                sound.categoryName.lowercase().contains(needle) ||
+                Credits.oneLine(sound).lowercase().contains(needle)
+        }.sortedBy { rowTitle(it) }.map { rowFor(it, present) }
+
+        val here = sounds.filter { it.id in present }.sortedBy { rowTitle(it) }
+
         _state.value = _state.value.copy(
             groups = groups,
+            query = query,
+            results = results,
+            onPhone = onPhone,
+            bundledRows = here.filter { it.id in bundledIds }.map { rowFor(it, present) },
+            downloadedRows = here.filter { it.id !in bundledIds }.map { rowFor(it, present) },
             hereCount = present.size,
             totalCount = sounds.size,
             storageLine = storageLine(present.size),
@@ -431,6 +598,38 @@ class SurroundingsCoordinator(
             checking = checking,
             volume = container.settings.surroundingsVolume,
         )
+
+        // The player's picker: the same facts, arranged by kind of place.
+        _slices.value = sounds
+            .filter { it.id in present }
+            .groupBy { it.group }
+            .entries
+            .sortedBy { it.key }
+            .map { (groupId, inGroup) ->
+                com.kamsiob.meedwell.ui.screens.SurroundingsSlice(
+                    id = groupId,
+                    title = groupTitle(groupId),
+                    items = inGroup
+                        .sortedBy { rowTitle(it) }
+                        .map {
+                            SurroundingsCardItem(
+                                id = it.id,
+                                title = rowTitle(it),
+                                duration = Downloads.humanDuration(it.durationSeconds),
+                                playing = it.id == _state.value.playingId,
+                            )
+                        },
+                )
+            }
+
+        // **The card is rebuilt whenever anything else is.**
+        //
+        // It was rebuilt only when a bed started, stopped, or was remembered at
+        // launch. So on a phone with 83 recordings and nothing playing, the list
+        // of what is here was never built at all, and the player's Surroundings
+        // page had nothing to show and rendered an empty screen. The page was
+        // right; the data behind it had never been asked for.
+        rebuildCard()
     }
 
     /**
@@ -463,10 +662,19 @@ class SurroundingsCoordinator(
         }
     }
 
+    /**
+     * How much of a group is on the phone, said in every case.
+     *
+     * A group with nothing downloaded used to read "18 recordings" and stop
+     * there, so the signal for "none of this is here" was the *absence* of a
+     * phrase. Nobody can scan for something that is not printed. Grid 13 words
+     * it "7 recordings, none yet", and now so does this.
+     */
     private fun groupSubtitle(total: Int, here: Int): String = when {
-        here == 0 -> "$total recordings"
+        here == 0 -> "$total recordings, none yet"
         here == total -> "$total recordings, all here"
-        else -> "$total recordings, $here here"
+        here == 1 -> "$total recordings, 1 on this phone"
+        else -> "$total recordings, $here on this phone"
     }
 
     /**
@@ -502,4 +710,6 @@ data class SurroundingsDetail(
     val licenseUrl: String,
     val recordistUrl: String,
     val isHere: Boolean,
+    /** Bundled recordings stay: they are why this works with no connection. */
+    val isBundled: Boolean = false,
 )

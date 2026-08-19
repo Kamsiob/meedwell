@@ -17,6 +17,13 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import com.kamsiob.meedwell.ui.theme.Motion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableFloatStateOf
@@ -61,16 +68,62 @@ fun ContourScrubber(
     var width by remember { mutableFloatStateOf(1f) }
 
     val points = remember(seed) { contourPoints(seed) }
+    val haptics = LocalHapticFeedback.current
+    val reduced = MeedwellTheme.reducedMotion
+
+    // **The phrase writes itself onto the staff.** When a new piece arrives the
+    // staff rules out left to right and the contour is drawn along it, whole,
+    // in remainder ink, before the played and unplayed halves take over. Keyed
+    // on the seed and never on progress, so it happens once per piece and the
+    // scrubber never replays it mid listen. The same honesty argument as the
+    // contour itself: this draws only what is true, in the order a hand would.
+    val written = remember(seed) { androidx.compose.animation.core.Animatable(if (reduced) 1f else 0f) }
+    LaunchedEffect(seed) {
+        if (!reduced && written.value < 1f) {
+            written.animateTo(1f, tween(360, easing = Motion.Rule))
+        }
+    }
+
+    // **The phrase answers the finger.** While a finger is down the dot swells
+    // and the whole remainder lifts a step, so the phrase brightens under the
+    // hand; on release the mark settles back and a single tick confirms the
+    // seek landed. This is the app's signature control acknowledging the
+    // pointing, not a tooltip.
+    var touching by remember { mutableStateOf(false) }
+    val dotRadius by animateFloatAsState(
+        targetValue = if (touching && !reduced) 3.1f else 2.3f,
+        animationSpec = tween(if (touching) 80 else 140, easing = Motion.Settle),
+        label = "contour dot",
+    )
+    val remainderAlpha by animateFloatAsState(
+        targetValue = if (touching) 0.34f else 0.24f,
+        animationSpec = tween(100, easing = Motion.Settle),
+        label = "contour remainder",
+    )
 
     Canvas(
         modifier
             .fillMaxWidth()
             .height(CONTOUR_HEIGHT)
             .pointerInput(seed) {
-                detectTapGestures { offset -> onSeek((offset.x / size.width).coerceIn(0f, 1f)) }
+                detectTapGestures(
+                    onPress = {
+                        touching = true
+                        tryAwaitRelease()
+                        touching = false
+                    },
+                ) { offset -> onSeek((offset.x / size.width).coerceIn(0f, 1f)) }
             }
             .pointerInput(seed) {
-                detectHorizontalDragGestures { change, _ ->
+                detectHorizontalDragGestures(
+                    onDragStart = { touching = true },
+                    onDragEnd = {
+                        touching = false
+                        // The mark landing, felt once.
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    },
+                    onDragCancel = { touching = false },
+                ) { change, _ ->
                     onSeek((change.position.x / size.width).coerceIn(0f, 1f))
                 }
             }
@@ -85,16 +138,19 @@ fun ContourScrubber(
     ) {
         width = size.width
         val line = 1.dp.toPx()
+        val reveal = written.value
 
-        // The staff, five lines evenly through the height, middle one heavier.
+        // The staff, five lines evenly through the height, middle one heavier,
+        // ruled left to right slightly ahead of the phrase being written on it.
         val staffTop = size.height * 0.12f
         val staffGap = (size.height * 0.76f) / 4f
+        val staffReach = size.width * (reveal * 1.35f).coerceAtMost(1f)
         repeat(5) { index ->
             val y = staffTop + index * staffGap
             drawLine(
                 color = if (index == 2) colors.hairline2 else colors.hairline,
                 start = Offset(0f, y),
-                end = Offset(size.width, y),
+                end = Offset(staffReach, y),
                 strokeWidth = line,
             )
         }
@@ -103,6 +159,18 @@ fun ContourScrubber(
         // colors. Split by rebuilding rather than by clipping, so the join is a
         // real point on the curve and the dot sits exactly on it.
         val stroke = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
+
+        if (reveal < 1f) {
+            // Still being written: the whole phrase in remainder ink, as far as
+            // the pen has got. No split and no dot until it is on the page.
+            drawPath(
+                path = contourPath(points, from = 0f, to = reveal, width = size.width, height = size.height),
+                color = colors.primaryText.copy(alpha = 0.24f),
+                style = stroke,
+            )
+            return@Canvas
+        }
+
         val cut = clamped
 
         drawPath(
@@ -112,15 +180,37 @@ fun ContourScrubber(
         )
         drawPath(
             path = contourPath(points, from = cut, to = 1f, width = size.width, height = size.height),
-            // `rgba(28,36,32,.24)`, the remainder.
-            color = colors.primaryText.copy(alpha = 0.24f),
+            // `rgba(28,36,32,.24)` at rest, lifted a step under a finger.
+            color = colors.primaryText.copy(alpha = remainderAlpha),
             style = stroke,
         )
+
+        // **The ink is still wet at the nib.** The last stretch before the dot
+        // is drawn a little heavier, tapering back, so the phrase reads as
+        // being written at the pace of the music. Not an animation: it moves
+        // only because the position moves, and is perfectly still when paused,
+        // so reduced motion has nothing here to remove.
+        if (cut > 0.001f) {
+            drawPath(
+                path = contourPath(
+                    points,
+                    from = (cut - 0.03f).coerceAtLeast(0f),
+                    to = cut,
+                    width = size.width,
+                    height = size.height,
+                ),
+                color = colors.moss,
+                style = Stroke(width = 3.2.dp.toPx(), cap = StrokeCap.Round),
+            )
+        }
 
         val dotY = contourYAt(points, cut) * size.height
         drawCircle(
             color = colors.moss,
-            radius = 4.6.dp.toPx() / 2f * 2f,
+            // 4.6dp is the dot's diameter per the grid. The old arithmetic
+            // cancelled itself and shipped the diameter as the radius, so the
+            // player's most prominent mark drew at twice its spec.
+            radius = dotRadius.dp.toPx(),
             center = Offset(size.width * cut, dotY),
         )
     }

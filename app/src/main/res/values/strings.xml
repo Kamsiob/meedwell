@@ -19,12 +19,33 @@
     <string name="app_name">Meedwell</string>
     <string name="app_name_full">Meedwell by Kamsiob</string>
 
-    <!-- Screen 03, Welcome -->
-    <string name="welcome_tagline">for people who buy their music</string>
-    <string name="welcome_body">Your Bandcamp collection and your local files, together on one shelf. Streamed here, and yours to keep as real files on your phone.</string>
-    <string name="welcome_connect">Connect Bandcamp</string>
-    <string name="welcome_local_only">Just play my local files</string>
-    <string name="welcome_footer">Free · Open source · Collects nothing</string>
+    <!-- Grid screen 01, the declaration. Said once, plainly, and the second
+         button refuses nobody. -->
+    <string name="declare_opening">Music to sit with.</string>
+    <string name="declare_body_1">A player for music you own, built around listening without words: chamber works, solo piano, Celtic strings, ambient, film and game scores.</string>
+    <string name="declare_body_2">It plays whatever is in your collection, all of it, exactly as you bought it. But this is the listening it was made for, and it does not pretend otherwise.</string>
+    <string name="declare_agree">Good, that is what I listen to</string>
+    <string name="declare_carry_on">Understood, carry on anyway</string>
+
+    <!-- Grid screen 02, two ways in, equally weighted. -->
+    <string name="where_opening">Where is your music?</string>
+    <string name="where_body">Meedwell reads a Bandcamp collection, files already on this phone, or both together on one shelf.</string>
+    <string name="where_bandcamp">Bandcamp</string>
+    <string name="where_bandcamp_body">Your purchases, hearts, and playlists. Meedwell talks to Bandcamp\'s own service and to nothing else. It never sees your password.</string>
+    <string name="where_connect">Connect Bandcamp</string>
+    <string name="where_phone">This phone</string>
+    <string name="where_phone_body">Choose folders and Meedwell reads what is in them. No account, no connection, nothing leaves the device.</string>
+    <string name="where_choose_folders">Choose folders</string>
+    <string name="where_footer">Either way, Meedwell collects nothing about you and has no server of its own. You can add the other one later.</string>
+
+    <!-- Grid screen 03. A default that alters playback has to be declared,
+         not discovered. -->
+    <string name="tone_intro_opening">One thing before you start.</string>
+    <string name="tone_intro_body_1">Meedwell ships with a tone voicing already chosen: Orchestral &amp; Scores. It trims rumble and adds a little air. It only ever cuts, so nothing clips.</string>
+    <string name="tone_intro_body_2">If you would rather hear files exactly as they were mastered, choose As Recorded and nothing at all is applied.</string>
+    <string name="tone_intro_orchestral_sub">Rumble trimmed, a little air</string>
+    <string name="tone_intro_footer">All five voicings live in More, and you can change this at any time. Your phone\'s own audio processing sits outside Meedwell and cannot be turned off from here.</string>
+    <string name="tone_intro_continue">Take me to my shelf</string>
 
     <!-- The mark, for screen readers -->
     <string name="mark_description">The Meedwell mark, a copper coin resting in an open cradle</string>

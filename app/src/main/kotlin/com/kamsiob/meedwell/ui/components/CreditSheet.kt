@@ -53,6 +53,16 @@ fun CreditSheet(
     credit: CreditBlock?,
     onOpenUrl: (String) -> Unit,
     onDismiss: () -> Unit,
+    /**
+     * Whether this recording can be taken off the phone.
+     *
+     * **Removal lived only on the storage screen**, at the foot of a tab, a long
+     * way from the recording somebody is actually looking at. This sheet opens
+     * from every row on every list, so it is where the question is asked.
+     * Bundled recordings do not offer it, because they cannot go.
+     */
+    canRemove: Boolean = false,
+    onRemove: () -> Unit = {},
 ) {
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
@@ -60,7 +70,7 @@ fun CreditSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(colors.scrim)
             .clickable(role = Role.Button, onClick = onDismiss)
             .semantics { contentDescription = "Close" },
         contentAlignment = Alignment.BottomCenter,
@@ -76,15 +86,7 @@ fun CreditSheet(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 26.dp),
         ) {
-            Box(
-                Modifier
-                    .padding(top = 12.dp)
-                    .width(36.dp)
-                    .height(4.5.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(colors.secondaryText.copy(alpha = 0.4f))
-                    .align(Alignment.CenterHorizontally)
-            )
+            SheetHandle(onDismiss = onDismiss, modifier = Modifier.padding(top = 12.dp))
 
             // The catalog description leads, as it does on the row. The
             // uploader's own title is a field further down rather than the
@@ -133,6 +135,27 @@ fun CreditSheet(
 
             Field("WHERE IT CAME FROM", "Freesound")
             Link("The original recording ↗") { onOpenUrl(credit.sourceUrl) }
+
+            if (canRemove) {
+                Hairline(Modifier.padding(top = 8.dp))
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 52.dp)
+                        .clickable(role = Role.Button) { onRemove(); onDismiss() }
+                        .padding(top = 14.dp)
+                        .semantics { contentDescription = "Remove this recording from the phone" },
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    Text("Remove from this phone", style = type.chip, color = colors.alarm)
+                }
+                Text(
+                    "It can be fetched again whenever you want it.",
+                    style = type.meta,
+                    color = colors.tertiaryText,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
 
             Box(Modifier.height(26.dp))
         }

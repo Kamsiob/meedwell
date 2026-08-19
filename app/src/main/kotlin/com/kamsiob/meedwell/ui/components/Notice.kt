@@ -5,6 +5,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -85,6 +87,7 @@ fun Notice(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(Radius.cover))
                     .background(colors.background)
+                    .border(1.dp, if (colors.isDark) Color(0x29EFEEE6) else Color(0x291C2420), RoundedCornerShape(Radius.cover))
                     .clickable(role = Role.Button, onClick = onDismiss)
                     .defaultMinSize(minHeight = 48.dp)
                     .padding(horizontal = 18.dp, vertical = 14.dp)
@@ -96,7 +99,8 @@ fun Notice(
             ) {
                 Text(
                     text.orEmpty(),
-                    style = MeedwellTheme.typography.meta,
+                    // Four seconds to be read wants row-title size, not a footnote.
+                    style = MeedwellTheme.typography.rowTitle,
                     color = colors.primaryText,
                 )
             }

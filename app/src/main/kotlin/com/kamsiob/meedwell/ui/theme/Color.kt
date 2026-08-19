@@ -131,6 +131,16 @@ data class MeedwellColors(
     /** The heavier rule, and the middle staff line. */
     val hairline2: Color,
     /**
+     * The wash behind a sheet.
+     *
+     * **A token because black is wrong at night.** Ten sheets each hardcoded
+     * `Color.Black` at half opacity. Over warm paper that over-darkens, and over
+     * Lamplight's near-black ground it is very nearly the ground itself, so the
+     * scrim was invisible and the sheet lost the edge that separates it from the
+     * page behind. Daylight dims with ink, Lamplight dims with more of the night.
+     */
+    val scrim: Color,
+    /**
      * A recess, used only where the grid uses `--paper-2`: never as a card, and
      * never with a shadow under it.
      */
@@ -145,6 +155,16 @@ data class MeedwellColors(
     val gold: Color,
     /** Destructive rows. Nothing else. */
     val alarm: Color,
+    /**
+     * The knob inside a switch, and the only filled circle in the app.
+     *
+     * It is light in **both** themes, because it has to read against moss in
+     * either one. The grid spells this out: `.tog b{background:var(--paper)}`
+     * by day and `.tog b{background:var(--lamp-ink)}` by lamplight. It cannot
+     * be `background`, which is near-black at night, and it cannot be
+     * `primaryText`, which is near-black by day.
+     */
+    val switchKnob: Color,
     val isDark: Boolean,
 )
 
@@ -156,6 +176,7 @@ val LamplightColors = MeedwellColors(
     tertiaryText = Lamp3,
     hairline = LampHair,
     hairline2 = LampHair2,
+    scrim = Color(0xB3000000),
     // Lamplight has no recessed surface in the grid. Kept equal to the ground
     // so any accidental use is invisible rather than a card appearing at night.
     recess = Lamp,
@@ -164,6 +185,7 @@ val LamplightColors = MeedwellColors(
     copper = Copper,
     gold = Color(0xFFC9A34E),
     alarm = Color(0xFFC57A57),
+    switchKnob = LampInk,
     isDark = true,
 )
 
@@ -175,11 +197,13 @@ val DaylightColors = MeedwellColors(
     tertiaryText = Ink3,
     hairline = Hair,
     hairline2 = Hair2,
+    scrim = Color(0x661C2420),
     recess = Paper2,
     moss = Moss,
     mossInk = MossDeep,
     copper = Copper,
     gold = GoldInk,
     alarm = Alarm,
+    switchKnob = Paper,
     isDark = false,
 )

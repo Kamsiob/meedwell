@@ -1,5 +1,17 @@
 package com.kamsiob.meedwell.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.getValue
+import com.kamsiob.meedwell.ui.theme.Motion
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -63,14 +75,28 @@ fun PageMarks(
     onSelect: (PlayerPage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // **The underline travels.**
+    //
+    // It used to be drawn per mark and flipped between 16dp and 0dp instantly,
+    // so the single highest-information pixel on the screen, the one that says
+    // which page you are on, teleported. It is one mark now, sliding the 48dp
+    // between the two centers on the same settle the shelf switcher uses. This
+    // is the app's own "this one" idiom, animated the way it already animates
+    // elsewhere, not a new idea.
+    val underlineAt by animateDpAsState(
+        targetValue = if (page == PlayerPage.Music) (-24).dp else 24.dp,
+        animationSpec = if (MeedwellTheme.reducedMotion) snap() else tween(Motion.turn, easing = Motion.Settle),
+        label = "page underline",
+    )
+
+    Box(modifier.fillMaxWidth()) {
     Row(
-        modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.Bottom,
     ) {
         PageMark(
             inked = page == PlayerPage.Music,
-            underlined = page == PlayerPage.Music,
             label = "Music page",
             selected = page == PlayerPage.Music,
             // Copper, because this mark *is* the app's mark.
@@ -92,14 +118,16 @@ fun PageMarks(
             )
         }
 
-        Box(Modifier.width(26.dp))
+        // No spacer. Each mark already carries a 48dp target, so a 26dp gap
+        // between them put their centers 74dp apart where the grid sets 46, and
+        // they read as two stray icons rather than one paired signature.
+        Box(Modifier.width(0.dp))
 
         PageMark(
             // Lit whenever a sound is running, even from the music page. That
             // is how you know rain is playing without leaving the page you are
             // on, and it is the whole reason these are marks rather than dots.
             inked = page == PlayerPage.Surroundings || surroundingsPlaying,
-            underlined = page == PlayerPage.Surroundings,
             label = if (surroundingsPlaying) "Surroundings page, a sound is playing" else "Surroundings page",
             selected = page == PlayerPage.Surroundings,
             // **Moss, not copper.** The grid inks this one in the accent, and
@@ -125,12 +153,22 @@ fun PageMarks(
             )
         }
     }
+
+    Box(
+        Modifier
+            .align(Alignment.BottomCenter)
+            .offset(x = underlineAt)
+            .width(16.dp)
+            .height(2.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(MeedwellTheme.colors.moss)
+    )
+    }
 }
 
 @Composable
 private fun PageMark(
     inked: Boolean,
-    underlined: Boolean,
     label: String,
     selected: Boolean,
     inkedColor: androidx.compose.ui.graphics.Color,
@@ -143,7 +181,11 @@ private fun PageMark(
     val colors = MeedwellTheme.colors
     // Each mark has its own inked colour, and both go to a 30% ink outline
     // when they are not the page you are on.
-    val color = if (inked) inkedColor else colors.primaryText.copy(alpha = 0.3f)
+    val color by animateColorAsState(
+        targetValue = if (inked) inkedColor else colors.primaryText.copy(alpha = 0.3f),
+        animationSpec = tween(200, easing = Motion.Settle),
+        label = "mark ink",
+    )
 
     Column(
         Modifier
@@ -161,13 +203,9 @@ private fun PageMark(
         }
         // `.pm { padding-bottom: 7px }` then the underline.
         Box(Modifier.height(7.dp))
-        Box(
-            Modifier
-                .width(16.dp)
-                .height(2.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(if (underlined) colors.moss else androidx.compose.ui.graphics.Color.Transparent)
-        )
+        // Space reserved for the traveling underline, which is drawn once at
+        // the row level rather than per mark.
+        Box(Modifier.width(16.dp).height(2.dp))
     }
 }
 
@@ -187,12 +225,40 @@ private fun PageMark(
 fun PageEdge(onRight: Boolean, modifier: Modifier = Modifier) {
     val colors = MeedwellTheme.colors
     val tint = colors.primaryText.copy(alpha = 0.045f)
-    Row(modifier.fillMaxHeight().width(8.dp)) {
-        if (onRight) {
+    val reduced = MeedwellTheme.reducedMotion
+
+    // **The edge participates in the turn.** It used to teleport from one side
+    // to the other. Now, when the leaf turns, the sliver dips out, crosses, and
+    // widens for a beat as it lands, which is the physical fact of a page being
+    // turned: the sheet's edge lifts before it lies flat. This is the spread's
+    // own metaphor answering, not an effect laid on top of it.
+    val fade = remember { androidx.compose.animation.core.Animatable(1f) }
+    val widen = remember { androidx.compose.animation.core.Animatable(7f) }
+    var shownSide by remember { androidx.compose.runtime.mutableStateOf(onRight) }
+    LaunchedEffect(onRight) {
+        if (shownSide == onRight) return@LaunchedEffect
+        if (reduced) {
+            shownSide = onRight
+            return@LaunchedEffect
+        }
+        fade.animateTo(0f, tween(90, easing = Motion.Leave))
+        shownSide = onRight
+        widen.snapTo(13f)
+        fade.animateTo(1f, tween(160, easing = Motion.Settle))
+        widen.animateTo(7f, tween(190, easing = Motion.Rule))
+    }
+
+    Row(
+        modifier
+            .fillMaxHeight()
+            .width((widen.value + 1f).dp)
+            .graphicsLayer { alpha = fade.value }
+    ) {
+        if (shownSide) {
             Box(Modifier.width(1.dp).fillMaxHeight().background(colors.hairline))
-            Box(Modifier.width(7.dp).fillMaxHeight().background(tint))
+            Box(Modifier.width(widen.value.dp).fillMaxHeight().background(tint))
         } else {
-            Box(Modifier.width(7.dp).fillMaxHeight().background(tint))
+            Box(Modifier.width(widen.value.dp).fillMaxHeight().background(tint))
             Box(Modifier.width(1.dp).fillMaxHeight().background(colors.hairline))
         }
     }

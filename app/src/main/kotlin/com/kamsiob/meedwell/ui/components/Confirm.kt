@@ -3,6 +3,8 @@ package com.kamsiob.meedwell.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -53,7 +55,7 @@ fun ConfirmSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(colors.scrim)
             .clickable(role = Role.Button, onClick = onDismiss)
             .semantics { contentDescription = "Cancel" },
         contentAlignment = Alignment.BottomCenter,
@@ -64,6 +66,7 @@ fun ConfirmSheet(
                 .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
+                .verticalScroll(rememberScrollState())
                 .clickable(enabled = false) {}
                 .navigationBarsPadding()
                 .padding(horizontal = 26.dp, vertical = 22.dp),
@@ -115,4 +118,12 @@ sealed interface PendingConfirm {
      * will replace their listening history.
      */
     data object Restore : PendingConfirm
+
+    /**
+     * Deleting a list.
+     *
+     * Worth confirming even though nothing musical is lost: an order somebody
+     * built by hand is not recoverable from anywhere, unlike the tracks in it.
+     */
+    data class DeleteList(val id: String) : PendingConfirm
 }

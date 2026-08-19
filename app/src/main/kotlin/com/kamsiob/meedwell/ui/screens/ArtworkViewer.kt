@@ -2,6 +2,7 @@ package com.kamsiob.meedwell.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.ui.components.Cover
+import com.kamsiob.meedwell.ui.components.MeedwellIcon
+import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
 /**
@@ -88,6 +91,23 @@ fun ArtworkViewer(
                                 offsetY = 0f
                             }
                         }
+                    }
+                    // **Double tap, one hand.** Pinch needs two, and a double
+                    // tap whose second beat was a hair late used to close the
+                    // viewer instead of zooming it. Supplying onDoubleTap makes
+                    // the single tap wait out the window, which fixes the
+                    // misfire as a side effect.
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = {
+                                if (scale > 1.2f) {
+                                    scale = 1f; offsetX = 0f; offsetY = 0f
+                                } else {
+                                    scale = 2.5f
+                                }
+                            },
+                            onTap = { onClose() },
+                        )
                     },
             )
 
@@ -119,11 +139,15 @@ fun ArtworkViewer(
                 .semantics { contentDescription = "Close" },
             contentAlignment = Alignment.Center,
         ) {
-            Text("✕", style = MeedwellTheme.typography.rowTitle, color = Color.White.copy(alpha = 0.85f))
+            MeedwellIcon(
+                MeedwellIcons.Close,
+                size = 18.dp,
+                tint = Color.White.copy(alpha = 0.85f),
+            )
         }
 
         Text(
-            text = "Pinch to zoom · tap to close",
+            text = "Pinch or double tap to zoom · tap to close",
             style = MeedwellTheme.typography.section,
             color = Color.White.copy(alpha = 0.4f),
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp),

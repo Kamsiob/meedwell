@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
+import androidx.compose.ui.draw.alpha
+import com.kamsiob.meedwell.ui.components.SeedHeadPlate
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Artist
 import com.kamsiob.meedwell.core.model.Track
+import com.kamsiob.meedwell.ui.components.Hairline
 import com.kamsiob.meedwell.ui.components.CoverThumb
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
@@ -69,6 +72,23 @@ fun SearchScreen(
                 .defaultMinSize(minHeight = 48.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // The 48dp lives on this box, not on the field. A height on the
+            // field itself top-aligns its text, which is why the cursor floated
+            // at the top of every input in the app with a gap under it.
+            Box(
+                Modifier.weight(1f).height(48.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+            if (state.query.isEmpty()) {
+                Text(
+                    "Search your shelf",
+                    style = TextStyle(
+                        fontFamily = type.body.fontFamily,
+                        fontSize = type.body.fontSize,
+                        color = colors.tertiaryText,
+                    ),
+                )
+            }
             BasicTextField(
                 value = state.query,
                 onValueChange = onQueryChange,
@@ -81,10 +101,10 @@ fun SearchScreen(
                 cursorBrush = SolidColor(colors.primaryText),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
+                    .fillMaxWidth()
                     .semantics { contentDescription = "Search your shelf" },
             )
+            }
             if (state.query.isNotEmpty()) {
                 Box(
                     Modifier
@@ -104,6 +124,21 @@ fun SearchScreen(
                 style = type.voice,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 22.dp),
+            )
+            // A rest point rather than bare paper: this is what somebody sees
+            // every time they open the tab, and it used to be one sentence and
+            // then nothing at all. The plate marks the pause, and the foot
+            // names the one thing search deliberately does not do.
+            Box(Modifier.weight(1f))
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                SeedHeadPlate(Modifier.alpha(0.34f))
+            }
+            Text(
+                "Bandcamp's own site can look through everything they carry.",
+                style = type.meta,
+                color = colors.tertiaryText,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 30.dp),
             )
             return@Column
         }
@@ -127,7 +162,10 @@ fun SearchScreen(
                     ResultRow(
                         title = track.title,
                         subtitle = track.artist,
-                        coverUrl = null,
+                        // Its record's art, not a letter placeholder. The two
+                        // lists made entirely of the listener's own choices were
+                        // the two showing none of their artwork.
+                        coverUrl = CoverUrls.of(track.coverArtId),
                         round = false,
                         trailing = formatDuration(track.durationSeconds),
                         onClick = { onTrackClick(track) },
@@ -183,11 +221,12 @@ fun SearchScreen(
 
 @Composable
 private fun SectionHead(title: String) {
-    Text(
-        title.uppercase(),
-        style = MeedwellTheme.typography.section,
-        color = MeedwellTheme.colors.secondaryText,
-        modifier = Modifier.padding(top = 18.dp, bottom = 4.dp),
+    // The shared head, staff and all. This screen shadowed it with a bare
+    // darker label, so Search was the one screen whose whole idea is grouping
+    // and the one screen with no staves.
+    com.kamsiob.meedwell.ui.components.SectionHead(
+        title,
+        Modifier.padding(top = 18.dp, bottom = 4.dp),
     )
 }
 
@@ -225,7 +264,7 @@ private fun ResultRow(
                 Text(trailing, style = type.meta, color = colors.tertiaryText)
             }
         }
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+        Hairline()
     }
 }
 

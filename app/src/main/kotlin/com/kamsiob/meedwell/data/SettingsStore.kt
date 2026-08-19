@@ -58,6 +58,89 @@ class SettingsStore(context: Context) {
         get() = prefs.getLong(KEY_QUEUE_POSITION, 0L)
         set(value) = prefs.edit { putLong(KEY_QUEUE_POSITION, value) }
 
+    /**
+     * Whether opening the app puts the last queue back, paused.
+     *
+     * On by default. Off means Meedwell opens with nothing loaded, which is what
+     * somebody who uses this alongside another player will want: the queue
+     * reappearing is helpful right up until it is the thing you had forgotten
+     * about.
+     *
+     * Either way nothing plays on its own. This chooses whether the queue is
+     * **there**, never whether it starts.
+     */
+    var resumeQueueOnOpening: Boolean
+        get() = prefs.getBoolean(KEY_RESUME_QUEUE, true)
+        set(value) = prefs.edit { putBoolean(KEY_RESUME_QUEUE, value) }
+
+    /**
+     * Whether the choice about mobile data has been put to somebody once.
+     *
+     * The default is Wi-Fi only and stays that way, but a default nobody was
+     * told about is a setting they have to go and discover after a download
+     * refuses. Asked at the first download, answered once, and changeable in
+     * Settings forever after.
+     *
+     * Not exported, for the same reason as the one below: it is a fact about
+     * this install rather than about the person.
+     */
+    var hasAskedCellular: Boolean
+        get() = prefs.getBoolean(KEY_ASKED_CELLULAR, false)
+        set(value) = prefs.edit { putBoolean(KEY_ASKED_CELLULAR, value) }
+
+    /**
+     * Whether the notification permission has been put to somebody once.
+     *
+     * Deliberately **not** exported. It is a fact about this install rather than
+     * about the user, and restoring it onto a fresh phone would suppress the one
+     * ask on the device that has not had it.
+     */
+    var hasAskedNotifications: Boolean
+        get() = prefs.getBoolean(KEY_ASKED_NOTIFICATIONS, false)
+        set(value) = prefs.edit { putBoolean(KEY_ASKED_NOTIFICATIONS, value) }
+
+    /**
+     * The same question, asked again at the first download, and tracked apart on
+     * purpose.
+     *
+     * **The two asks buy different things.** Refusing the playback ask costs the
+     * shade controls, which is a fair thing to shrug at. Refusing it should not
+     * also decide, months later and silently, that a download somebody started
+     * runs with nothing to show for it: a foreground service whose notification
+     * the system will not draw is invisible work, which is the one thing a
+     * background download must never be, and is what Play requires a foreground
+     * service to show.
+     *
+     * This was not theoretical. A phone here had notifications ungranted, and a
+     * whole group downloaded start to finish with no sign of it anywhere.
+     *
+     * Not exported, for the same reason as the one above: a fact about this
+     * install rather than about the person.
+     */
+    var hasAskedDownloadNotifications: Boolean
+        get() = prefs.getBoolean(KEY_ASKED_DOWNLOAD_NOTIFICATIONS, false)
+        set(value) = prefs.edit { putBoolean(KEY_ASKED_DOWNLOAD_NOTIFICATIONS, value) }
+
+    /**
+     * Where the day line starts and ends, in minutes since midnight.
+     *
+     * **Not sunrise and sunset, and never derived from where you are.** Real
+     * solar times need a latitude, and this app asks for no location. The clock
+     * itself comes from the phone, so a change of timezone moves the sun without
+     * anybody telling Meedwell anything; these two are the hours the line is
+     * drawn between, and they are the listener's to set.
+     *
+     * Six to nine is the grid's own span and a fair default for most of the
+     * world most of the year. Somebody in Tromsø in January can say otherwise.
+     */
+    var dawnMinute: Int
+        get() = prefs.getInt(KEY_DAWN, 6 * 60)
+        set(value) = prefs.edit { putInt(KEY_DAWN, value.coerceIn(0, 23 * 60 + 59)) }
+
+    var duskMinute: Int
+        get() = prefs.getInt(KEY_DUSK, 21 * 60)
+        set(value) = prefs.edit { putInt(KEY_DUSK, value.coerceIn(0, 23 * 60 + 59)) }
+
     var lastSyncAt: Long
         get() = prefs.getLong(KEY_LAST_SYNC, 0L)
         set(value) = prefs.edit { putLong(KEY_LAST_SYNC, value) }
@@ -70,6 +153,17 @@ class SettingsStore(context: Context) {
     var hasChosenPath: Boolean
         get() = prefs.getBoolean(KEY_CHOSEN_PATH, false)
         set(value) = prefs.edit { putBoolean(KEY_CHOSEN_PATH, value) }
+
+    /**
+     * The tone voicing, by name.
+     *
+     * Stored as a name rather than a set of numbers so that a future curve
+     * revision reaches everybody who chose that voicing, instead of freezing
+     * whatever the gains happened to be the day they picked it.
+     */
+    var voicing: String
+        get() = prefs.getString(KEY_VOICING, null) ?: DEFAULT_VOICING
+        set(value) = prefs.edit { putString(KEY_VOICING, value) }
 
     /** When the last export was written, or zero for never. */
     var lastBackupAt: Long
@@ -92,6 +186,41 @@ class SettingsStore(context: Context) {
     var surroundingsSoundId: String?
         get() = prefs.getString(KEY_SURROUNDINGS_SOUND, null)
         set(value) = prefs.edit { putString(KEY_SURROUNDINGS_SOUND, value) }
+
+    /**
+     * How often each Surroundings recording has been started.
+     *
+     * **A short list has to be the right short list.** The player and the tab
+     * both show a handful of what is on the phone, and picking that handful by
+     * whatever order the manifest happened to be in is the same as picking it at
+     * random. Somebody who reaches for rain every night should find rain first.
+     *
+     * A tally rather than a history: no timestamps, nothing that could
+     * reconstruct when somebody was awake. It never leaves the phone, and it is
+     * a few dozen bytes.
+     */
+    var surroundingsPlays: Map<String, Int>
+        get() = prefs.getString(KEY_SURROUNDINGS_PLAYS, null).orEmpty()
+            .split(';')
+            .filter { it.isNotBlank() }
+            .mapNotNull { entry ->
+                val parts = entry.split('=')
+                if (parts.size == 2) parts[0] to (parts[1].toIntOrNull() ?: 0) else null
+            }
+            .toMap()
+        set(value) = prefs.edit {
+            putString(
+                KEY_SURROUNDINGS_PLAYS,
+                value.entries.joinToString(";") { "${it.key}=${it.value}" },
+            )
+        }
+
+    /** One more play for this recording. */
+    fun noteSurroundingsPlay(id: String) {
+        val now = surroundingsPlays.toMutableMap()
+        now[id] = (now[id] ?: 0) + 1
+        surroundingsPlays = now
+    }
 
     /** Its volume, 0 through 1. */
     var surroundingsVolume: Float
@@ -117,9 +246,28 @@ class SettingsStore(context: Context) {
         const val KEY_QUEUE_INDEX = "queue_index"
         const val KEY_QUEUE_POSITION = "queue_position"
         const val KEY_CHOSEN_PATH = "chosen_path"
+        const val KEY_RESUME_QUEUE = "resume_queue_on_opening"
+        const val KEY_ASKED_NOTIFICATIONS = "asked_notifications"
+        const val KEY_ASKED_DOWNLOAD_NOTIFICATIONS = "asked_download_notifications"
+        const val KEY_ASKED_CELLULAR = "asked_cellular"
+        const val KEY_DAWN = "dawn_minute"
+        const val KEY_DUSK = "dusk_minute"
         const val KEY_WIFI_ONLY = "wifi_only_downloads"
         const val KEY_LAST_BACKUP = "last_backup_at"
+        const val KEY_VOICING = "voicing"
+
+        /**
+         * The voicing a fresh install starts on, per grid screen 03.
+         *
+         * **Not `AsRecorded`.** The design ships with a voicing already applied
+         * and declares it during onboarding, which is the whole reason screen 03
+         * exists: a default that alters playback has to be stated, not
+         * discovered. The opt-out sits on that same screen, so nobody meets this
+         * without being told.
+         */
+        const val DEFAULT_VOICING = "Orchestral"
         const val KEY_SURROUNDINGS_SOUND = "surroundings_sound"
         const val KEY_SURROUNDINGS_VOLUME = "surroundings_volume"
+        const val KEY_SURROUNDINGS_PLAYS = "surroundings_plays"
     }
 }

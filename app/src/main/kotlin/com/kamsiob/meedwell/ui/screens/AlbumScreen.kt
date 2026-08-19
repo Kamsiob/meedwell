@@ -29,6 +29,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import com.kamsiob.meedwell.ui.components.numeralColumnWidth
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Provenance
@@ -44,6 +46,8 @@ import androidx.compose.foundation.layout.width
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.SectionHead
 import com.kamsiob.meedwell.ui.components.StaffRule
+import com.kamsiob.meedwell.ui.components.GhostButton
+import com.kamsiob.meedwell.ui.components.ClosingSprig
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.combinedClickableCompat
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -93,6 +97,8 @@ fun AlbumScreen(
     val hasCover = album.coverUrl != null
 
     Box(modifier = modifier.fillMaxSize()) {
+        val numeralWidth = numeralColumnWidth(tracks.maxOfOrNull { it.trackNumber } ?: 0)
+
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(bottom = 140.dp),
@@ -179,27 +185,16 @@ fun AlbumScreen(
                             horizontalArrangement = Arrangement.spacedBy(18.dp),
                         ) {
                             PillButton(label = "Play", onClick = onPlay)
-                            Box(
-                                Modifier
-                                    .defaultMinSize(minHeight = 48.dp)
-                                    .height(48.dp)
-                                    .clickable(role = Role.Button, onClick = onShuffle),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    MeedwellIcon(
-                                        icon = MeedwellIcons.Shuffle,
-                                        size = 16.dp,
-                                        tint = colors.secondaryText,
-                                    )
-                                    Text(
-                                        "Shuffle",
-                                        style = type.meta,
-                                        color = colors.secondaryText,
-                                        modifier = Modifier.padding(start = 7.dp),
-                                    )
-                                }
-                            }
+                            // The equal second choice, as a ghost pill rather
+                            // than bare small text beside a filled button.
+                            // Shuffling a record is a peer of playing it, and
+                            // the components file says the ghost exists for
+                            // exactly this case.
+                            GhostButton(
+                                label = "Shuffle",
+                                onClick = onShuffle,
+                                modifier = Modifier.weight(1f),
+                            )
                         }
 
                         SectionHead("Programme", Modifier.padding(top = 18.dp, bottom = 3.dp))
@@ -211,9 +206,22 @@ fun AlbumScreen(
                 TrackRow(
                     track = track,
                     isPlaying = track.id == playingTrackId,
+                    numeralWidth = numeralWidth,
                     onClick = { onTrackClick(index) },
                     onLongClick = { onTrackLongClick(track) },
                 )
+            }
+
+            item(key = "close") {
+                // "The engraved sprig closes the sheet the way a printed score
+                // closes a page." Grid 07's own caption; the programme used to
+                // end at the last movement and run into blank paper.
+                Box(
+                    Modifier.fillMaxWidth().padding(top = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ClosingSprig()
+                }
             }
 
             if (tracks.isEmpty()) {
@@ -252,8 +260,7 @@ fun AlbumScreen(
                     )
                     Box(
                         Modifier
-                            .defaultMinSize(minHeight = 48.dp)
-                            .height(48.dp)
+                            .defaultMinSize(minWidth = 64.dp, minHeight = 48.dp)
                             .clickable(role = Role.Button, onClick = onPlay),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -261,7 +268,7 @@ fun AlbumScreen(
                     }
                     MenuButton(onAlbumMenu)
                 }
-                Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                Hairline()
             }
         }
     }
@@ -288,6 +295,7 @@ fun AlbumScreen(
 private fun TrackRow(
     track: Track,
     isPlaying: Boolean,
+    numeralWidth: Dp,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -309,7 +317,13 @@ private fun TrackRow(
                 text = track.trackNumber.takeIf { it > 0 }?.let { Programme.roman(it) }.orEmpty(),
                 style = type.movementNumeral,
                 color = if (isPlaying) colors.mossInk else colors.tertiaryText,
-                modifier = Modifier.width(25.dp),
+                // Flush right against the title, the way numerals sit on a
+                // printed programme. One shared width per programme, sized
+                // from the highest numeral, so XVIII never wraps.
+                textAlign = TextAlign.End,
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier.width(numeralWidth).padding(end = 10.dp),
             )
             Column(Modifier.weight(1f).padding(end = 10.dp)) {
                 Text(
@@ -343,6 +357,11 @@ private fun TrackRow(
                 text = formatDuration(track.durationSeconds),
                 style = type.meta,
                 color = colors.tertiaryText,
+                // A fixed right-aligned box, so the times land in one column
+                // whether or not the row beside them carries a tempo. Tabular
+                // figures do the rest.
+                textAlign = TextAlign.End,
+                modifier = Modifier.width(46.dp),
             )
         }
         Hairline(Modifier.padding(horizontal = 22.dp))

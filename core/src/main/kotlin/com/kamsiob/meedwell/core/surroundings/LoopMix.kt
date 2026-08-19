@@ -38,6 +38,29 @@ object LoopMix {
     const val MAX_MAKEUP_DB = 18.0
 
     /**
+     * What the top of the volume control is worth, above the matched bed level.
+     *
+     * **Without this the control had nowhere to go.** The library is normalised
+     * to a bed level of -43.5 dB and almost every file needs no further makeup,
+     * so full volume applied a gain of exactly zero and played the bed at the
+     * level it was mastered to sit *under music* at. On its own, in a room, that
+     * is barely there, which is precisely what it was reported as.
+     *
+     * The bed target still does its real job, which is making every recording
+     * match every other one. This rides on top of all of them equally, so two
+     * beds at the same volume stay equally loud.
+     *
+     * Twelve rather than more, measured against the shipped library: true peaks
+     * run from -31.5 to -2.0 dBTP with a median of -14.0, so twelve puts the
+     * median at -2 and brings 45 of the 111 files into contact with the limiter
+     * on their transients alone. That is a true-peak limiter with look-ahead
+     * catching a crackle or a thunderclap, not compression riding the whole
+     * bed, and it is what the limiter is there for. Eighteen would have put 80
+     * of them into it, which starts squashing the thing worth listening to.
+     */
+    const val BED_HEADROOM_DB = 12.0
+
+    /**
      * The true-peak ceiling at playback.
      *
      * A decibel under full scale, rather than at it. Opus is decoded to float
@@ -193,6 +216,6 @@ object LoopMix {
         // slider is a barely perceptible drop of about 6 dB, which makes the
         // bottom half of the control useless for a bed you want under music.
         val volumeDb = 40.0 * log10(v)
-        return makeupGainDb(sound) + volumeDb
+        return makeupGainDb(sound) + volumeDb + BED_HEADROOM_DB
     }
 }

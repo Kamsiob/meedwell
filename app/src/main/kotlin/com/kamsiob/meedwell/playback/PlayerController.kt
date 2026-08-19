@@ -54,12 +54,131 @@ class PlayerController(
             while (true) {
                 kotlinx.coroutines.delay(1_000)
                 val c = controller ?: continue
-                if (c.isPlaying) pushState(c)
+                if (c.isPlaying) {
+                    tickSleep(c)
+                    pushState(c)
+                }
             }
         }
     }
 
     private var ticker: kotlinx.coroutines.Job? = null
+
+    /**
+     * The tone control, bound to the player's own audio session.
+     *
+     * Held here because it has to follow the session, which changes when the
+     * player is rebuilt, and nothing else knows when that happens.
+     */
+    val tone = ToneController()
+
+    /**
+     * The remembered voicing, restored before anything connects.
+     *
+     * `apply` records the choice and then returns, because there is no audio
+     * session yet; the real work happens again on connect. Without this the Tone
+     * screen would show "As Recorded" on a cold start until the first track
+     * played, which reads as the setting having been forgotten.
+     *
+     * Declared after `tone` on purpose. Kotlin runs initializers in declaration
+     * order, so an init block above it would be applying to null.
+     */
+    init {
+        tone.apply(com.kamsiob.meedwell.core.library.Voicing.byName(container.settings.voicing))
+        _state.value = _state.value.copy(
+            voicing = tone.voicing,
+            voicingName = tone.voicing.label,
+        )
+    }
+
+    /**
+     * Applies a voicing and remembers it.
+     *
+     * The state is updated directly rather than through `pushState`, because
+     * that needs a live controller and somebody can perfectly well sit on the
+     * Tone screen with nothing playing. Going through the player would leave the
+     * checkmark on the old row until the next track started.
+     */
+    fun setVoicing(voicing: com.kamsiob.meedwell.core.library.Voicing) {
+        container.settings.voicing = voicing.name
+        tone.apply(voicing)
+        _state.value = _state.value.copy(
+            voicing = tone.voicing,
+            voicingName = tone.voicing.label,
+            toneAvailable = tone.available,
+        )
+    }
+
+    // ---------- The sleep timer ----------
+
+    /**
+     * When the music stops, in epoch millis, or null for no timer.
+     *
+     * Held as an **absolute moment** rather than as a remaining duration, so it
+     * survives the process being paused, the ticker being late, and the phone
+     * sleeping. A countdown decremented on a timer drifts; a wall-clock target
+     * cannot.
+     */
+    private var sleepAt: Long? = null
+
+    /** Stop when the current piece ends, rather than at a clock time. */
+    private var sleepAtEndOfPiece: Boolean = false
+
+    /**
+     * Sets a timer, or clears it.
+     *
+     * Stops the music **and** the surroundings together, which is why the
+     * caller passes a hook rather than this reaching for the other player: one
+     * of them stopping and leaving rain running is the failure that wakes
+     * somebody up.
+     */
+    fun setSleepTimer(minutes: Int?) {
+        sleepAtEndOfPiece = false
+        sleepAt = minutes?.let { System.currentTimeMillis() + it * 60_000L }
+        if (sleepAt == null) controller?.volume = 1f
+        pushState(controller ?: return)
+    }
+
+    /** Stop when this piece finishes. */
+    fun setSleepAtEndOfPiece(on: Boolean) {
+        sleepAt = null
+        sleepAtEndOfPiece = on
+        controller?.volume = 1f
+        pushState(controller ?: return)
+    }
+
+    /** Called when the timer runs out, so the ambience stops with the music. */
+    var onSleep: (() -> Unit)? = null
+
+    /**
+     * Applies the fade and stops when the moment arrives.
+     *
+     * Runs on the same one second ticker as the clock, so there is no second
+     * timer to fall out of step with the first.
+     */
+    private fun tickSleep(c: MediaController) {
+        val target = sleepAt
+        if (target != null) {
+            val remaining = (target - System.currentTimeMillis()) / 1000
+            if (remaining <= 0) {
+                c.volume = 1f
+                c.pause()
+                sleepAt = null
+                onSleep?.invoke()
+                return
+            }
+            c.volume = com.kamsiob.meedwell.core.library.SleepPlan.gainAt(remaining)
+            return
+        }
+        if (sleepAtEndOfPiece && c.mediaItemCount > 0) {
+            val duration = c.duration
+            if (duration > 0 && c.currentPosition >= duration - 400) {
+                c.pause()
+                sleepAtEndOfPiece = false
+                onSleep?.invoke()
+            }
+        }
+    }
 
     fun connect() {
         if (controller != null) return
@@ -70,6 +189,7 @@ class PlayerController(
                 val c = runCatching { future.get() }.getOrNull() ?: return@addListener
                 controller = c
                 c.addListener(StateListener())
+                tone.apply(com.kamsiob.meedwell.core.library.Voicing.byName(container.settings.voicing))
                 restoreQueue(c)
                 pushState(c)
                 startTicker()
@@ -79,6 +199,7 @@ class PlayerController(
     }
 
     fun release() {
+        tone.release()
         ticker?.cancel()
         ticker = null
         controller?.release()
@@ -94,12 +215,21 @@ class PlayerController(
      */
     private fun restoreQueue(c: MediaController) {
         if (c.mediaItemCount > 0) return
+        if (!container.settings.resumeQueueOnOpening) return
         scope.launch {
             val saved = container.database.queue().all().map { it.trackId }
             if (saved.isEmpty()) return@launch
             val tracks = container.library.tracks(saved)
             if (tracks.isEmpty()) return@launch
-            val items = tracks.map { it.toMediaItem(container.client()) }
+            // The count has to travel with the restored queue too.
+            //
+            // Every other path passes `wholeRecordCount(tracks)`; this one did
+            // not, so it defaulted to zero and the player's programme line, the
+            // "IV of IX" between the title and the scrubber, was permanently
+            // blank after any restart. It came back only if you started a fresh
+            // queue, which is why it looked intermittent rather than broken.
+            val total = wholeRecordCount(tracks)
+            val items = tracks.map { it.toMediaItem(container.client(), total) }
             c.setMediaItems(
                 items,
                 container.settings.queueIndex.coerceIn(0, items.lastIndex),
@@ -163,6 +293,19 @@ class PlayerController(
     }
 
     /** Drops one item out of the queue. */
+    /**
+     * Reorders the queue, one commit per completed drag.
+     *
+     * `MASTER_SPEC` has said "drag reorder, swipe to remove" since version one;
+     * the remove existed and the reorder never did.
+     */
+    fun moveQueueItem(from: Int, to: Int) {
+        val c = controller ?: return
+        if (from == to || from !in 0 until c.mediaItemCount || to !in 0 until c.mediaItemCount) return
+        c.moveMediaItem(from, to)
+        pushState(c)
+    }
+
     fun removeQueueItem(index: Int) {
         val c = controller ?: return
         if (index !in 0 until c.mediaItemCount) return
@@ -187,6 +330,9 @@ class PlayerController(
                 artist = item.mediaMetadata.artist?.toString().orEmpty(),
                 artworkUri = item.mediaMetadata.artworkUri?.toString(),
                 isCurrent = i == c.currentMediaItemIndex,
+                durationSeconds = (item.mediaMetadata.durationMs ?: 0L) / 1000,
+                trackNumber = item.mediaMetadata.trackNumber ?: 0,
+                wholeRecordCount = item.mediaMetadata.totalTrackCount ?: 0,
             )
         }
     }
@@ -235,6 +381,7 @@ class PlayerController(
             isPlaying = player.isPlaying,
             title = player.mediaMetadata.title?.toString().orEmpty(),
             artist = player.mediaMetadata.artist?.toString().orEmpty(),
+            album = player.mediaMetadata.albumTitle?.toString().orEmpty(),
             artworkUri = player.mediaMetadata.artworkUri?.toString(),
             trackId = player.currentMediaItem?.mediaId,
             positionMs = player.currentPosition.coerceAtLeast(0),
@@ -249,6 +396,15 @@ class PlayerController(
                 else -> RepeatMode.Off
             },
             queueSize = player.mediaItemCount,
+            hasNext = player.hasNextMediaItem(),
+            hasPrevious = player.hasPreviousMediaItem(),
+            sleepSecondsRemaining = sleepAt?.let {
+                ((it - System.currentTimeMillis()) / 1000).coerceAtLeast(0)
+            },
+            sleepAtEndOfPiece = sleepAtEndOfPiece,
+            voicing = tone.voicing,
+            voicingName = tone.voicing.label,
+            toneAvailable = tone.available,
             trackNumber = player.currentMediaItem?.mediaMetadata?.trackNumber ?: 0,
             trackCount = player.currentMediaItem?.mediaMetadata?.totalTrackCount ?: 0,
         )
@@ -264,6 +420,15 @@ data class PlaybackState(
     val isPlaying: Boolean = false,
     val title: String = "",
     val artist: String = "",
+    /**
+     * The record this track belongs to.
+     *
+     * The grid sets "Bride Callanan - Harp Music for Early Hours" under the
+     * title: artist *and* album. Only the artist was carried, so the player's
+     * title block said half of what it was drawn to say, on the screen with the
+     * least to read.
+     */
+    val album: String = "",
     val artworkUri: String? = null,
     val trackId: String? = null,
     val positionMs: Long = 0,
@@ -277,10 +442,37 @@ data class PlaybackState(
     val shuffle: Boolean = false,
     val repeat: RepeatMode = RepeatMode.Off,
     val queueSize: Int = 0,
+    /**
+     * Whether skipping can actually do anything.
+     *
+     * The transport used to be drawn identically whether or not it could move,
+     * so at the end of a record "next" was a button that swallowed taps in
+     * silence. A control that cannot act should look like it cannot act, which
+     * is also how somebody discovers that repeat is what they wanted.
+     */
+    val hasNext: Boolean = false,
+    val hasPrevious: Boolean = false,
     /** The track's own number on its record, and how many there are. */
     val trackNumber: Int = 0,
     val trackCount: Int = 0,
+    /** Seconds left on the sleep timer, or null when there is none. */
+    val sleepSecondsRemaining: Long? = null,
+    val sleepAtEndOfPiece: Boolean = false,
+    val voicing: com.kamsiob.meedwell.core.library.Voicing =
+        com.kamsiob.meedwell.core.library.Voicing.AsRecorded,
+    val voicingName: String = "As Recorded",
+    /** False on a phone whose platform did not offer an equalizer at all. */
+    val toneAvailable: Boolean = true,
 ) {
+    /** The timer in a word or two, for the More screen's right-hand column. */
+    val sleepLabel: String
+        get() = when {
+            sleepAtEndOfPiece -> "end of this piece"
+            sleepSecondsRemaining != null ->
+                com.kamsiob.meedwell.core.library.SleepPlan.countdown(sleepSecondsRemaining)
+            else -> "Off"
+        }
+
     /**
      * "andante · IV of IX", the programme line.
      *
@@ -291,13 +483,8 @@ data class PlaybackState(
         get() = com.kamsiob.meedwell.core.library.Programme.line(title, trackNumber, trackCount)
 
     /** The tempo marking alone, for the mini player's one short line. */
-    /**
-     * The tone voicing in force, named rather than numbered.
-     *
-     * Placeholder until the tone engine exists; it reads "As Recorded", which
-     * is both the default and the honest answer while nothing is being applied.
-     */
-    val toneName: String get() = "As Recorded"
+    /** The tone voicing in force, named rather than numbered. */
+    val toneName: String get() = voicingName
 
     val tempoMark: String?
         get() = com.kamsiob.meedwell.core.library.Programme.tempoIn(title)
@@ -316,6 +503,11 @@ data class QueueItem(
     val artist: String,
     val artworkUri: String?,
     val isCurrent: Boolean,
+    val durationSeconds: Long = 0,
+    /** Its number on its record, for the bill's Roman numeral. */
+    val trackNumber: Int = 0,
+    /** Nonzero only when the whole queue is one record: then it is a programme. */
+    val wholeRecordCount: Int = 0,
 )
 
 /**
@@ -354,11 +546,20 @@ internal fun Track.toMediaItem(client: SubsonicClient?, totalTrackCount: Int = 0
                 .setArtist(artist)
                 .setAlbumTitle(albumName)
                 .setTrackNumber(trackNumber.takeIf { it > 0 })
+                // The running time rides with the item so the queue can total
+                // what is left, which is the number somebody planning an
+                // evening actually wants.
+                .setDurationMs((durationSeconds * 1000).takeIf { it > 0 })
                 // How many movements the record has, so the player can say
                 // "IV of IX". Only set when the caller handed over a whole
                 // record; a mixed queue is not a programme and gets nothing.
                 .setTotalTrackCount(totalTrackCount.takeIf { it > 0 })
-                .setArtworkUri(client?.coverArtUrl(coverArtId)?.toUri())
+                // The same stable URL the shelf uses. Minting a fresh salt here
+                // gave every media item a different artwork URI, so the
+                // notification refetched art it already had on every track.
+                .setArtworkUri(
+                    com.kamsiob.meedwell.ui.screens.CoverUrls.of(coverArtId)?.toUri()
+                )
                 .setIsPlayable(uri != Uri.EMPTY)
                 .build()
         )

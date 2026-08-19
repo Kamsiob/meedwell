@@ -5,6 +5,6 @@
   truth. These two exist so the launch window and the icon background match it.
 -->
 <resources>
-    <color name="meedwell_background">#0B0B0E</color>
+    <color name="meedwell_background">#F6F4EC</color>
     <color name="meedwell_mark_field">#16121C</color>
 </resources>

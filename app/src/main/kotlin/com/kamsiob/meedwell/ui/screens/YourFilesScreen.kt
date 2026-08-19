@@ -26,11 +26,12 @@ import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Provenance
 import com.kamsiob.meedwell.data.db.WatchedFolderEntity
+import com.kamsiob.meedwell.ui.components.Hairline
+import com.kamsiob.meedwell.ui.components.SectionHead
 import com.kamsiob.meedwell.ui.components.CoverThumb
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.TextButtonRow
-import com.kamsiob.meedwell.ui.components.IconButton
-import com.kamsiob.meedwell.ui.components.IconEdge
+import com.kamsiob.meedwell.ui.components.DetailHeader
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -68,17 +69,7 @@ fun YourFilesScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 22.dp),
         ) {
-            IconButton(
-                icon = MeedwellIcons.Back,
-                contentDescription = "Back",
-                onClick = onBack,
-                size = 25.dp,
-                tint = colors.primaryText,
-                edge = IconEdge.Start,
-                modifier = Modifier.padding(top = 6.dp),
-            )
-
-            Text("Your files", style = type.h1, color = colors.primaryText)
+            DetailHeader("Your files", onBack)
             Text(
                 text = state.voiceLine,
                 style = type.voice,
@@ -93,7 +84,7 @@ fun YourFilesScreen(
                     .fillMaxWidth()
                     .padding(top = 16.dp)
                     .clip(RoundedCornerShape(13.dp))
-                    .background(colors.background)
+                    .background(colors.recess)
                     .padding(14.dp),
             ) {
                 Text(
@@ -113,12 +104,7 @@ fun YourFilesScreen(
                 )
             }
 
-            Text(
-                "WATCHED FOLDERS",
-                style = type.section,
-                color = colors.secondaryText,
-                modifier = Modifier.padding(top = 24.dp),
-            )
+            SectionHead("Watched folders", Modifier.padding(top = 24.dp))
 
             if (state.folders.isEmpty()) {
                 Text(
@@ -159,7 +145,7 @@ fun YourFilesScreen(
                                 Text("Remove", style = type.meta, color = colors.secondaryText)
                             }
                         }
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                        Hairline()
                     }
                 }
             }
@@ -180,12 +166,7 @@ fun YourFilesScreen(
             }
 
             if (state.matched.isNotEmpty()) {
-                Text(
-                    "MATCHED TO YOUR SHELF",
-                    style = type.section,
-                    color = colors.secondaryText,
-                    modifier = Modifier.padding(top = 22.dp),
-                )
+                SectionHead("Matched to your shelf", Modifier.padding(top = 22.dp))
                 state.matched.forEach { album ->
                     Column {
                         Row(
@@ -214,7 +195,7 @@ fun YourFilesScreen(
                                 )
                             }
                         }
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                        Hairline()
                     }
                 }
             }

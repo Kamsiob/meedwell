@@ -97,7 +97,8 @@ in a corner.
 
 - tap anywhere on the card to expand or collapse
 - drag along the volume line to set level
-- swipe the card down to stop the sound and dismiss the card
+- drag the card down to fold it, up to open it. Neither stops the sound
+- stop the sound from the named row at the foot of the opened card
 - long press does nothing
 
 ### It never blocks content

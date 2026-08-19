@@ -80,10 +80,16 @@ class LibraryRepository(
      * query against the local play log: no algorithm, no feed, nothing sent
      * anywhere, which is the point rather than a caveat.
      */
-    fun observeForgotten(now: Long = clock()): Flow<List<Album>> =
+    fun observeForgotten(now: Long = clock()): Flow<List<ForgottenRecord>> =
         db.playEvents()
-            .observeForgotten(playThreshold = 2, quietBefore = now - QUIET_SECONDS)
-            .map { rows -> rows.map { it.toDomain() } }
+            .observeForgotten(
+                playThreshold = 2,
+                quietBefore = now - QUIET_SECONDS,
+                playedSince = now - RECENTLY_SECONDS,
+            )
+            .map { rows ->
+                rows.map { ForgottenRecord(it.album.toDomain(), it.plays, it.lastPlayed) }
+            }
 
     fun observeStarredTracks(): Flow<List<Track>> =
         db.tracks().observeStarred().map { rows -> rows.map { it.toDomain() } }
@@ -312,6 +318,20 @@ class LibraryRepository(
 
         /** Fourteen months, per the specification. */
         const val QUIET_SECONDS = 425L * 24 * 60 * 60
+
+        /**
+         * Anything heard this recently is never forgotten, whatever else is true
+         * of it.
+         *
+         * The specification's rule is "never played, played at most twice, **or**
+         * quiet for fourteen months", and that or is what put a record you had
+         * just finished onto the forgotten shelf: one play still satisfies "at
+         * most twice". The low-play arm is worth keeping, because a record you
+         * bought and never got into is exactly what the shelf is for, but it
+         * cannot be allowed to outrank the plainest fact available, which is
+         * that you were listening to it this month.
+         */
+        const val RECENTLY_SECONDS = 30L * 24 * 60 * 60
     }
 }
 
@@ -319,6 +339,13 @@ data class SearchResults(
     val albums: List<Album>,
     val tracks: List<Track>,
     val artists: List<Artist>,
+)
+
+/** A forgotten record, with the facts its reason is written from. */
+data class ForgottenRecord(
+    val album: Album,
+    val plays: Int,
+    val lastPlayedAt: Long?,
 )
 
 enum class ShelfSort { Artist, Recent, Title, MostPlayed }

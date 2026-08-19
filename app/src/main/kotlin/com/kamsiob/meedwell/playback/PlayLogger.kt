@@ -35,6 +35,9 @@ class PlayLogger(private val container: AppContainer) {
     private var lastTickAt: Long = 0L
     private var durationMs: Long = 0L
 
+    /** Whether the track in hand has already earned its row. */
+    private var recorded: Boolean = false
+
     fun attach(player: Player) {
         player.addListener(object : Player.Listener {
 
@@ -48,6 +51,7 @@ class PlayLogger(private val container: AppContainer) {
                 listenedMs = 0L
                 lastTickAt = 0L
                 durationMs = 0L
+                recorded = false
                 currentId?.let { id ->
                     scope.launch {
                         currentAlbumId = container.database.tracks().byId(id)?.albumId
@@ -94,15 +98,29 @@ class PlayLogger(private val container: AppContainer) {
      */
     private fun flush() {
         val id = currentId ?: return
+        if (recorded) return
         val listened = listenedMs / 1000
-        currentId = null
-        listenedMs = 0L
         if (listened < MINIMUM_SECONDS) return
 
         val duration = durationMs / 1000
         val halfway = if (duration > 0) duration / 2 else Long.MAX_VALUE
         val enough = listened >= minOf(halfway, SUBSTANTIAL_SECONDS)
         if (!enough) return
+
+        // Counted once, and the track keeps its identity afterwards.
+        //
+        // This used to clear `currentId` and the running total on every flush,
+        // and a flush happens on every pause. So pausing thirty seconds in threw
+        // away both the track and the thirty seconds: the rest of the listen was
+        // credited to nothing at all, and a piece you paused once and then heard
+        // right through was never recorded. Anyone who pauses is invisible to
+        // History, the Forgotten Shelf and the most-played sort, which is most
+        // people.
+        //
+        // The identity is cleared where it actually changes, in
+        // `onMediaItemTransition`, and this flag is what stops one long listen
+        // becoming a row per pause.
+        recorded = true
 
         val albumId = currentAlbumId
         scope.launch {

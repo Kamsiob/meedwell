@@ -17,6 +17,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import com.kamsiob.meedwell.ui.theme.Motion
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 
 /**
@@ -46,6 +51,20 @@ import com.kamsiob.meedwell.ui.theme.MeedwellTheme
 @Composable
 fun Staff(modifier: Modifier = Modifier) {
     val colors = MeedwellTheme.colors
+
+    // **The staff is ruled on, not stamped on.** When a section head enters
+    // the page its five lines draw left to right on the Rule curve, each a
+    // breath behind the one above, the same gesture the contour uses to write
+    // itself onto the player. It is the smallest motion in the app and the
+    // most repeated, which is exactly why it carries: every screen with a
+    // section quietly behaves like a page being set. Reduced motion rules the
+    // lines instantly.
+    val reduced = MeedwellTheme.reducedMotion
+    val ruled = remember { Animatable(if (reduced) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (!reduced) ruled.animateTo(1f, tween(360, easing = Motion.Rule))
+    }
+
     Canvas(
         modifier
             .height(STAFF_HEIGHT)
@@ -57,10 +76,14 @@ fun Staff(modifier: Modifier = Modifier) {
         val gap = 3.dp.toPx()
         repeat(5) { index ->
             val y = index * (line + gap) + line / 2
+            // The cascade: line n starts a beat after line n-1 and all five
+            // finish inside the same 360ms.
+            val reach = ((ruled.value * 1.24f) - index * 0.06f).coerceIn(0f, 1f)
+            if (reach <= 0f) return@repeat
             drawLine(
                 color = if (index == 2) colors.hairline2 else colors.hairline,
                 start = Offset(0f, y),
-                end = Offset(size.width, y),
+                end = Offset(size.width * reach, y),
                 strokeWidth = line,
             )
         }
@@ -128,4 +151,20 @@ fun Hairline(modifier: Modifier = Modifier, color: Color? = null) {
             .background(stroke)
             .clearAndSetSemantics {}
     )
+}
+
+/**
+ * Room for the widest numeral a programme will print.
+ *
+ * Roman numerals grow with the count: VIII is four glyphs, XVIII five,
+ * XXVIII six. A fixed 30dp column held I through VII and wrapped everything
+ * past it, which on a long record broke numerals across two lines. The column
+ * is sized once from the highest number in the list, so every row in one
+ * programme shares one margin and the titles all start at the same place.
+ */
+fun numeralColumnWidth(highest: Int): androidx.compose.ui.unit.Dp = when {
+    highest >= 28 -> 58.dp
+    highest >= 18 -> 50.dp
+    highest >= 8 -> 42.dp
+    else -> 30.dp
 }

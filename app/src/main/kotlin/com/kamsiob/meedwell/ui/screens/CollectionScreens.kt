@@ -33,10 +33,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.model.Album
 import com.kamsiob.meedwell.core.model.Track
+import com.kamsiob.meedwell.ui.components.Hairline
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.sp
+import com.kamsiob.meedwell.ui.components.SeedHeadPlate
+import com.kamsiob.meedwell.ui.components.SectionHead
 import com.kamsiob.meedwell.ui.components.CoverSquare
 import com.kamsiob.meedwell.ui.components.CoverThumb
-import com.kamsiob.meedwell.ui.components.IconButton
-import com.kamsiob.meedwell.ui.components.IconEdge
+import com.kamsiob.meedwell.ui.components.DetailHeader
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.combinedClickableCompat
@@ -62,16 +66,7 @@ fun HistoryScreen(
 
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
-            IconButton(
-                icon = MeedwellIcons.Back,
-                contentDescription = "Back",
-                onClick = onBack,
-                size = 25.dp,
-                tint = colors.primaryText,
-                edge = IconEdge.Start,
-                modifier = Modifier.padding(top = 6.dp),
-            )
-            Text("History", style = type.h1, color = colors.primaryText)
+            DetailHeader("History", onBack)
             Text(
                 "The same log the forgotten shelf reads from",
                 style = type.voice,
@@ -81,7 +76,8 @@ fun HistoryScreen(
 
             if (days.isEmpty()) {
                 EmptyNote(
-                    "Nothing here yet. Play something and it turns up, on this phone and nowhere else."
+                    "Nothing here yet.",
+                    "Play something and it turns up, on this phone and nowhere else.",
                 )
                 return@Column
             }
@@ -89,12 +85,7 @@ fun HistoryScreen(
             LazyColumn(contentPadding = PaddingValues(top = 14.dp, bottom = 120.dp)) {
                 days.forEach { day ->
                     item(key = "d-" + day.label) {
-                        Text(
-                            day.label.uppercase(),
-                            style = type.section,
-                            color = colors.secondaryText,
-                            modifier = Modifier.padding(top = 14.dp, bottom = 2.dp),
-                        )
+                        SectionHead(day.label, Modifier.padding(top = 18.dp, bottom = 2.dp))
                     }
                     items(day.entries, key = { it.key }) { entry ->
                         Column {
@@ -125,7 +116,7 @@ fun HistoryScreen(
                                 }
                                 Text(entry.time, style = type.meta, color = colors.tertiaryText)
                             }
-                            Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                            Hairline()
                         }
                     }
                 }
@@ -163,16 +154,7 @@ fun ForgottenShelfScreen(
 
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
-            IconButton(
-                icon = MeedwellIcons.Back,
-                contentDescription = "Back",
-                onClick = onBack,
-                size = 25.dp,
-                tint = colors.primaryText,
-                edge = IconEdge.Start,
-                modifier = Modifier.padding(top = 6.dp),
-            )
-            Text("Forgotten shelf", style = type.h1, color = colors.primaryText)
+            DetailHeader("Forgotten shelf", onBack)
             Text(
                 "Bought, loved, and quietly waiting",
                 style = type.voice,
@@ -182,7 +164,8 @@ fun ForgottenShelfScreen(
 
             if (albums.isEmpty()) {
                 EmptyNote(
-                    "Nothing is waiting yet. This fills in as you listen, and as records go quiet for a while."
+                    "Nothing is waiting yet.",
+                    "This fills in as you listen, and as records go quiet for a while.",
                 )
                 return@Column
             }
@@ -367,16 +350,7 @@ fun LovedScreen(
 
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
-            IconButton(
-                icon = MeedwellIcons.Back,
-                contentDescription = "Back",
-                onClick = onBack,
-                size = 25.dp,
-                tint = colors.primaryText,
-                edge = IconEdge.Start,
-                modifier = Modifier.padding(top = 6.dp),
-            )
-            Text("Loved", style = type.h1, color = colors.primaryText)
+            DetailHeader("Loved", onBack)
             Text(
                 "Hearts that live in your account, not this app",
                 style = type.voice,
@@ -385,7 +359,10 @@ fun LovedScreen(
             )
 
             if (tracks.isEmpty()) {
-                EmptyNote("Nothing loved yet. The heart is on every track, and it travels with your account.")
+                EmptyNote(
+                    "Nothing loved yet.",
+                    "The heart is on every track, and it travels with your account.",
+                )
                 return@Column
             }
 
@@ -403,7 +380,7 @@ fun LovedScreen(
                                 .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            CoverThumb(url = null, title = track.title, size = 40.dp)
+                            CoverThumb(url = CoverUrls.of(track.coverArtId), title = track.title, size = 40.dp)
                             Column(Modifier.weight(1f).padding(start = 12.dp)) {
                                 Text(track.title, style = type.rowTitle, color = colors.primaryText, maxLines = 1)
                                 Text(track.artist, style = type.meta, color = colors.tertiaryText, maxLines = 1)
@@ -414,7 +391,7 @@ fun LovedScreen(
                                 color = colors.tertiaryText,
                             )
                         }
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                        Hairline()
                     }
                 }
                 item(key = "foot") {
@@ -454,16 +431,7 @@ fun ArtistScreen(
 
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(horizontal = 22.dp)) {
-            IconButton(
-                icon = MeedwellIcons.Back,
-                contentDescription = "Back",
-                onClick = onBack,
-                size = 25.dp,
-                tint = colors.primaryText,
-                edge = IconEdge.Start,
-                modifier = Modifier.padding(top = 6.dp),
-            )
-            Text(state.name, style = type.h2, color = colors.primaryText)
+            DetailHeader(state.name, onBack, style = type.h2)
             Text(
                 state.voiceLine,
                 style = type.voice,
@@ -503,7 +471,7 @@ fun ArtistScreen(
                                 }
                             }
                         }
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                        Hairline()
                     }
                 }
             }
@@ -549,7 +517,7 @@ private fun ListRow(
                     Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(colors.background),
+                        .background(colors.recess),
                     contentAlignment = Alignment.Center,
                 ) {
                     com.kamsiob.meedwell.ui.components.MeedwellIcon(
@@ -566,18 +534,46 @@ private fun ListRow(
                 Text(subtitle, style = type.meta, color = colors.tertiaryText, maxLines = 1)
             }
         }
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+        Hairline()
     }
 }
 
+/**
+ * An empty screen as a rest point rather than a shrug.
+ *
+ * Three of these were one faint line, smaller than the voice line above them,
+ * and the design's own law is that an empty screen is an invitation. The serif
+ * carries the sentence, the body says the way forward, and the plate marks the
+ * pause the way the welcome screen already does.
+ */
 @Composable
-private fun EmptyNote(text: String) {
-    Text(
-        text,
-        style = MeedwellTheme.typography.meta,
-        color = MeedwellTheme.colors.secondaryText,
-        modifier = Modifier.padding(top = 26.dp),
-    )
+private fun EmptyNote(text: String, body: String? = null) {
+    Column(
+        Modifier.fillMaxWidth().padding(top = 44.dp, start = 10.dp, end = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text,
+            style = MeedwellTheme.typography.serifOpening.copy(
+                fontSize = 24.sp,
+                lineHeight = 30.sp,
+            ),
+            color = MeedwellTheme.colors.primaryText,
+            textAlign = TextAlign.Center,
+        )
+        if (body != null) {
+            Text(
+                body,
+                style = MeedwellTheme.typography.body,
+                color = MeedwellTheme.colors.secondaryText,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
+        SeedHeadPlate(
+            Modifier.padding(top = 26.dp).alpha(0.34f)
+        )
+    }
 }
 
 // ---------- State ----------
@@ -596,7 +592,20 @@ data class HistoryDay(val label: String, val entries: List<HistoryEntry>)
 
 data class ForgottenAlbum(val album: Album, val reason: String)
 
-data class ListSummary(val id: String, val name: String, val subtitle: String, val coverUrl: String?)
+data class ListSummary(
+    val id: String,
+    val name: String,
+    val subtitle: String,
+    val coverUrl: String?,
+    /**
+     * False for a list that came from Bandcamp.
+     *
+     * Their API implements no way to create, change or delete a playlist, so
+     * those are shown and played and never edited. Carried on the row so the
+     * screen can say so rather than offering a rename that would quietly fail.
+     */
+    val editable: Boolean = true,
+)
 
 data class ListsState(
     val lists: List<ListSummary> = emptyList(),

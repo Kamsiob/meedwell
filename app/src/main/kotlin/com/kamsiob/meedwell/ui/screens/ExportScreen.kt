@@ -15,8 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.kamsiob.meedwell.ui.components.IconButton
-import com.kamsiob.meedwell.ui.components.IconEdge
+import com.kamsiob.meedwell.ui.components.DetailHeader
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.components.PillButton
 import com.kamsiob.meedwell.ui.components.TextButtonRow
@@ -58,16 +57,7 @@ fun ExportScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 22.dp),
         ) {
-            IconButton(
-                icon = MeedwellIcons.Back,
-                contentDescription = "Back",
-                onClick = onBack,
-                size = 25.dp,
-                tint = colors.primaryText,
-                edge = IconEdge.Start,
-                modifier = Modifier.padding(top = 6.dp),
-            )
-            Text("Export and restore", style = type.h1, color = colors.primaryText)
+            DetailHeader("Export and restore", onBack)
             Text(
                 state.lastBackupLine,
                 style = type.voice,
@@ -160,7 +150,7 @@ private fun ResultPanel(result: String) {
             .fillMaxWidth()
             .padding(top = 20.dp)
             .clip(RoundedCornerShape(Radius.cover))
-            .background(colors.background)
+            .background(colors.recess)
             .padding(16.dp),
     ) {
         Text(result, style = MeedwellTheme.typography.body, color = colors.primaryText)

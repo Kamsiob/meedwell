@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -76,7 +77,7 @@ fun ConnectScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 26.dp, vertical = 24.dp),
+                .padding(horizontal = 22.dp),
         ) {
             Text(
                 text = "Connect your collection",
@@ -90,8 +91,14 @@ fun ConnectScreen(
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 10.dp),
             )
+            // The login caveat is stated **before** the button rather than
+            // after it. Bandcamp's fan settings page only resolves for a signed
+            // in browser; a signed out one lands somewhere that looks nothing
+            // like these instructions, and somebody who has already tapped
+            // through has no way to tell whether the app sent them wrong.
             Text(
-                text = "Find them under Fan Settings, then Subsonic, on bandcamp.com.",
+                text = "Find them under Fan Settings, then Subsonic, on bandcamp.com. " +
+                    "Sign in to Bandcamp in your browser first, or the page will not open to your settings.",
                 style = type.meta,
                 color = colors.secondaryText,
                 modifier = Modifier.padding(top = 14.dp),
@@ -144,7 +151,7 @@ fun ConnectScreen(
                 // An action keeps the same name through its whole flow, so this
                 // says Connect while idle and describes itself while working
                 // rather than turning into a spinner with no label.
-                label = if (state.checking) "Checking" else stringResource(R.string.welcome_connect),
+                label = if (state.checking) "Checking" else stringResource(R.string.where_connect),
                 onClick = { if (!state.checking) onConnect() },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -192,7 +199,7 @@ private fun ConnectError(error: ConnectError, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(colors.background)
+            .background(colors.recess)
             .padding(14.dp),
     ) {
         Text(headline, style = type.rowTitle, color = colors.primaryText)
@@ -230,6 +237,13 @@ private fun CredentialField(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         ) {
+            // Centered in a minimum-height box rather than stretched to a
+            // fixed one: the fixed height both floated the cursor to the top
+            // and clipped the line at large font scale.
+            Box(
+                Modifier.weight(1f).defaultMinSize(minHeight = 48.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
@@ -268,13 +282,13 @@ private fun CredentialField(
                     )
                 },
                 modifier = Modifier
-                    .weight(1f)
-                    .heightIn48()
+                    .fillMaxWidth()
                     .semantics {
                         contentDescription = label
                         if (isPassword) password()
                     },
             )
+            }
 
             if (isPassword && onToggleReveal != null) {
                 Box(

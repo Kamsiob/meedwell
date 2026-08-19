@@ -54,6 +54,36 @@ enum class MeedwellIcons(
         )
     ),
     ListView(listOf("M9 6h11M9 12h11M9 18h11", "M4 6h.5M4 12h.5M4 18h.5")),
+
+    /**
+     * The tone control, as a bank of three faders.
+     *
+     * The player used to name the voicing in words, "Tone: Orchestral &
+     * Scores", set in the serif across the middle of the subrow. It was the
+     * only text in a row of marks and it read as an announcement rather than a
+     * control, which is disruptive on the one screen meant to be quiet. The
+     * mark says the same thing and the screen it opens says the rest.
+     */
+    /**
+     * Where the sound is going: this phone, headphones, a speaker, a TV.
+     *
+     * Android owns the actual picker. This only opens it, because routing is a
+     * system matter and an app that drew its own list would be guessing at what
+     * is connected.
+     */
+    Output(
+        listOf(
+            "M4 9.5h3.5L12 5.5v13L7.5 14.5H4z",
+            "M16 9a4.5 4.5 0 0 1 0 6",
+            "M19 6.5a8.5 8.5 0 0 1 0 11",
+        )
+    ),
+    Tone(
+        listOf(
+            "M6 4v16", "M12 4v16", "M18 4v16",
+            "M3.5 9h5", "M9.5 14.5h5", "M15.5 7.5h5",
+        )
+    ),
     Search(listOf("M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14", "M20 20l-3.5-3.5")),
 
     /** The four tab icons. */
@@ -139,6 +169,24 @@ enum class MeedwellIcons(
     ChevronDown(listOf("M6 9l6 6 6-6")),
     ChevronRight(listOf("M9 5l7 7-7 7")),
     Close(listOf("M6 6l12 12M18 6L6 18")),
+
+    /**
+     * The mark against a chosen thing, as on Tone's voicings.
+     *
+     * Deliberately narrow and slightly extended past the corner, so it reads as
+     * a pen stroke rather than a checkbox tick. Every list it appears in is a
+     * pick-one list, and the row also carries `selected` for a screen reader,
+     * so the glyph is never the only thing saying which one is in use.
+     */
+    Check(listOf("M4.5 12.5l5 5L20 6.5")),
+
+    /**
+     * The grip on a row that can be dragged.
+     *
+     * Two rules rather than the usual six dots: this design draws structure with
+     * hairlines, and a dot grid would be the one stippled thing in the app.
+     */
+    Handle(listOf("M5 9.5h14M5 14.5h14")),
 
     /** The overflow menu: three filled dots, as in the reference. */
     Dots(

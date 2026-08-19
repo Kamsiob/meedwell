@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,8 +27,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.meedwell.core.surroundings.CreditBlock
 import com.kamsiob.meedwell.core.surroundings.LicenseGroup
-import com.kamsiob.meedwell.ui.components.IconButton
-import com.kamsiob.meedwell.ui.components.IconEdge
+import com.kamsiob.meedwell.ui.components.SectionHead
+import com.kamsiob.meedwell.ui.components.Hairline
+import com.kamsiob.meedwell.ui.components.DetailHeader
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -64,17 +66,7 @@ fun CreditsScreen(
     val type = MeedwellTheme.typography
 
     Column(modifier.fillMaxSize().padding(horizontal = 22.dp)) {
-        IconButton(
-            icon = MeedwellIcons.Back,
-            contentDescription = "Back",
-            onClick = onBack,
-            size = 25.dp,
-            tint = colors.primaryText,
-            edge = IconEdge.Start,
-            modifier = Modifier.padding(top = 6.dp),
-        )
-        Text("Credits", style = type.h1, color = colors.primaryText)
-
+        DetailHeader("Credits and licenses", onBack)
         LazyColumn(contentPadding = PaddingValues(top = 10.dp, bottom = 40.dp)) {
 
             item(key = "summary") {
@@ -86,7 +78,7 @@ fun CreditsScreen(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                             .clip(RoundedCornerShape(13.dp))
-                            .background(colors.background)
+                            .background(colors.recess)
                             .padding(14.dp),
                     ) {
                         Text(
@@ -122,14 +114,20 @@ fun CreditsScreen(
             groups.forEach { group ->
                 item(key = "h-" + group.licenseLabel) {
                     Column(Modifier.padding(top = 24.dp, bottom = 4.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
                             Text(
                                 group.licenseLabel.uppercase(),
                                 style = type.section,
-                                color = colors.primaryText,
+                                // Tertiary, like every section head. Primary ink
+                                // made the license labels shout over the very
+                                // credits they were grouping.
+                                color = colors.tertiaryText,
                             )
                             Text(
-                                "  ${group.entries.size}",
+                                "${group.entries.size}",
                                 style = type.numeric,
                                 color = colors.tertiaryText,
                             )
@@ -137,7 +135,7 @@ fun CreditsScreen(
                         Box(
                             Modifier
                                 .padding(top = 4.dp)
-                                .defaultMinSize(minHeight = 44.dp)
+                                .defaultMinSize(minHeight = 48.dp)
                                 .clickable(role = Role.Button) { onOpenUrl(group.licenseUrl) }
                                 .semantics { contentDescription = "Read the ${group.licenseLabel} license" },
                             contentAlignment = Alignment.CenterStart,
@@ -196,19 +194,16 @@ fun CreditsScreen(
                                 tint = colors.tertiaryText,
                             )
                         }
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                        Hairline()
                     }
                 }
             }
 
             if (softwareNotices.isNotEmpty()) {
                 item(key = "software-head") {
-                    Text(
-                        "SOFTWARE",
-                        style = type.section,
-                        color = colors.primaryText,
-                        modifier = Modifier.padding(top = 30.dp, bottom = 8.dp),
-                    )
+                    Column(Modifier.padding(top = 24.dp, bottom = 4.dp)) {
+                        SectionHead("Software")
+                    }
                 }
                 items(softwareNotices, key = { "s-" + it.name }) { notice ->
                     Column {
@@ -230,7 +225,7 @@ fun CreditsScreen(
                                 tint = colors.tertiaryText,
                             )
                         }
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                        Hairline()
                     }
                 }
             }
@@ -270,10 +265,10 @@ fun RecordingCredit(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(colors.background)
+            .background(colors.recess)
             .padding(14.dp),
     ) {
-        Text("RECORDED BY", style = type.section, color = colors.tertiaryText)
+        SectionHead("Recorded by")
         Text(
             block.recordist,
             style = type.rowTitle,

@@ -124,4 +124,14 @@ data class BackupSettings(
     @SerialName("remember_long_track_position") val rememberLongTrackPosition: Boolean = true,
     @SerialName("wifi_only_downloads") val wifiOnlyDownloads: Boolean = true,
     @SerialName("surroundings_volume") val surroundingsVolume: Float = 0.6f,
+    /**
+     * The tone voicing, by name, defaulting to the one that applies nothing.
+     *
+     * A file written before this field existed simply has no key here, and the
+     * default is the honest reading of that: an older export cannot know which
+     * voicing somebody chose, so it restores the one that changes nothing rather
+     * than guessing.
+     */
+    @SerialName("voicing") val voicing: String = "AsRecorded",
+    @SerialName("resume_queue_on_opening") val resumeQueueOnOpening: Boolean = true,
 )

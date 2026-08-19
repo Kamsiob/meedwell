@@ -16,6 +16,7 @@ import com.kamsiob.meedwell.data.db.PlayEventEntity
 import com.kamsiob.meedwell.data.db.PlaylistEntity
 import com.kamsiob.meedwell.data.db.PlaylistTrackEntity
 import com.kamsiob.meedwell.data.db.WatchedFolderEntity
+import com.kamsiob.meedwell.core.library.Voicing
 import com.kamsiob.meedwell.ui.theme.ThemeChoice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -91,6 +92,8 @@ class BackupRepository(
                 rememberLongTrackPosition = settings.rememberLongTrackPosition,
                 wifiOnlyDownloads = settings.wifiOnlyDownloads,
                 surroundingsVolume = settings.surroundingsVolume,
+                voicing = settings.voicing,
+                resumeQueueOnOpening = settings.resumeQueueOnOpening,
             ),
         )
     }
@@ -236,6 +239,11 @@ class BackupRepository(
         settings.rememberLongTrackPosition = from.rememberLongTrackPosition
         settings.wifiOnlyDownloads = from.wifiOnlyDownloads
         settings.surroundingsVolume = from.surroundingsVolume
+        settings.resumeQueueOnOpening = from.resumeQueueOnOpening
+        // Only a name this build still recognises. An export carrying a voicing
+        // from a later version restores as As Recorded rather than as a curve
+        // this build would have to invent.
+        settings.voicing = Voicing.byName(from.voicing).name
     }
 
     /** A suggested filename, dated so successive exports do not overwrite. */

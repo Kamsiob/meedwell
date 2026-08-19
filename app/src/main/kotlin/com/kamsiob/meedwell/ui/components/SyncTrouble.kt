@@ -3,6 +3,8 @@ package com.kamsiob.meedwell.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -56,7 +58,7 @@ fun SyncTroubleSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(colors.scrim)
             .clickable(role = Role.Button, onClick = onDismiss)
             .semantics { contentDescription = "Dismiss" },
         contentAlignment = Alignment.BottomCenter,
@@ -67,6 +69,7 @@ fun SyncTroubleSheet(
                 .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
+                .verticalScroll(rememberScrollState())
                 .clickable(enabled = false) {}
                 .navigationBarsPadding()
                 .padding(horizontal = 26.dp, vertical = 22.dp),
@@ -99,7 +102,7 @@ fun SyncTroubleSheet(
                     .fillMaxWidth()
                     .padding(top = 8.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(colors.background)
+                    .background(colors.recess)
                     .padding(12.dp),
             ) {
                 Text(failure.detail(), style = type.numeric, color = colors.tertiaryText)

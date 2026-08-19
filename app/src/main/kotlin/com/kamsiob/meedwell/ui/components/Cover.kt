@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +60,20 @@ fun Cover(
     val colors = MeedwellTheme.colors
     var failed by remember(url) { mutableStateOf(false) }
 
+    /**
+     * Whether the art has actually arrived.
+     *
+     * Coil draws nothing at all while a request is in flight, so a cold shelf
+     * on a slow connection was a page of blank rectangles with titles under
+     * them. The initials now stand in from the first frame.
+     *
+     * Tracked rather than simply drawing [MissingCover] behind the image
+     * permanently: covers are scaled to **fit**, never cropped, so a cover that
+     * is not square letterboxes, and a permanent backdrop would show initials in
+     * the bars either side of it.
+     */
+    var loaded by remember(url) { mutableStateOf(false) }
+
     val shape = RoundedCornerShape(cornerRadius)
     Box(
         modifier = modifier
@@ -71,9 +89,13 @@ fun Cover(
                 contentDescription?.let { this.contentDescription = it }
             },
     ) {
-        if (url.isNullOrBlank() || failed) {
+        // Under the art until the art is there, and instead of it if it never
+        // arrives. Not composed once the image has loaded, so it can never show
+        // through the bars beside a cover that is not square.
+        if (url.isNullOrBlank() || failed || !loaded) {
             MissingCover(title = title, modifier = Modifier.fillMaxSize())
-        } else {
+        }
+        if (!url.isNullOrBlank() && !failed) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(url)
@@ -87,6 +109,7 @@ fun Cover(
                 // whole image is what a person bought.
                 contentScale = ContentScale.Fit,
                 onError = { failed = true },
+                onSuccess = { loaded = true },
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -166,17 +189,36 @@ fun CoverThumb(
     )
 }
 
-/** A square cover for the grid. */
+/**
+ * A square cover for the grid, standing inside a plate mark.
+ *
+ * **A print pulled from an engraved plate carries the plate's own impression**:
+ * the faint rectangle the copper's edge left in the paper, just outside the
+ * image. It is the oldest way a page shows depth without a shadow, and it is
+ * drawn on the slot rather than on the art, so the artwork itself stays
+ * untouched per the legibility law. One hairline, three dp out, never closer.
+ */
 @Composable
 fun CoverSquare(
     url: String?,
     title: String,
     modifier: Modifier = Modifier,
 ) {
+    val mark = MeedwellTheme.colors.hairline
     Cover(
         url = url,
         title = title,
         cornerRadius = Radius.cover,
-        modifier = modifier.aspectRatio(1f),
+        modifier = modifier
+            .aspectRatio(1f)
+            .drawBehind {
+                val inset = 3.dp.toPx()
+                drawRect(
+                    color = mark,
+                    topLeft = Offset(-inset, -inset),
+                    size = Size(size.width + inset * 2, size.height + inset * 2),
+                    style = Stroke(width = 1.dp.toPx()),
+                )
+            },
     )
 }

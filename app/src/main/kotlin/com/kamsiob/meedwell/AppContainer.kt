@@ -5,6 +5,7 @@ import com.kamsiob.meedwell.core.subsonic.SubsonicClient
 import com.kamsiob.meedwell.data.CredentialStore
 import com.kamsiob.meedwell.data.LibraryRepository
 import com.kamsiob.meedwell.data.OkHttpSubsonicEngine
+import com.kamsiob.meedwell.data.PlaylistRepository
 import com.kamsiob.meedwell.data.BackupRepository
 import com.kamsiob.meedwell.data.SurroundingsDownloader
 import com.kamsiob.meedwell.data.SurroundingsRepository
@@ -35,6 +36,8 @@ class AppContainer(context: Context) {
 
     val library: LibraryRepository by lazy { LibraryRepository(database) }
 
+    val playlists: PlaylistRepository by lazy { PlaylistRepository(database) }
+
     val surroundings: SurroundingsRepository by lazy { SurroundingsRepository(appContext) }
 
     /**
@@ -61,6 +64,28 @@ class AppContainer(context: Context) {
 
     val surroundingsDownloader: SurroundingsDownloader by lazy {
         SurroundingsDownloader(appContext, surroundingsStore, settings, httpClient)
+    }
+
+    /**
+     * The player the bed runs on, owned by the application rather than a screen.
+     *
+     * **It used to be built inside the view model.** That put ambient audio at
+     * the mercy of the view model's lifetime and, worse, meant no foreground
+     * service and no notification held it up: a bed playing on its own could not
+     * be paused from the shade or the lock screen, could not be stopped without
+     * reopening the app, and could be killed by the system at any moment with no
+     * trace. The one sound most likely to be playing with the phone face down was
+     * the only one with no controls outside the app.
+     *
+     * Here it can be reached by both the screens and `SurroundingsService`, which
+     * is what makes the notification possible.
+     *
+     * The audio focus rule lives inside the player and does not change: the bed
+     * never requests focus, which is the whole reason changing it cannot
+     * interrupt the music.
+     */
+    val surroundingsPlayer: com.kamsiob.meedwell.playback.SurroundingsPlayer by lazy {
+        com.kamsiob.meedwell.playback.SurroundingsPlayer(appContext, settings)
     }
 
     private val engine by lazy { OkHttpSubsonicEngine() }

@@ -1,6 +1,9 @@
 package com.kamsiob.meedwell.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.border
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -30,6 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -38,8 +47,13 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.kamsiob.meedwell.ui.components.Hairline
+import com.kamsiob.meedwell.ui.components.SunMark
+import com.kamsiob.meedwell.ui.components.LevelLine
+import com.kamsiob.meedwell.ui.components.HoldLine
+import com.kamsiob.meedwell.ui.components.SectionHead
+import com.kamsiob.meedwell.ui.components.DetailHeader
 import com.kamsiob.meedwell.ui.components.IconButton
-import com.kamsiob.meedwell.ui.components.IconEdge
 import com.kamsiob.meedwell.ui.components.MeedwellIcon
 import com.kamsiob.meedwell.ui.components.MeedwellIcons
 import com.kamsiob.meedwell.ui.theme.MeedwellTheme
@@ -75,7 +89,9 @@ fun SurroundingsScreen(
     onCheckForNew: () -> Unit,
     onRemove: (String) -> Unit,
     onOpenDetail: (String) -> Unit,
-    onToggleGroup: (String) -> Unit,
+    onOpenGroup: (String) -> Unit,
+    onOpenStorage: () -> Unit,
+    onSearch: (String) -> Unit,
     onOpenCredits: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -86,22 +102,82 @@ fun SurroundingsScreen(
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.padding(horizontal = 22.dp)) {
-                IconButton(
-                    icon = MeedwellIcons.Back,
-                    contentDescription = "Back",
-                    onClick = onBack,
-                    size = 25.dp,
-                    tint = colors.primaryText,
-                    edge = IconEdge.Start,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
-                Text("Surroundings", style = type.h1, color = colors.primaryText)
+                DetailHeader("Surroundings", onBack)
                 Text(
                     state.voiceLine,
                     style = type.voice,
                     color = colors.secondaryText,
                     modifier = Modifier.padding(top = 8.dp),
                 )
+
+                // **Search, because 111 recordings behind nine headings had no
+                // way to be found by name at all.** A hairline pill, the same
+                // control the shelf uses, so it is recognized rather than
+                // learned.
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 14.dp)
+                        .defaultMinSize(minHeight = 48.dp)
+                        .border(1.dp, colors.hairline2, CircleShape)
+                        .padding(horizontal = 14.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    MeedwellIcon(MeedwellIcons.Search, size = 14.dp, tint = colors.tertiaryText)
+                    Box(
+                        Modifier.weight(1f).padding(start = 9.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        if (state.query.isEmpty()) {
+                            Text(
+                                "Rain, fire, a room",
+                                style = type.chip,
+                                color = colors.tertiaryText,
+                            )
+                        }
+                        BasicTextField(
+                            value = state.query,
+                            onValueChange = onSearch,
+                            singleLine = true,
+                            textStyle = type.chip.copy(color = colors.primaryText),
+                            cursorBrush = SolidColor(colors.mossInk),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "Search the recordings" },
+                        )
+                    }
+                    if (state.query.isNotEmpty()) {
+                        Box(
+                            Modifier
+                                .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+                                .clickable(role = Role.Button) { onSearch("") }
+                                .semantics { contentDescription = "Clear the search" },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("Clear", style = type.chip, color = colors.tertiaryText)
+                        }
+                    }
+                }
+
+                // **What is playing sits at the top.**
+                //
+                // Grid 13's caption is a direct instruction: "What is playing
+                // sits at the top so stopping it never requires hunting." It was
+                // pinned to the bottom of the screen instead, below every group,
+                // which is the one place you do not look when you arrive
+                // wondering what that sound is. Groups also open collapsed, so
+                // landing here with a bed running showed nine closed headers and
+                // nothing saying which one held it.
+                if (state.playingId != null) {
+                    SectionHead("Playing", Modifier.padding(top = 18.dp, bottom = 2.dp))
+                    PlayingBar(
+                        state = state,
+                        onPause = onPause,
+                        onResume = { onPlay(state.playingId) },
+                        onStop = onStop,
+                        onVolume = onVolume,
+                    )
+                }
             }
 
             if (state.loadError != null) {
@@ -113,47 +189,105 @@ fun SurroundingsScreen(
                 contentPadding = PaddingValues(top = 16.dp, bottom = 40.dp),
                 modifier = Modifier.weight(1f),
             ) {
-                state.groups.forEach { group ->
-                    item(key = "g-" + group.id) {
-                        GroupHeader(
-                            group = group,
-                            onToggle = { onToggleGroup(group.id) },
-                            onDownloadAll = { onDownloadGroup(group.id) },
+                if (state.query.isNotBlank()) {
+                    if (state.results.isEmpty()) {
+                        item(key = "no-results") {
+                            Text(
+                                "Nothing here matches that.",
+                                style = type.meta,
+                                color = colors.tertiaryText,
+                                modifier = Modifier.padding(horizontal = 22.dp).padding(top = 18.dp),
+                            )
+                        }
+                    }
+                    items(state.results, key = { "r-" + it.id }) { sound ->
+                        SoundRow(
+                            sound = sound,
+                            playing = state.playingId == sound.id && state.isPlaying,
+                            current = state.playingId == sound.id,
+                            onPlay = { onPlay(sound.id) },
+                            onPause = onPause,
+                            onDownload = { onDownload(sound.id) },
+                            onCancel = { onCancelDownload(sound.id) },
+                            onRemove = { onRemove(sound.id) },
+                            onOpenDetail = { onOpenDetail(sound.id) },
                         )
                     }
-                    if (group.expanded) {
-                        group.sounds.forEach { sound ->
-                            sound.categoryHeader?.let { header ->
-                                item(key = "c-" + sound.id) {
-                                    Text(
-                                        header.uppercase(),
-                                        style = MeedwellTheme.typography.section,
-                                        color = MeedwellTheme.colors.tertiaryText,
-                                        modifier = Modifier
-                                            .padding(horizontal = 22.dp)
-                                            .padding(top = 18.dp, bottom = 4.dp),
-                                    )
-                                }
-                            }
-                            item(key = sound.id) {
-                                SoundRow(
-                                    sound = sound,
-                                    playing = state.playingId == sound.id && state.isPlaying,
-                                    onPlay = { onPlay(sound.id) },
-                                    onPause = onPause,
-                                    onDownload = { onDownload(sound.id) },
-                                    onCancel = { onCancelDownload(sound.id) },
-                                    onRemove = { onRemove(sound.id) },
-                                    onOpenDetail = { onOpenDetail(sound.id) },
-                                )
+                } else {
+                    // **What can be played right now, before the doors.**
+                    //
+                    // The tab used to open on nine closed headings, so arriving
+                    // with a bed running showed nothing about it and arriving
+                    // fresh showed nothing you could start.
+                    if (state.onPhone.isNotEmpty()) {
+                        item(key = "here-head") {
+                            Column(Modifier.padding(horizontal = 22.dp)) {
+                                SectionHead("On this phone", Modifier.padding(top = 20.dp, bottom = 2.dp))
                             }
                         }
+                        items(state.onPhone.take(6), key = { "h-" + it.id }) { sound ->
+                            SoundRow(
+                                sound = sound,
+                                playing = state.playingId == sound.id && state.isPlaying,
+                                current = state.playingId == sound.id,
+                                onPlay = { onPlay(sound.id) },
+                                onPause = onPause,
+                                onDownload = { onDownload(sound.id) },
+                                onCancel = { onCancelDownload(sound.id) },
+                                onRemove = { onRemove(sound.id) },
+                                onOpenDetail = { onOpenDetail(sound.id) },
+                            )
+                        }
+                    }
+
+                    item(key = "library-head") {
+                        Column(Modifier.padding(horizontal = 22.dp)) {
+                            SectionHead("The library", Modifier.padding(top = 20.dp, bottom = 2.dp))
+                        }
+                    }
+                    // **A group is a destination now, not an accordion.**
+                    //
+                    // Opening one in place changed the screen's length under a
+                    // thumb and still left eight closed doors above and below.
+                    items(state.groups, key = { "g-" + it.id }) { group ->
+                        GroupHeader(
+                            group = group,
+                            onToggle = { onOpenGroup(group.id) },
+                            onDownloadAll = { onDownloadGroup(group.id) },
+                        )
                     }
                 }
 
                 item(key = "foot") {
                     Column(Modifier.padding(horizontal = 22.dp).padding(top = 26.dp)) {
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+                        Hairline()
+
+                        // Storage, which is the only place a recording can be
+                        // removed. It used to have nowhere to live at all.
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(minHeight = 56.dp)
+                                .clickable(role = Role.Button, onClick = onOpenStorage)
+                                .padding(vertical = 14.dp)
+                                .semantics { contentDescription = "Surroundings storage" },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Storage",
+                                style = type.rowTitle,
+                                color = colors.primaryText,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(state.storageLine, style = type.meta, color = colors.tertiaryText)
+                            MeedwellIcon(
+                                MeedwellIcons.ChevronRight,
+                                size = 14.dp,
+                                tint = colors.tertiaryText,
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                        Hairline()
 
                         // The third granularity: the whole thing at once.
                         // Deliberately at the bottom rather than the top, and
@@ -221,15 +355,6 @@ fun SurroundingsScreen(
                 }
             }
 
-            if (state.playingId != null) {
-                PlayingBar(
-                    state = state,
-                    onPause = onPause,
-                    onResume = { onPlay(state.playingId) },
-                    onStop = onStop,
-                    onVolume = onVolume,
-                )
-            }
         }
     }
 }
@@ -241,7 +366,7 @@ private fun ErrorPanel(message: String, modifier: Modifier = Modifier) {
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.cover))
-            .background(colors.background)
+            .background(colors.recess)
             .padding(16.dp),
     ) {
         Text("The library could not be read", style = MeedwellTheme.typography.rowTitle, color = colors.primaryText)
@@ -283,9 +408,20 @@ private fun GroupHeader(group: SurroundingsGroup, onToggle: () -> Unit, onDownlo
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }
+            // How much of this group is already here, as a hairline gauge.
+            //
+            // Nine group rows were nine identical blocks of two lines, with the
+            // only difference buried at the end of a sentence. This gives the
+            // column a shape to scan, and the subtitle beside it says the same
+            // fact in words, so the mark is never carrying the meaning alone.
+            HoldLine(
+                here = group.sounds.count { it.state != RowState.Away },
+                total = group.sounds.size,
+                modifier = Modifier.padding(end = 12.dp),
+            )
             MeedwellIcon(
                 icon = if (group.expanded) MeedwellIcons.ChevronDown else MeedwellIcons.ChevronRight,
-                size = 16.dp,
+                size = 14.dp,
                 tint = colors.tertiaryText,
             )
         }
@@ -318,6 +454,7 @@ private fun GroupHeader(group: SurroundingsGroup, onToggle: () -> Unit, onDownlo
 private fun SoundRow(
     sound: SurroundingsRow,
     playing: Boolean,
+    current: Boolean,
     onPlay: () -> Unit,
     onPause: () -> Unit,
     onDownload: () -> Unit,
@@ -338,31 +475,42 @@ private fun SoundRow(
                         sound.state == RowState.Here && playing -> onPause()
                         sound.state == RowState.Here -> onPlay()
                         sound.state == RowState.Downloading -> onCancel()
-                        else -> onDownload()
+                        // Not here, and the body does nothing. Getting it is the
+                        // status column's job, where the size is printed.
+                        else -> Unit
                     }
                 }
                 .padding(vertical = 10.dp)
                 .semantics { contentDescription = sound.accessibilityLabel(playing) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            StateBadge(state = sound.state, playing = playing, progress = sound.progress)
+            // Present or not, said by a filled or hollow sun.
+            //
+            // This replaces a badge that swapped between a download arrow and a
+            // play triangle in the same slot, which meant the only signal for
+            // "is this on my phone" was a shape you had to already know the code
+            // for, one row at a time. Filled reads as here down the whole column
+            // without reading anything.
+            SunMark(
+                here = sound.state != RowState.Away,
+                playing = playing,
+                current = current,
+            )
 
             Column(Modifier.weight(1f).padding(start = 14.dp)) {
                 Text(
                     sound.title,
                     style = type.rowTitle,
-                    color = if (playing) colors.primaryText else colors.secondaryText,
+                    color = if (current) colors.primaryText else colors.secondaryText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     // The maker's name rides on the row itself, not only in a
                     // credits screen somebody has to go and find. The running
-                    // time sits with it because for a bed it is the second
-                    // thing anybody wants to know.
-                    listOf(sound.durationLabel, sound.subtitle)
-                        .filter { it.isNotBlank() }
-                        .joinToString(" · "),
+                    // time has moved to the status column, where it is one of
+                    // the four things that column says.
+                    sound.subtitle,
                     style = type.meta,
                     color = colors.tertiaryText,
                     maxLines = 1,
@@ -379,6 +527,55 @@ private fun SoundRow(
                 }
             }
 
+            // **One column, four answers.**
+            //
+            // Grid 14 words it exactly: installed items show duration, and ones
+            // that are not here show their size. Carrying "playing" and "paused"
+            // in the same slot costs nothing and finally puts the state of the
+            // bed in the list rather than only in a bar at the far end of the
+            // screen. The size figure was already being computed and was reaching
+            // the screen reader only, so a sighted person was never told what a
+            // download would cost before tapping it.
+            //
+            // When a recording is not here, this column **is** the download
+            // button. The row tap used to do four different things depending on
+            // invisible state, so a stray tap could start a transfer. Now the
+            // row plays what is already here, and getting something is its own
+            // named target with the price on it.
+            val away = sound.state == RowState.Away
+            Box(
+                Modifier
+                    .widthIn(min = 62.dp)
+                    .defaultMinSize(minHeight = 48.dp)
+                    .then(
+                        if (away) {
+                            Modifier
+                                .clickable(role = Role.Button, onClick = onDownload)
+                                .semantics {
+                                    contentDescription = "Get ${sound.title}, ${sound.sizeLabel}"
+                                }
+                        } else {
+                            Modifier
+                        }
+                    ),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                val (statusText, statusInk) = when {
+                    playing -> "playing" to colors.mossInk
+                    current -> "paused" to colors.mossInk
+                    sound.state == RowState.Downloading -> "getting" to colors.secondaryText
+                    away -> sound.sizeLabel to colors.tertiaryText
+                    else -> sound.durationLabel to colors.tertiaryText
+                }
+                Text(
+                    statusText,
+                    style = type.plate,
+                    color = statusInk,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
             IconButton(
                 icon = MeedwellIcons.Info,
                 contentDescription = "Who recorded ${sound.title}, and under what license",
@@ -387,61 +584,11 @@ private fun SoundRow(
                 tint = colors.tertiaryText,
             )
         }
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+        Hairline()
     }
 }
 
-/**
- * The one glyph that says where a recording stands.
- *
- * Four states in one slot rather than four different controls, so the eye
- * learns one place to look: here and quiet, here and playing, arriving, or not
- * here yet.
- */
-@Composable
-private fun StateBadge(state: RowState, playing: Boolean, progress: Float) {
-    val colors = MeedwellTheme.colors
-    Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
-        when {
-            state == RowState.Downloading -> {
-                // A ring that fills, drawn rather than borrowed, so it matches
-                // the rest of the app's line weight.
-                Box(
-                    Modifier
-                        .size(30.dp)
-                        .semantics {
-                            progressBarRangeInfo = ProgressBarRangeInfo(progress, 0f..1f)
-                        }
-                        .clip(CircleShape)
-                        .background(colors.background),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Box(
-                        Modifier
-                            .size((30 * progress.coerceIn(0.08f, 1f)).dp)
-                            .clip(CircleShape)
-                            .background(colors.secondaryText.copy(alpha = 0.55f))
-                    )
-                }
-            }
-            state == RowState.Here && playing -> MeedwellIcon(
-                MeedwellIcons.Pause,
-                size = 19.dp,
-                tint = colors.primaryText,
-            )
-            state == RowState.Here -> MeedwellIcon(
-                MeedwellIcons.Play,
-                size = 19.dp,
-                tint = colors.secondaryText,
-            )
-            else -> MeedwellIcon(
-                MeedwellIcons.Download,
-                size = 18.dp,
-                tint = colors.tertiaryText,
-            )
-        }
-    }
-}
+
 
 /**
  * The bed that is playing, pinned to the bottom.
@@ -460,113 +607,94 @@ private fun PlayingBar(
     val colors = MeedwellTheme.colors
     val type = MeedwellTheme.typography
 
-    Column(
-        Modifier
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.cover))
-            .background(colors.background)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                icon = if (state.isPlaying) MeedwellIcons.Pause else MeedwellIcons.Play,
-                contentDescription = if (state.isPlaying) "Pause the surroundings" else "Play the surroundings",
-                onClick = { if (state.isPlaying) onPause() else onResume() },
-                size = 20.dp,
-                tint = colors.primaryText,
+    // **No pseudo container.** This used to be a rounded box filled with the
+    // same color as the page behind it, which is an invisible card whose only
+    // effect was to indent its own text. What sets this block apart is that it
+    // is at the top under its own section head.
+    Column(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.Top) {
+            SunMark(
+                here = true,
+                playing = state.isPlaying,
+                width = 20.dp,
+                height = 16.dp,
             )
-            Column(Modifier.weight(1f).padding(start = 8.dp)) {
+            Column(Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(
                     state.playingTitle,
-                    style = type.rowTitle,
+                    style = type.h2,
                     color = colors.primaryText,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (state.playingDescription.isNotBlank()) {
+                    Text(
+                        state.playingDescription,
+                        style = type.tempo,
+                        color = colors.tertiaryText,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 3.dp),
+                    )
+                }
                 Text(
                     state.playingCredit,
                     style = type.meta,
                     color = colors.tertiaryText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 3.dp),
                 )
             }
-            IconButton(
-                icon = MeedwellIcons.Close,
-                contentDescription = "Stop the surroundings",
-                onClick = onStop,
-                size = 17.dp,
-                tint = colors.tertiaryText,
-            )
         }
 
-        VolumeSlider(
+        LevelLine(
             value = state.volume,
             onChange = onVolume,
-            modifier = Modifier.padding(top = 10.dp),
+            playing = state.isPlaying,
+            modifier = Modifier.padding(top = 4.dp),
         )
-    }
-}
 
-/**
- * The volume of the bed.
- *
- * Its own control rather than a Material slider, for the same reason every
- * other surface here is: a borrowed one arrives with its own track height,
- * thumb and ripple, and would be the only thing on screen not drawn by this
- * app. It is also a plain drag rather than a thumb to grab, which is far easier
- * to hit than a small circle.
- */
-@Composable
-private fun VolumeSlider(value: Float, onChange: (Float) -> Unit, modifier: Modifier = Modifier) {
-    val colors = MeedwellTheme.colors
-    var trackWidth by remember { mutableFloatStateOf(1f) }
-
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        MeedwellIcon(MeedwellIcons.VolumeLow, size = 15.dp, tint = colors.tertiaryText)
-        Box(
-            Modifier
-                .weight(1f)
-                .padding(horizontal = 10.dp)
-                // A tall target around a thin track: the line is 4dp and the
-                // reach is 44, which is what makes it usable one handed.
-                .height(44.dp)
-                .onSizeChanged { if (it.width > 0) trackWidth = it.width.toFloat() }
-                .semantics {
-                    contentDescription = "Surroundings volume"
-                    progressBarRangeInfo = ProgressBarRangeInfo(value, 0f..1f)
-                }
-                .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        onChange((offset.x / trackWidth).coerceIn(0f, 1f))
-                    }
-                }
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures { change, _ ->
-                        onChange((change.position.x / trackWidth).coerceIn(0f, 1f))
-                    }
-                },
-            contentAlignment = Alignment.CenterStart,
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
+                    .size(46.dp)
                     .clip(CircleShape)
-                    .background(colors.primaryText.copy(alpha = 0.16f))
-            )
+                    .background(colors.moss)
+                    .clickable(role = Role.Button) { if (state.isPlaying) onPause() else onResume() }
+                    .semantics {
+                        contentDescription =
+                            if (state.isPlaying) "Pause the surroundings" else "Play the surroundings"
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                MeedwellIcon(
+                    icon = if (state.isPlaying) MeedwellIcons.Pause else MeedwellIcons.Play,
+                    size = 16.dp,
+                    tint = colors.background,
+                )
+            }
+            // **Stopping is a word, not an ✕.**
+            //
+            // The cross said "put this panel away" everywhere else in the app
+            // and on the platform, and here it ended the sound. The glyph and
+            // the effect disagreed.
             Box(
                 Modifier
-                    .fillMaxWidth(value.coerceIn(0.001f, 1f))
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(colors.primaryText.copy(alpha = 0.75f))
-            )
+                    .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+                    .clickable(role = Role.Button, onClick = onStop)
+                    .padding(start = 14.dp, end = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Stop", style = type.chip, color = colors.tertiaryText)
+            }
         }
-        MeedwellIcon(MeedwellIcons.VolumeHigh, size = 17.dp, tint = colors.tertiaryText)
     }
 }
+
 
 // ---------- State ----------
 
@@ -576,7 +704,7 @@ enum class RowState { Here, Downloading, Away }
 data class SurroundingsRow(
     val id: String,
     /**
-     * What the recording is, in the words of the person who catalogued it.
+     * What the recording is, in the words of the person who catalogd it.
      *
      * Deliberately **not** the uploader's own title. Those are filenames as
      * often as names: "campfire deer camp 21 minutes - wind - snow - sleet -
@@ -623,9 +751,27 @@ data class SurroundingsUiState(
     val groups: List<SurroundingsGroup> = emptyList(),
     val playingId: String? = null,
     val playingTitle: String = "",
+    /**
+     * The catalog's one line about what this recording is, which the player
+     * spread sets under the title. Carried in the manifest and, until now, never
+     * shown anywhere.
+     */
+    val playingDescription: String = "",
+    /** Its group, which the player's plate draws its field from. */
+    val playingGroup: String = "",
     val playingCredit: String = "",
     val isPlaying: Boolean = false,
     val volume: Float = 0.6f,
+    /** What is typed into the library's search field. */
+    val query: String = "",
+    /** Matches for that query, flat, across every group. */
+    val results: List<SurroundingsRow> = emptyList(),
+    /** Everything on this phone, most recently used first. */
+    val onPhone: List<SurroundingsRow> = emptyList(),
+    /** Came with the app, and cannot be removed. */
+    val bundledRows: List<SurroundingsRow> = emptyList(),
+    /** Fetched later, and can be removed again. */
+    val downloadedRows: List<SurroundingsRow> = emptyList(),
     val hereCount: Int = 0,
     val totalCount: Int = 0,
     val storageLine: String = "",
@@ -634,12 +780,19 @@ data class SurroundingsUiState(
     val checking: Boolean = false,
     val loadError: String? = null,
 ) {
+    /**
+     * The screen's one serif line, and it is a description rather than a count.
+     *
+     * It used to read "55 of 111 on this phone", which answers a question nobody
+     * arriving here is asking. Somebody opening this tab for the first time
+     * needs to know what Surroundings is, and the honest answer states both uses
+     * in nine words. The counts moved to the group rows and the storage line,
+     * where they are attached to something you can act on.
+     */
     val voiceLine: String
         get() = when {
             loadError != null -> "Something is wrong with the library file."
             totalCount == 0 -> "Nothing here yet."
-            hereCount == totalCount -> "All $totalCount recordings are on this phone."
-            hereCount == 0 -> "$totalCount recordings, waiting to be fetched."
-            else -> "$hereCount of $totalCount on this phone"
+            else -> "Recordings of real places. Put one under your music, or enjoy one on its own."
         }
 }

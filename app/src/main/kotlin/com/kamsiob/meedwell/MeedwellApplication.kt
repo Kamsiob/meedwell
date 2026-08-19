@@ -1,6 +1,7 @@
 package com.kamsiob.meedwell
 
 import android.app.Application
+import android.content.Context
 
 /**
  * The application object.
@@ -19,3 +20,17 @@ class MeedwellApplication : Application() {
 
     val container: AppContainer by lazy { AppContainer(this) }
 }
+
+/**
+ * The one container, from anywhere with a `Context`.
+ *
+ * **Services must use this rather than building their own.** `AppContainer`
+ * holds lazily created singletons, so a service that constructs its own gets a
+ * second copy of every one of them. That was harmless while the container held
+ * only repositories and stores, and it stopped being harmless the moment it
+ * started holding the Surroundings player: a service with its own instance
+ * would faithfully pause a player nobody could hear, while the real one carried
+ * on.
+ */
+val Context.meedwell: AppContainer
+    get() = (applicationContext as MeedwellApplication).container

@@ -3,6 +3,8 @@ package com.kamsiob.meedwell.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -64,7 +66,7 @@ fun ActionSheet(
             .fillMaxSize()
             // A scrim that dismisses. Tapping outside a sheet to close it is
             // the thing everybody tries first.
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(colors.scrim)
             .clickable(role = Role.Button, onClick = onDismiss)
             .semantics { contentDescription = "Close" },
         contentAlignment = Alignment.BottomCenter,
@@ -75,20 +77,13 @@ fun ActionSheet(
                 .sheetShadow()
                 .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
                 .background(colors.background)
+                .verticalScroll(rememberScrollState())
                 // Consumes taps so they do not fall through to the scrim.
                 .clickable(enabled = false) {}
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 26.dp),
         ) {
-            Box(
-                Modifier
-                    .padding(top = 12.dp)
-                    .width(36.dp)
-                    .height(4.5.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(colors.secondaryText.copy(alpha = 0.4f))
-                    .align(Alignment.CenterHorizontally)
-            )
+            SheetHandle(onDismiss = onDismiss, modifier = Modifier.padding(top = 12.dp))
 
             // The header names what the verbs will act on, so a long-press on
             // the wrong row is obvious before anything is done.
@@ -114,7 +109,7 @@ fun ActionSheet(
                     )
                 }
             }
-            Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+            Hairline()
 
             val actions = target.actions()
             actions.forEachIndexed { index, action ->
@@ -156,7 +151,7 @@ private fun ActionRow(action: SheetAction, divider: Boolean, onClick: () -> Unit
             }
         }
         if (divider) {
-            Box(Modifier.fillMaxWidth().height(0.5.dp).background(colors.hairline))
+            Hairline()
         }
     }
 }
@@ -193,6 +188,7 @@ data class ActionTarget(
     fun actions(): List<SheetAction> = buildList {
         add(SheetAction.PlayNext)
         add(SheetAction.AddToQueue)
+        add(SheetAction.AddToList)
         // The heart, with its real limit attached rather than hidden.
         add(if (isStarred) SheetAction.AlreadyLoved else SheetAction.Love)
         add(SheetAction.ViewArtwork)
@@ -208,6 +204,14 @@ sealed class SheetAction(
 ) {
     data object PlayNext : SheetAction("Play next", null, MeedwellIcons.PlayNext)
     data object AddToQueue : SheetAction("Add to queue", null, MeedwellIcons.Queue)
+
+    /**
+     * The one place a list can be built from anywhere in the app.
+     *
+     * Second in the sheet on purpose: a queue is for the next hour, a list is
+     * for keeping, and the thing worth keeping should not be below "share".
+     */
+    data object AddToList : SheetAction("Add to a list", "Kept on this phone", MeedwellIcons.Lists)
 
     /** `star` works and reaches the account. */
     data object Love : SheetAction("Love", "Goes to your Bandcamp account", MeedwellIcons.Heart)

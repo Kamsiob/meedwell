@@ -299,17 +299,27 @@ interface PlayEventDao {
      */
     @Query(
         """
-        SELECT album.* FROM album
+        SELECT album.*,
+               COALESCE(counts.plays, 0) AS plays,
+               counts.lastPlayed AS lastPlayed
+        FROM album
         LEFT JOIN (
             SELECT albumId, COUNT(*) AS plays, MAX(playedAt) AS lastPlayed
             FROM play_event GROUP BY albumId
         ) counts ON counts.albumId = album.id
-        WHERE COALESCE(counts.plays, 0) <= :playThreshold
-           OR COALESCE(counts.lastPlayed, 0) < :quietBefore
+        WHERE (
+                COALESCE(counts.plays, 0) <= :playThreshold
+                OR COALESCE(counts.lastPlayed, 0) < :quietBefore
+              )
+          AND COALESCE(counts.lastPlayed, 0) < :playedSince
         ORDER BY COALESCE(counts.lastPlayed, 0), album.sortArtist
         """
     )
-    fun observeForgotten(playThreshold: Int, quietBefore: Long): Flow<List<AlbumEntity>>
+    fun observeForgotten(
+        playThreshold: Int,
+        quietBefore: Long,
+        playedSince: Long,
+    ): Flow<List<ForgottenRowEntity>>
 
     /** Erase listening history genuinely empties it rather than hiding it. */
     @Query("DELETE FROM play_event")
@@ -318,6 +328,20 @@ interface PlayEventDao {
     @Query("SELECT COUNT(*) FROM play_event")
     suspend fun count(): Int
 }
+
+/**
+ * A forgotten record with the two facts that make its reason true.
+ *
+ * The play count and the last-played moment were computed inside the query's
+ * own subselect and then thrown away by the projection, so every tile on the
+ * Forgotten Shelf said the same italic phrase. The screen's entire promise is
+ * "here is why you might have forgotten it," and it knew why all along.
+ */
+data class ForgottenRowEntity(
+    @androidx.room.Embedded val album: AlbumEntity,
+    val plays: Int,
+    val lastPlayed: Long?,
+)
 
 /** One row of the history screen, already joined. */
 /** One track's resume point, for an export. */
@@ -401,6 +425,51 @@ interface PlaylistDao {
         clearTracks(playlistId)
         insertTracks(trackIds.mapIndexed { i, id -> PlaylistTrackEntity(playlistId, id, i) })
     }
+
+    /**
+     * Puts one track at the end of a list.
+     *
+     * **A list may hold the same track twice.** That is not an oversight to
+     * guard against: somebody building a set may well want a piece to come round
+     * again, and silently refusing would be the app deciding it knows better.
+     */
+    @Transaction
+    suspend fun appendTrack(playlistId: String, trackId: String) {
+        val at = trackCount(playlistId)
+        insertTracks(listOf(PlaylistTrackEntity(playlistId, trackId, at)))
+    }
+
+    /**
+     * Takes one track out, by position rather than by id.
+     *
+     * By position because a list may hold the same track twice, and removing
+     * "the track" would then take out both. The positions are rewritten
+     * afterwards so they stay a dense 0..n-1, which is what keeps reordering
+     * arithmetic rather than a puzzle.
+     */
+    @Transaction
+    suspend fun removeAt(playlistId: String, position: Int) {
+        val ids = trackIdsFor(playlistId).toMutableList()
+        if (position !in ids.indices) return
+        ids.removeAt(position)
+        replaceTracks(playlistId, ids)
+    }
+
+    /** Moves one track, carrying everything between it and its destination. */
+    @Transaction
+    suspend fun move(playlistId: String, from: Int, to: Int) {
+        val ids = trackIdsFor(playlistId).toMutableList()
+        if (from !in ids.indices || to !in ids.indices || from == to) return
+        ids.add(to, ids.removeAt(from))
+        replaceTracks(playlistId, ids)
+    }
+
+    /** Renaming touches `updatedAt`, which is what a future sync merges on. */
+    @Query("UPDATE playlist SET name = :name, updatedAt = :at WHERE id = :id AND fromBandcamp = 0")
+    suspend fun rename(id: String, name: String, at: Long)
+
+    @Query("UPDATE playlist SET updatedAt = :at WHERE id = :id")
+    suspend fun touch(id: String, at: Long)
 }
 
 @Dao

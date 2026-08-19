@@ -63,6 +63,8 @@ class BackupRoundTripTest {
             rememberLongTrackPosition = false,
             wifiOnlyDownloads = false,
             surroundingsVolume = 0.37f,
+            voicing = "Piano",
+            resumeQueueOnOpening = false,
         ),
     )
 
@@ -113,6 +115,29 @@ class BackupRoundTripTest {
         assertThat(restored.settings.rememberLongTrackPosition).isFalse()
         assertThat(restored.settings.wifiOnlyDownloads).isFalse()
         assertThat(restored.settings.surroundingsVolume).isWithin(1e-6f).of(0.37f)
+        assertThat(restored.settings.voicing).isEqualTo("Piano")
+        assertThat(restored.settings.resumeQueueOnOpening).isFalse()
+    }
+
+    /**
+     * A file written before Tone existed.
+     *
+     * The settings block has no `voicing` and no `resume_queue_on_opening`, and
+     * it has to read rather than refuse. An older export cannot know which
+     * voicing somebody chose, so the honest default is the one that applies
+     * nothing rather than a curve invented on their behalf.
+     */
+    @Test
+    fun `an export written before a setting existed still reads`() {
+        val older = """
+            {"format_version":1,"written_by":"Meedwell 0.9","written_at":1700000000,
+             "settings":{"theme":"Daylight","gapless":true}}
+        """.trimIndent()
+        val result = BackupReader.read(older)
+        assertThat(result).isInstanceOf(BackupReader.Result.Ok::class.java)
+        val settings = (result as BackupReader.Result.Ok).file.settings
+        assertThat(settings.voicing).isEqualTo("AsRecorded")
+        assertThat(settings.resumeQueueOnOpening).isTrue()
     }
 
     // ---------- Refusing rather than half working ----------

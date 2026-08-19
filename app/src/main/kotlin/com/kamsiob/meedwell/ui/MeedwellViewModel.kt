@@ -29,9 +29,13 @@ import com.kamsiob.meedwell.ui.screens.ShelfState
 import com.kamsiob.meedwell.core.surroundings.LicenseGroup
 import com.kamsiob.meedwell.ui.screens.ArtistState
 import com.kamsiob.meedwell.ui.screens.ExportState
+import com.kamsiob.meedwell.ui.screens.MoreState
 import com.kamsiob.meedwell.ui.screens.ForgottenAlbum
 import com.kamsiob.meedwell.ui.screens.HistoryDay
 import com.kamsiob.meedwell.ui.screens.HistoryEntry
+import com.kamsiob.meedwell.ui.screens.ListSummary
+import kotlinx.coroutines.flow.map
+import com.kamsiob.meedwell.ui.screens.PlaylistState
 import com.kamsiob.meedwell.ui.screens.ListsState
 import com.kamsiob.meedwell.ui.screens.SearchState
 import com.kamsiob.meedwell.ui.screens.ShelfView
@@ -72,6 +76,17 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
      */
     private val _notice = MutableStateFlow<String?>(null)
     val notice: StateFlow<String?> = _notice.asStateFlow()
+
+    /**
+     * Say something once, in the app's own voice.
+     *
+     * The interface had no way to raise a notice of its own: every message came
+     * from inside the view model, so a screen that learned something the model
+     * could not know, such as a system panel refusing to open, had to swallow it.
+     */
+    fun say(message: String) {
+        _notice.value = message
+    }
 
     private val _shelf = MutableStateFlow(
         ShelfState(
@@ -131,6 +146,10 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     private val _lists = MutableStateFlow(ListsState())
     val lists: StateFlow<ListsState> = _lists.asStateFlow()
 
+    private val _playlist = MutableStateFlow(PlaylistState())
+    val playlist: StateFlow<PlaylistState> = _playlist.asStateFlow()
+    private var playlistJob: kotlinx.coroutines.Job? = null
+
     private val _loved = MutableStateFlow<List<Track>>(emptyList())
     val loved: StateFlow<List<Track>> = _loved.asStateFlow()
 
@@ -139,6 +158,9 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     private val _credits = MutableStateFlow(CreditsState())
     val credits: StateFlow<CreditsState> = _credits.asStateFlow()
+
+    private val _more = MutableStateFlow(MoreState())
+    val more: StateFlow<MoreState> = _more.asStateFlow()
 
     private val _export = MutableStateFlow(ExportState())
     val export: StateFlow<ExportState> = _export.asStateFlow()
@@ -164,6 +186,32 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
         player.connect()
         surroundings.load()
         announceSetAsideDatabase()
+        // The timer stops both, or the one that keeps going wakes somebody up.
+        player.onSleep = { surroundings.stop() }
+        observePlaybackForMore()
+        observeLists()
+    }
+
+    /**
+     * Keeps More's Tone and sleep timer values honest.
+     *
+     * Both live on the playback state and change while nothing else on More
+     * does, so they cannot ride along with `refreshSettings` the way the rest of
+     * the right-hand column does. A sleep timer counting down behind a row that
+     * still says "Off" is exactly the sort of stale value that makes the whole
+     * column untrustworthy.
+     */
+    private fun observePlaybackForMore() {
+        viewModelScope.launch {
+            player.state.collect { playback ->
+                val tone = playback.voicingName
+                val sleep = playback.sleepLabel
+                val current = _more.value
+                if (current.toneName != tone || current.sleepTimer != sleep) {
+                    _more.value = current.copy(toneName = tone, sleepTimer = sleep)
+                }
+            }
+        }
     }
 
     /**
@@ -199,6 +247,40 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun playAlbum(albumId: String, startIndex: Int = 0) = player.playAlbum(albumId, startIndex)
+
+    /**
+     * Plays one entry out of the history, as itself.
+     *
+     * The history row used to call `playAlbum`, so tapping the piece you heard
+     * on Tuesday started its record from track one. The same bug was found and
+     * fixed in Search, with a comment saying that music starting makes it worse
+     * than a crash; this is that fix, applied to the screen it was still on.
+     */
+    /**
+     * The third way in: neither Bandcamp nor folders, just listening.
+     *
+     * Somebody who declined Bandcamp and has no files on the phone could not
+     * get past onboarding at all, while the footer promised them a "later" that
+     * was unreachable. The person the welcome screen was written for was the
+     * one person it locked out. This opens the door onto Surroundings, which
+     * works from the first minute with no account and no files.
+     */
+    fun chooseListeningOnly() {
+        settings.hasChosenPath = true
+        refreshSettings()
+    }
+
+    /**
+     * Plays one entry out of the history, as itself, rather than track one of
+     * its album. The same bug was found and fixed in Search first.
+     */
+    fun playHistoryEntry(trackId: String, albumId: String) {
+        viewModelScope.launch {
+            val tracks = container.library.tracksForAlbum(albumId)
+            val index = tracks.indexOfFirst { it.id == trackId }
+            if (index >= 0) player.playTracks(tracks, index) else player.playAlbum(albumId)
+        }
+    }
 
     /**
      * Plays one specific track, from within its own album.
@@ -290,7 +372,10 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
             .launchIn(viewModelScope)
 
         container.library.observeForgotten()
-            .onEach { albums -> _forgotten.value = albums.map { ForgottenAlbum(it, forgottenReason(it)) } }
+            .onEach { records ->
+                _forgotten.value = records.map { ForgottenAlbum(it.album, forgottenReason(it)) }
+                _more.value = _more.value.copy(forgottenCount = records.size)
+            }
             .launchIn(viewModelScope)
 
         container.library.observeStarredTracks()
@@ -330,8 +415,11 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
                             title = row.title,
                             subtitle = row.artist,
                             time = clockLabel(row.playedAt),
-                            coverUrl = row.coverArtId.takeIf { it.isNotBlank() }
-                                ?.let { id -> client?.coverArtUrl(id) },
+                            // Through `CoverUrls` rather than the client, so
+                            // history shares the one stable URL per cover with
+                            // the shelf instead of minting a fresh salt and
+                            // reloading art the loader already holds.
+                            coverUrl = CoverUrls.of(row.coverArtId),
                         )
                     },
                 )
@@ -344,7 +432,24 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
      * The reason is the whole point of the screen. "Here is a record" is a
      * shelf; "here is why you might have forgotten it" is the feature.
      */
-    private fun forgottenReason(album: com.kamsiob.meedwell.core.model.Album): String = "quietly waiting"
+    private fun forgottenReason(record: com.kamsiob.meedwell.data.ForgottenRecord): String {
+        val now = System.currentTimeMillis() / 1000
+        val last = record.lastPlayedAt
+        val month = java.text.SimpleDateFormat("MMMM", java.util.Locale.US)
+        val monthYear = java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.US)
+        fun name(at: Long, withYear: Boolean) =
+            (if (withYear) monthYear else month).format(java.util.Date(at * 1000))
+        return when {
+            last == null && (record.album.addedAt ?: 0) > 0 &&
+                now - (record.album.addedAt ?: 0) > 365L * 86_400 ->
+                "Never played. Shelved ${name(record.album.addedAt!!, withYear = true)}."
+            last == null -> "Not played yet"
+            now - last > 365L * 86_400 -> "Last heard ${name(last, withYear = true)}"
+            now - last > 45L * 86_400 -> "Last heard in ${name(last, withYear = false)}"
+            record.plays == 1 -> "Played once, then quiet"
+            else -> "Played twice, then quiet"
+        }
+    }
 
     /**
      * Narrows the whole shelf to one tag.
@@ -364,7 +469,7 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     fun clearGenreFilter() {
         if (_genreFilter.value == null) return
         _genreFilter.value = null
-        _shelf.value = _shelf.value.copy(sortLabel = sortLabel(_sort.value, _scope.value), filtering = false)
+        _shelf.value = _shelf.value.copy(sort = _sort.value, sortLabel = sortLabel(_sort.value, _scope.value), filtering = false)
     }
 
     fun openArtist(artistId: String) {
@@ -438,6 +543,24 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     // ---------- Settings ----------
 
+    /**
+     * Whether a runtime permission is actually held.
+     *
+     * **The one Settings shows arrived in API 33**, and this app runs from 29.
+     * Asking the platform about a permission that does not exist on the device
+     * returns denied, so an Android 10 phone would have read "Not allowed.
+     * Playback controls will not appear" while the notification sat in its
+     * shade. Below 33 notifications are granted at install, so there is nothing
+     * to withhold and nothing to report as missing.
+     */
+    private fun isGranted(permission: String): Boolean {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return true
+        return androidx.core.content.ContextCompat.checkSelfPermission(
+            container.appContext,
+            permission,
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
     fun refreshSettings() {
         viewModelScope.launch {
             _settings.value = _settings.value.copy(
@@ -449,8 +572,162 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
                 historyEventCount = container.database.playEvents().count(),
                 lastSyncAt = settings.lastSyncAt,
                 wifiOnlyDownloads = settings.wifiOnlyDownloads,
+                resumeQueueOnOpening = settings.resumeQueueOnOpening,
+                dawnMinute = settings.dawnMinute,
+                duskMinute = settings.duskMinute,
                 lastBackupAt = settings.lastBackupAt,
+                notificationsAllowed = isGranted(android.Manifest.permission.POST_NOTIFICATIONS),
+                versionName = com.kamsiob.meedwell.BuildConfig.VERSION_NAME,
+                versionCode = com.kamsiob.meedwell.BuildConfig.VERSION_CODE,
             )
+            // More shows the same facts on the right of its rows, so it is
+            // refreshed from the same place rather than kept in step by hand.
+            _more.value = _more.value.copy(
+                connected = container.credentials.isConnected,
+                playCount = container.database.playEvents().count(),
+                folderCount = _settings.value.watchedFolderCount,
+                lastSyncAt = settings.lastSyncAt,
+            )
+        }
+    }
+
+    // ---------- Lists ----------
+
+    /**
+     * The lists, and how many tracks are in each.
+     *
+     * `ListsState` existed with nothing but a loved count in it: the lists
+     * themselves were never loaded, so the screen that reads this had nothing to
+     * show and no way to say why.
+     */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun observeLists() {
+        container.playlists.observeAll()
+            .flatMapLatest { rows ->
+                if (rows.isEmpty()) kotlinx.coroutines.flow.flowOf(emptyList())
+                else combine(
+                    rows.map { row ->
+                        container.playlists.observeTracks(row.id).map { tracks -> row to tracks }
+                    }
+                ) { it.toList() }
+            }
+            .onEach { pairs ->
+                _lists.value = _lists.value.copy(
+                    lists = pairs.map { (row, tracks) ->
+                        ListSummary(
+                            id = row.id,
+                            name = row.name,
+                            subtitle = buildString {
+                                append(
+                                    when (tracks.size) {
+                                        0 -> "Empty"
+                                        1 -> "1 track"
+                                        else -> "${tracks.size} tracks"
+                                    }
+                                )
+                                // Said on the row rather than discovered on the
+                                // screen behind it, because it is the difference
+                                // between a list you can change and one you
+                                // cannot.
+                                if (row.fromBandcamp) append(" · from Bandcamp")
+                            },
+                            coverUrl = tracks.firstOrNull()?.let { CoverUrls.of(it.coverArtId) },
+                            editable = !row.fromBandcamp,
+                        )
+                    }
+                )
+            }
+            .launchIn(viewModelScope)
+    }
+
+    /**
+     * Opens one list and follows it.
+     *
+     * The previous collector is cancelled first: without that, opening three
+     * lists in a row leaves three collectors writing into the same state and the
+     * last one to emit wins, which looks like the screen showing the wrong list
+     * at random.
+     */
+    fun openList(id: String) {
+        playlistJob?.cancel()
+        playlistJob = combine(
+            container.playlists.observe(id),
+            container.playlists.observeTracks(id),
+        ) { row, tracks ->
+            PlaylistState(
+                id = id,
+                name = row?.name.orEmpty(),
+                tracks = tracks,
+                editable = row?.fromBandcamp != true,
+            )
+        }
+            .onEach { _playlist.value = it }
+            .launchIn(viewModelScope)
+    }
+
+    fun closeList() {
+        playlistJob?.cancel()
+        playlistJob = null
+        _playlist.value = PlaylistState()
+    }
+
+    fun shuffleList(listId: String) {
+        viewModelScope.launch {
+            val ids = container.playlists.trackIds(listId).shuffled()
+            if (ids.isEmpty()) return@launch
+            player.playTracks(container.library.tracks(ids), 0)
+        }
+    }
+
+    fun createList(name: String, onMade: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            val id = container.playlists.create(name)
+            _notice.value = "Made \"${name.trim().ifBlank { "New list" }}\"."
+            onMade(id)
+        }
+    }
+
+    fun renameList(id: String, name: String) {
+        viewModelScope.launch { container.playlists.rename(id, name) }
+    }
+
+    fun deleteList(id: String) {
+        viewModelScope.launch {
+            container.playlists.delete(id)
+            _notice.value = "List deleted. The music is untouched."
+        }
+    }
+
+    fun addTrackToList(listId: String, trackId: String) {
+        viewModelScope.launch {
+            container.playlists.addTrack(listId, trackId)
+            _notice.value = "Added."
+        }
+    }
+
+    fun addAlbumToList(listId: String, albumId: String) {
+        viewModelScope.launch {
+            val before = container.playlists.trackCount(listId)
+            container.playlists.addAlbum(listId, albumId)
+            val added = container.playlists.trackCount(listId) - before
+            _notice.value = if (added == 1) "Added 1 track." else "Added $added tracks."
+        }
+    }
+
+    fun removeFromList(listId: String, position: Int) {
+        viewModelScope.launch { container.playlists.removeAt(listId, position) }
+    }
+
+    fun moveInList(listId: String, from: Int, to: Int) {
+        viewModelScope.launch { container.playlists.move(listId, from, to) }
+    }
+
+    /** Plays a list from a given position, in its own order. */
+    fun playList(listId: String, startIndex: Int = 0) {
+        viewModelScope.launch {
+            val ids = container.playlists.trackIds(listId)
+            if (ids.isEmpty()) return@launch
+            player.playTracks(container.library.tracks(ids), startIndex)
         }
     }
 
@@ -513,6 +790,64 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
 
     fun toggleWifiOnly() {
         settings.wifiOnlyDownloads = !settings.wifiOnlyDownloads
+        refreshSettings()
+    }
+
+    /**
+     * Whether to put the notification permission to somebody now.
+     *
+     * Once per install, and only while it is still genuinely ungranted. Somebody
+     * who granted it in the system settings never sees a dialog they have
+     * already answered.
+     */
+    fun shouldAskForNotifications(): Boolean =
+        !settings.hasAskedNotifications &&
+            !isGranted(android.Manifest.permission.POST_NOTIFICATIONS)
+
+    fun markNotificationsAsked() {
+        settings.hasAskedNotifications = true
+        refreshSettings()
+    }
+
+    /**
+     * Whether to put it again as a download starts.
+     *
+     * Asked a second time, and only a second time, because this is the occasion
+     * where refusing has a real cost: without it the download runs with nothing
+     * in the shade, no progress and no way to stop it from outside the app.
+     * Somebody who granted it at the first play never sees this, and somebody
+     * who refuses here is never asked a third time.
+     */
+    fun shouldAskForDownloadNotifications(): Boolean =
+        !settings.hasAskedDownloadNotifications &&
+            !isGranted(android.Manifest.permission.POST_NOTIFICATIONS)
+
+    fun markDownloadNotificationsAsked() {
+        settings.hasAskedDownloadNotifications = true
+        refreshSettings()
+    }
+
+    /**
+     * The listener's own dawn and dusk.
+     *
+     * Kept sane rather than trusted: a dusk at or before dawn would draw a line
+     * that runs backwards, so the two are nudged apart by an hour instead of
+     * being allowed to cross.
+     */
+    fun setDawn(minute: Int) {
+        settings.dawnMinute = minute
+        if (settings.duskMinute <= minute) settings.duskMinute = (minute + 60).coerceAtMost(23 * 60 + 59)
+        refreshSettings()
+    }
+
+    fun setDusk(minute: Int) {
+        settings.duskMinute = minute
+        if (settings.dawnMinute >= minute) settings.dawnMinute = (minute - 60).coerceAtLeast(0)
+        refreshSettings()
+    }
+
+    fun toggleResumeQueue() {
+        settings.resumeQueueOnOpening = !settings.resumeQueueOnOpening
         refreshSettings()
     }
 
@@ -608,7 +943,7 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
         // "Artist A to Z" there would lose the only thing on screen that
         // explains why most of the shelf is missing.
         if (_genreFilter.value == null) {
-            _shelf.value = _shelf.value.copy(sortLabel = sortLabel(sort, scope))
+            _shelf.value = _shelf.value.copy(sort = sort, sortLabel = sortLabel(sort, scope))
         }
     }
 
@@ -651,7 +986,13 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
      */
     fun connect(onConnected: () -> Unit) {
         val state = _connect.value
-        if (!state.canSubmit || state.checking) return
+        if (state.checking) return
+        if (!state.canSubmit) {
+            // The button used to swallow the tap in silence, which reads as the
+            // app being broken rather than the form being incomplete.
+            _notice.value = "Both fields are needed. Paste the username and password from Bandcamp's page."
+            return
+        }
 
         _connect.value = state.copy(checking = true, error = null)
         viewModelScope.launch {
@@ -691,6 +1032,18 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     /** Chosen "just play my local files". No account, and no sync language anywhere after this. */
+    /**
+     * The end of onboarding, and the only place the path is marked chosen.
+     *
+     * Called from the tone disclosure, which is the last of the three screens.
+     * Marking it earlier would mean somebody who backed out partway through
+     * reopened the app onto a shelf they had never agreed to set up.
+     */
+    fun finishOnboarding() {
+        settings.hasChosenPath = true
+        _shelf.value = _shelf.value.copy(connected = container.credentials.isConnected)
+    }
+
     fun continueLocalOnly() {
         settings.hasChosenPath = true
         _shelf.value = _shelf.value.copy(connected = false)
@@ -717,7 +1070,17 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
                     _syncFailure.value = null
                     container.library.refreshLocalCounts()
                 }
-                is SyncResult.Failed -> _syncFailure.value = result.reason
+                is SyncResult.Failed -> if (manual) {
+                    _syncFailure.value = result.reason
+                } else {
+                    // **A background failure must not ambush the app.** The
+                    // stale-sync check runs on open, and raising the full
+                    // trouble sheet over whatever somebody opened the app to do
+                    // put a modal error in front of a person who came to press
+                    // play. The sheet keeps its job for the sync they asked
+                    // for; the one nobody asked for gets a quiet line.
+                    _notice.value = "Bandcamp didn't answer just now. Your music is untouched; sync again any time from Settings."
+                }
             }
             _shelf.value = _shelf.value.copy(syncing = false)
             _settings.value = _settings.value.copy(syncing = false)
@@ -760,14 +1123,6 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
      * `unstar` errors whatever is sent, so this is the truthful answer rather
      * than a control that fails silently.
      */
-    fun showSleepTimerComing() {
-        _notice.value = "The sleep timer is not built yet. It is on What's ahead."
-    }
-
-    fun showToneComing() {
-        _notice.value = "Tone is not built yet. Everything plays as recorded."
-    }
-
     fun showLoveLimit() {
         _notice.value = "Bandcamp cannot take a heart off yet. Their website can."
     }
@@ -813,7 +1168,11 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
             _notice.value = if (landed) {
                 "Loved. It is on your Bandcamp account too."
             } else {
-                "Bandcamp did not take the heart. Nothing changed."
+                if (container.client() == null) {
+                    "The heart travels with a Bandcamp account, and nothing is connected yet."
+                } else {
+                    "Bandcamp did not take the heart. Nothing changed."
+                }
             }
         }
     }
@@ -856,7 +1215,11 @@ class MeedwellViewModel(private val container: AppContainer) : ViewModel() {
             _notice.value = if (landed) {
                 "Loved. It is on your Bandcamp account too."
             } else {
-                "Bandcamp did not take the heart. Nothing changed."
+                if (container.client() == null) {
+                    "The heart travels with a Bandcamp account, and nothing is connected yet."
+                } else {
+                    "Bandcamp did not take the heart. Nothing changed."
+                }
             }
         }
     }

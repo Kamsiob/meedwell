@@ -213,9 +213,25 @@ class LoopMixTest {
     // ---------- Volume ----------
 
     @Test
-    fun `full volume is the recording's own intended level`() {
+    fun `full volume is the recording's own level plus the headroom`() {
         val s = sound(makeup = "10.79")
-        assertThat(LoopMix.playbackGainDb(s, 1.0)).isWithin(1e-9).of(10.79)
+        assertThat(LoopMix.playbackGainDb(s, 1.0))
+            .isWithin(1e-9).of(10.79 + LoopMix.BED_HEADROOM_DB)
+    }
+
+    /**
+     * The bug this headroom exists for.
+     *
+     * The library is normalised so almost every file needs no makeup at all, so
+     * full volume used to apply a gain of exactly zero: the bed played at the
+     * level it was mastered to sit under music at, and on its own it was barely
+     * audible. Full volume has to be meaningfully louder than the matched bed
+     * level or the top of the control means nothing.
+     */
+    @Test
+    fun `full volume is well above the matched bed level`() {
+        val typical = sound(makeup = "0.0")
+        assertThat(LoopMix.playbackGainDb(typical, 1.0)).isGreaterThan(6.0)
     }
 
     @Test
@@ -230,8 +246,12 @@ class LoopMixTest {
      */
     @Test
     fun `halfway down the slider is a real drop`() {
+        // Stated as the drop from full rather than as an absolute gain, so the
+        // claim is about the taper itself and stays true whatever headroom the
+        // top of the control is given.
         val s = sound(makeup = "0.0")
-        assertThat(LoopMix.playbackGainDb(s, 0.5)).isWithin(0.01).of(-12.04)
+        val drop = LoopMix.playbackGainDb(s, 1.0) - LoopMix.playbackGainDb(s, 0.5)
+        assertThat(drop).isWithin(0.01).of(12.04)
     }
 
     /**
