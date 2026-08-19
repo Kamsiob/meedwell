@@ -168,6 +168,51 @@ Consequences, all of them already designed for, per `MASTER_SPEC.md` section 6:
 
 **Account state changed during verification, and it could not be reverted.** Verifying `star` required starring something. One track, "Wolf Blood" from The Celtic Collection II, and one album, The Celtic Collection II, were starred. `unstar` is broken server side, so neither could be undone through the API. They can be unstarred on the Bandcamp website. Recorded here rather than quietly left, because it is a change made to the owner's real account.
 
+### 19 August 2026: Android Auto, and what the car is allowed to see
+
+Built for 1.5. The expensive decision was made in Phase 1 and was correct:
+`PlaybackService` has always been a `MediaLibraryService` rather than a
+`MediaSessionService`, so this is a browse tree rather than a rewrite.
+
+**The car never sees this app's design.** Auto asks for a tree and draws its
+own templates. Nothing about staves, contours or the serif italic exists there,
+and pretending otherwise would be the wrong thing to optimize. What can be
+chosen is the shape of the tree, and the constraint that matters is not visual:
+how many taps it takes to start music while driving.
+
+**Recent is the first tab** because a car overwhelmingly wants the record you
+were already playing. Albums, Composers and Lists mirror the shelf. Genres are
+left out: they are the library's idea of order rather than the listener's, and
+a browse tab has to earn its place at a steering wheel.
+
+**Surroundings is deliberately absent from the car.** The bed is a second sound
+layered under the first at a level set by dragging, which is a two control
+interaction, and driving is the one place that is genuinely a bad idea. If it
+ever appears it should be plain playable items with no layering.
+
+**The tree is served entirely from the local database.** A browse tree that
+waits on Bandcamp is empty in a parking garage, which is exactly where somebody
+is when they plug in.
+
+**`onAddMediaItems` is the callback that makes a tap produce sound**, and its
+absence is invisible: browse items carry an id and no uri, so without it the
+car accepts the tap and plays nothing, silently. It resolves a record to its
+whole programme, and reuses `Track.toMediaItem`, so the rule that a local file
+beats a stream has one implementation rather than two.
+
+**`onPlaybackResumption` is still not implemented**, deliberately, and this is
+the release where somebody would be most tempted to add it. Implementing it is
+what makes an app start playing on its own when a car connects, which is the
+single most common way a player annoys people.
+
+**Verified without a car.** `MediaTreeBrowseTest` connects a real
+`MediaBrowser` to the service and walks the tree exactly as Auto does, seeding
+one record first so the assertions are not vacuous on an empty shelf, which is
+how the first version of it passed while proving nothing. The test was then
+checked by breaking album resolution on purpose and confirming it went red. The
+Desktop Head Unit is installed for the chrome, but the chrome is Google's code;
+this is the part that is ours.
+
 ### 19 August 2026: the application id is io.github.kamsiob.meedwell
 
 The Play Console entry was created under `io.github.kamsiob.meedwell`, the

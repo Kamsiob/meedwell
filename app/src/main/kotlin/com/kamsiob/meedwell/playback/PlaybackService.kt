@@ -11,6 +11,18 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.common.MediaItem
+import androidx.media3.session.LibraryResult
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import androidx.media3.session.MediaLibraryService.LibraryParams
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import com.kamsiob.meedwell.MainActivity
@@ -45,6 +57,17 @@ class PlaybackService : MediaLibraryService() {
 
     private var player: ExoPlayer? = null
     private var session: MediaLibrarySession? = null
+    private var tree: MediaTree? = null
+
+    /**
+     * Where the browse callbacks do their work.
+     *
+     * Every `MediaLibrarySession.Callback` method returns a future, and every
+     * answer this app can give involves reading the database. Doing that on the
+     * calling thread would block the car's browser; this scope is where it
+     * happens instead, and it is cancelled with the service.
+     */
+    private val treeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
@@ -89,6 +112,8 @@ class PlaybackService : MediaLibraryService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
+        tree = MediaTree(container)
+
         session = MediaLibrarySession.Builder(this, exo, LibraryCallback())
             .setSessionActivity(openApp)
             .build()
@@ -113,7 +138,114 @@ class PlaybackService : MediaLibraryService() {
      * the feature, not an omission, and this comment exists so that a future
      * session does not helpfully add it.
      */
-    private inner class LibraryCallback : MediaLibrarySession.Callback
+    private inner class LibraryCallback : MediaLibrarySession.Callback {
+
+        override fun onGetLibraryRoot(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            params: LibraryParams?,
+        ): ListenableFuture<LibraryResult<MediaItem>> {
+            val tree = tree ?: return errorFuture()
+            val rootParams = LibraryParams.Builder().setExtras(tree.rootExtras()).build()
+            return Futures.immediateFuture(LibraryResult.ofItem(tree.root(), rootParams))
+        }
+
+        override fun onGetChildren(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            parentId: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?,
+        ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = answering {
+            LibraryResult.ofItemList(tree!!.children(parentId, page, pageSize), params)
+        }
+
+        override fun onGetItem(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            mediaId: String,
+        ): ListenableFuture<LibraryResult<MediaItem>> = answering {
+            tree!!.item(mediaId)
+                ?.let { LibraryResult.ofItem(it, null) }
+                ?: LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
+        }
+
+        /**
+         * Voice search. The results are computed here and announced, which is
+         * the two step shape the API asks for: this call says how many there
+         * are, and the browser then asks for them.
+         */
+        override fun onSearch(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            params: LibraryParams?,
+        ): ListenableFuture<LibraryResult<Void>> = answering {
+            val found = tree!!.search(query, page = 0, pageSize = Int.MAX_VALUE)
+            session.notifySearchResultChanged(browser, query, found.size, params)
+            LibraryResult.ofVoid()
+        }
+
+        override fun onGetSearchResult(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?,
+        ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = answering {
+            LibraryResult.ofItemList(tree!!.search(query, page, pageSize), params)
+        }
+
+        /**
+         * **What turns a tap in the car into sound.**
+         *
+         * The items arriving here carry a media id and nothing else: no uri, no
+         * duration, no artwork. Without this the player is handed items it
+         * cannot play and the car goes quiet with no error anybody sees. A
+         * browsable id resolves to everything inside it, so tapping a record
+         * plays the record rather than doing nothing.
+         */
+        override fun onAddMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: MutableList<MediaItem>,
+        ): ListenableFuture<MutableList<MediaItem>> {
+            val future = SettableFuture.create<MutableList<MediaItem>>()
+            treeScope.launch {
+                runCatching {
+                    mediaItems.flatMap { item ->
+                        // An item that already knows where its audio is came
+                        // from this app rather than from the car, and is left
+                        // exactly as it is.
+                        if (item.localConfiguration != null) listOf(item)
+                        else tree?.resolve(item.mediaId).orEmpty()
+                    }.toMutableList()
+                }.onSuccess(future::set).onFailure(future::setException)
+            }
+            return future
+        }
+
+        /** Runs a suspending answer and hands back the future the API wants. */
+        private fun <T : Any> answering(block: suspend () -> LibraryResult<T>):
+            ListenableFuture<LibraryResult<T>> {
+            val future = SettableFuture.create<LibraryResult<T>>()
+            treeScope.launch {
+                runCatching { block() }
+                    .onSuccess(future::set)
+                    // A browse error is reported as one rather than thrown into
+                    // the car's process, where it reads as this app crashing.
+                    .onFailure { future.set(LibraryResult.ofError<T>(LibraryResult.RESULT_ERROR_UNKNOWN)) }
+            }
+            return future
+        }
+
+        private fun <T : Any> errorFuture(): ListenableFuture<LibraryResult<T>> =
+            Futures.immediateFuture(
+                LibraryResult.ofError<T>(LibraryResult.RESULT_ERROR_SESSION_DISCONNECTED)
+            )
+    }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         // Swiping the app away with nothing playing should not leave a service
@@ -127,6 +259,7 @@ class PlaybackService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        treeScope.cancel()
         session?.run {
             player.release()
             release()

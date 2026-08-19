@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What Android Auto reads to decide this app is a media app.
+
+  Without this file the service is discoverable and the car still ignores it,
+  which is the failure that looks like broken code and is not. "media" is the
+  only use declared: this app has no messaging, no templated screens of its
+  own, and nothing else it wants from the car.
+-->
+<automotiveApp>
+    <uses name="media" />
+</automotiveApp>

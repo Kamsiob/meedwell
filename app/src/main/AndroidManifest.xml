@@ -120,6 +120,14 @@
             </intent-filter>
         </service>
 
+        <!--
+          The declaration Android Auto looks for. It names this a media app,
+          which is what makes the browse tree reachable from a car at all.
+        -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+
         <!-- Surroundings downloads.
 
              Not exported, and no intent filter: nothing outside the app has any
